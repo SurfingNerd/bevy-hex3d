@@ -2,20 +2,27 @@
 //! The scene includes a patterned texture and a rotation for visualizing the normals and UVs.
 
 mod hexagon;
+mod map;
 
 use bevy::{
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
+use bevy_ecs_tilemap::TilemapPlugin;
 use hexagon::Hexagon3D;
 use bevy::log;
+
+use crate::map::TiledMapPlugin;
 
 
 fn main() {
     App::new()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
+        .add_plugin(TilemapPlugin)
+        .add_plugin(TiledMapPlugin)
         .add_startup_system(setup)
+        // .add_startup_system(setup_map)
         // .add_system(rotate)
         .run();
 }
@@ -89,9 +96,11 @@ fn setup(
     });
 
     commands.spawn_bundle(PerspectiveCameraBundle {
-        transform: Transform::from_xyz(0.0, 6., 12.0).looking_at(Vec3::new(0., 1., 0.), Vec3::Y),
+        transform: Transform::from_xyz(0.0, 0.0, 64.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
         ..Default::default()
     });
+
+    
 }
 
 fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
