@@ -22,7 +22,7 @@ use super::tiled_map::{TiledMapBundle, TiledMap};
 //     });
 // }
 
-fn map_startup(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn map_startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let handle: Handle<TiledMap> = asset_server.load("map.tmx");
 

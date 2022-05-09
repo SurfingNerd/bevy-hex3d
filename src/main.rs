@@ -1,8 +1,12 @@
 //! This example demonstrates the built-in 3d shapes in Bevy.
 //! The scene includes a patterned texture and a rotation for visualizing the normals and UVs.
 
+
+
 mod hexagon;
 mod map;
+
+use crate::map::TiledMapPlugin;
 
 use bevy::{
     prelude::*,
@@ -12,7 +16,7 @@ use bevy_ecs_tilemap::TilemapPlugin;
 use hexagon::Hexagon3D;
 use bevy::log;
 
-use crate::map::TiledMapPlugin;
+
 
 
 fn main() {
@@ -22,7 +26,7 @@ fn main() {
         .add_plugin(TilemapPlugin)
         .add_plugin(TiledMapPlugin)
         .add_startup_system(setup)
-        // .add_startup_system(setup_map)
+        .add_startup_system(map::map_startup)
         // .add_system(rotate)
         .run();
 }
