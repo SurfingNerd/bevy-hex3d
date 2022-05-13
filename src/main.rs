@@ -10,13 +10,11 @@ use crate::map::TiledMapPlugin;
 
 use bevy::{
     prelude::*,
-    render::render_resource::{Extent3d, TextureDimension, TextureFormat},
+    render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
 };
 use bevy_ecs_tilemap::TilemapPlugin;
 use hexagon::Hexagon3D;
 use bevy::log;
-
-
 
 
 fn main() {
@@ -27,6 +25,7 @@ fn main() {
         .add_plugin(TiledMapPlugin)
         .add_startup_system(setup)
         .add_startup_system(map::map_startup)
+        .add_system(set_texture_filters_to_nearest)
         // .add_system(rotate)
         .run();
 }
@@ -106,6 +105,26 @@ fn setup(
 
     
 }
+
+pub fn set_texture_filters_to_nearest(
+    mut texture_events: EventReader<AssetEvent<Image>>,
+    mut textures: ResMut<Assets<Image>>,
+) {
+    // quick and dirty, run this for all textures anytime a texture is created.
+    for event in texture_events.iter() {
+        match event {
+            AssetEvent::Created { handle } => {
+                if let Some(mut texture) = textures.get_mut(handle) {
+                    texture.texture_descriptor.usage = TextureUsages::TEXTURE_BINDING
+                        | TextureUsages::COPY_SRC
+                        | TextureUsages::COPY_DST;
+                }
+            }
+            _ => (),
+        }
+    }
+}
+
 
 fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
     for mut transform in query.iter_mut() {

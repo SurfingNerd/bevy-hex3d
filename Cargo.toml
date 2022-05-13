@@ -11,6 +11,6 @@ resolver = "2" # Important! wgpu/Bevy needs this!
 
 [dependencies]
 bevy = { version = "0.7.0", features = ["dynamic"] }
-bevy_ecs_tilemap = { version = "0.6.0" }
+bevy_ecs_tilemap = { path = "../bevy_ecs_tilemap" }
 tiled = "0.10.2"
 anyhow = "1.0"

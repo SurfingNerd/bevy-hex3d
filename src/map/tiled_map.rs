@@ -54,6 +54,9 @@ impl AssetLoader for TiledLoader {
                 let asset_path = AssetPath::new(tile_path, None);
                 let texture: Handle<Image> = load_context.get_handle(asset_path.clone());
 
+                // add the texture usage here to COPY_SRC
+                // but how ?
+
                 handles.insert(tileset_index, texture.clone());
 
                 dependencies.push(asset_path);
