@@ -98,10 +98,12 @@ fn setup(
         ..Default::default()
     });
 
-    commands.spawn_bundle(PerspectiveCameraBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 64.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
-        ..Default::default()
-    });
+    // commands.spawn_bundle(PerspectiveCameraBundle {
+    //     transform: Transform::from_xyz(0.0, 0.0, 64.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
+    //     ..Default::default()
+    // });
+
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
     
 }

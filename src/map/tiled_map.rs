@@ -13,6 +13,7 @@ pub struct TiledMapPlugin;
 
 impl Plugin for TiledMapPlugin {
     fn build(&self, app: &mut App) {
+        log::info!("building TiledMapPlugin");
         app.add_asset::<TiledMap>()
             .add_asset_loader(TiledLoader)
             .add_system(process_loaded_tile_maps);
@@ -42,6 +43,9 @@ impl AssetLoader for TiledLoader {
         bytes: &'a [u8],
         load_context: &'a mut LoadContext,
     ) -> BoxedFuture<'a, Result<(), anyhow::Error>> {
+
+        log::info!("loading assets.");
+
         Box::pin(async move {
             let mut loader = tiled::Loader::new();
             let map = loader.load_tmx_map_from(BufReader::new(bytes), load_context.path())?;
@@ -87,6 +91,7 @@ pub fn process_loaded_tile_maps(
     layer_query: Query<&Layer>,
     chunk_query: Query<&Chunk>,
 ) {
+    // log::info!("process_loaded_tile_maps");
     let mut changed_maps = Vec::<Handle<TiledMap>>::default();
     for event in map_events.iter() {
         match event {
@@ -152,10 +157,15 @@ pub fn process_loaded_tile_maps(
                     }
                     map.remove_layer(&mut commands, layer_id);
                 }
+               
 
                 for (tileset_index, tileset) in tiled_map.map.tilesets().iter().enumerate() {
+
+                    log::info!("index: {}", tileset_index);
                     // Once materials have been created/added we need to then create the layers.
                     for (layer_index, layer) in tiled_map.map.layers().enumerate() {
+
+                        log::info!("layer_index: {} ", layer_index);
                         let tile_width = tileset.tile_width as f32;
                         let tile_height = tileset.tile_height as f32;
 
@@ -163,6 +173,8 @@ pub fn process_loaded_tile_maps(
 
                         let offset_x = layer.offset_x;
                         let offset_y = layer.offset_y;
+
+                        log::info!("{} {}", offset_x, offset_y);
 
                         let mut map_settings = LayerSettings::new(
                             MapSize(
@@ -194,6 +206,8 @@ pub fn process_loaded_tile_maps(
                             tiled::Orientation::Orthogonal => TilemapMeshType::Square,
                         };
 
+                        log::info!("{:?}", map_settings.mesh_type);
+
                         let layer_entity = LayerBuilder::<TileBundle>::new_batch(
                             &mut commands,
                             map_settings.clone(),
@@ -214,6 +228,8 @@ pub fn process_loaded_tile_maps(
 
                                 let x = tile_pos.0 as i32;
                                 let y = tile_pos.1 as i32;
+
+                                // log::info!("x {} y {} type: {:?}", x, y, layer.layer_type());
 
                                 match layer.layer_type() {
                                     tiled::LayerType::TileLayer(tile_layer) => {

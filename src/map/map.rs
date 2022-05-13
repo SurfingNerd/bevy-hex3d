@@ -1,6 +1,6 @@
 use bevy::{
     prelude::{AssetServer, Commands, Res, OrthographicCameraBundle, Handle, Transform},
-    sprite::ColorMaterial,
+    sprite::ColorMaterial, log,
 };
 use bevy_ecs_tilemap::Map;
 
@@ -26,6 +26,7 @@ pub fn map_startup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
     let handle: Handle<TiledMap> = asset_server.load("map.tmx");
 
+    log::info!("map started up!!");
     let map_entity = commands.spawn().id();
 
     commands.entity(map_entity).insert_bundle(TiledMapBundle {
