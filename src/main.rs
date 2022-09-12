@@ -6,13 +6,14 @@
 mod hexagon;
 mod map;
 
-use crate::map::TiledMapPlugin;
+// use crate::map::TiledMapPlugin;
 
 use bevy::{
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
 };
 use bevy_ecs_tilemap::TilemapPlugin;
+use bevy_flycam::{PlayerPlugin, MovementSettings};
 use hexagon::Hexagon3D;
 use bevy::log;
 
@@ -22,11 +23,17 @@ fn main() {
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
         .add_plugin(TilemapPlugin)
-        .add_plugin(TiledMapPlugin)
+        //.add_plugin(TiledMapPlugin)
+        .add_plugin(PlayerPlugin)
+        .insert_resource(MovementSettings {
+            sensitivity: 0.00015, // default: 0.00012
+            speed: 12.0,          // default: 12.0
+        })
         .add_startup_system(setup)
-        .add_startup_system(map::map_startup)
-        .add_system(set_texture_filters_to_nearest)
-        // .add_system(rotate)
+        //.add_startup_system(map::map_startup)
+        //.add_system(set_texture_filters_to_nearest)
+        //.add_system(cam_movement)
+        .add_system(rotate)
         .run();
 }
 
@@ -103,8 +110,15 @@ fn setup(
     //     ..Default::default()
     // });
 
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    //let mut cam = Camera2dBundle::new_with_far(200.0);
+    // let cam = Camera3dBundle {
+    //     transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+    //     ..default()
+    // };
+    
+    //log::info!("{:?}", cam.transform);
 
+    // commands.spawn_bundle(cam);
     
 }
 
@@ -134,6 +148,12 @@ fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
             * Quat::from_rotation_x(-std::f32::consts::PI / 4.)
     }
 }
+
+// fn cam_movement(time: Res<Time>,
+//     keyboard_input: Res<Input<KeyCode>>,
+//     mut query: Query<(&mut FlyCamera, &mut Transform)>,) {
+
+// }
 
 /// Creates a colorful test pattern
 fn uv_debug_texture() -> Image {
