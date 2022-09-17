@@ -5,36 +5,46 @@
 
 mod hexagon;
 mod map;
-
+mod examples;
+mod hex_demo;
 // use crate::map::TiledMapPlugin;
+
+
 
 use bevy::{
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
 };
-use bevy_ecs_tilemap::TilemapPlugin;
-use bevy_flycam::{PlayerPlugin, MovementSettings};
+// use bevy_ecs_tilemap::TilemapPlugin;
+// use bevy_flycam::{PlayerPlugin, MovementSettings};
+use hex_demo::run_hex_demo;
 use hexagon::Hexagon3D;
-use bevy::log;
+// use bevy::log;
+// use examples::runGameOfLife;
+// use examples::runHexagonColums;
 
 
 fn main() {
-    App::new()
-        .insert_resource(Msaa { samples: 4 })
-        .add_plugins(DefaultPlugins)
-        .add_plugin(TilemapPlugin)
-        //.add_plugin(TiledMapPlugin)
-        .add_plugin(PlayerPlugin)
-        .insert_resource(MovementSettings {
-            sensitivity: 0.00015, // default: 0.00012
-            speed: 12.0,          // default: 12.0
-        })
-        .add_startup_system(setup)
-        //.add_startup_system(map::map_startup)
-        //.add_system(set_texture_filters_to_nearest)
-        //.add_system(cam_movement)
-        .add_system(rotate)
-        .run();
+
+    // runHexagonColums();
+    run_hex_demo();
+
+    // App::new()
+    //     .insert_resource(Msaa { samples: 4 })
+    //     .add_plugins(DefaultPlugins)
+    //     .add_plugin(TilemapPlugin)
+    //     //.add_plugin(TiledMapPlugin)
+    //     .add_plugin(PlayerPlugin)
+    //     .insert_resource(MovementSettings {
+    //         sensitivity: 0.00015, // default: 0.00012
+    //         speed: 12.0,          // default: 12.0
+    //     })
+    //     .add_startup_system(setup)
+    //     //.add_startup_system(map::map_startup)
+    //     //.add_system(set_texture_filters_to_nearest)
+    //     //.add_system(cam_movement)
+    //     .add_system(rotate)
+    //     .run();
 }
 
 /// A marker component for our shapes so we can query them separately from the ground plane
