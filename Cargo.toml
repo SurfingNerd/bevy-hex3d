@@ -15,3 +15,4 @@ bevy_ecs_tilemap = { path = "../bevy_ecs_tilemap" }
 bevy_flycam = "0.8.1"
 tiled = "0.10.2"
 anyhow = "1.0"
+hex2d = "1.1.0"

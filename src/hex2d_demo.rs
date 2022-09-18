@@ -3,8 +3,13 @@ use bevy::{prelude::{App, Commands, ResMut, Assets, Mesh, Image, StandardMateria
 use crate::{hexagon::Hexagon3D, Shape};
 use bevy_flycam::PlayerPlugin;
 
-const X_EXTENT: f32 = 14.;
+const X_EXTENT: f32 = 2.;
+const Y_EXTENT: f32 = 2.;
 
+struct Game {
+  width: i32,
+  height: i32
+}
 
 #[derive(Component, Debug)]
 struct GroundTile {
@@ -21,6 +26,8 @@ fn uv_debug_texture() -> Image {
       255, 102, 159, 255, 255, 159, 102, 255, 236, 255, 102, 255, 121, 255, 102, 255, 102, 255,
       198, 255, 102, 198, 255, 255, 121, 102, 255, 255, 236, 102, 255, 255,
   ];
+
+  
 
   let mut texture_data = [0; TEXTURE_SIZE * TEXTURE_SIZE * 4];
   for y in 0..TEXTURE_SIZE {
@@ -52,34 +59,31 @@ fn setup(
       ..Default::default()
   });
   
-  let shapes = [
-     // meshes.add(shape::Cube::default().into()),
-     // meshes.add(shape::Box::default().into()),
-     // meshes.add(shape::Capsule::default().into()),
-     // meshes.add(shape::Torus::default().into()),
-     // meshes.add(shape::Icosphere::default().into()),
-     // meshes.add(shape::UVSphere::default().into()),
-     meshes.add( Hexagon3D::default().into()),
-     meshes.add( Hexagon3D::default().into())
-  ];
+  let game = Game { width: 10, height: 10};
 
-  let num_shapes = shapes.len();
+ 
 
   //let quat = bevy::math::Quat{size: Vec2 {x: -1.0, y: 0.0}, flip: false};
   let quat = bevy::math::Quat::from_rotation_x(std::f32::consts::PI * 1.50);
 
-  for (i, shape) in shapes.into_iter().enumerate() {
-      
-      info!(i);
+  let hex_mesh = meshes.add(Hexagon3D::default().into());
+
+  
+
+// for (i, shape) in shapes.into_iter().enumerate() {
+  for x in 0..game.width {
+    for y in 0..game.height {
+      let c = hex2d::Coordinate::new(x, y);
+      let (x_pixel, y_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
       commands
           .spawn_bundle(PbrBundle {
-              mesh: shape,
+              mesh: hex_mesh.clone(), // does only the handle get cloned here ? so we reuse the mesh ?
               material: debug_material.clone(),
               transform: Transform {
                   translation: Vec3::new(
-                      -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
-                      2.0,
-                      0.0,
+                      x_pixel,
+                      0.01,
+                      y_pixel,
                   ),
                   rotation: quat.clone(),
                   
@@ -87,9 +91,32 @@ fn setup(
               },
               ..Default::default()
           })
-          .insert(GroundTile {x: i as i32 , y: 1} );
+          .insert(GroundTile {x , y});
           // .insert(Shape);
+    } 
   }
+   
+  
+  //     info!(i);
+  //     commands
+  //         .spawn_bundle(PbrBundle {
+  //             mesh: shape,
+  //             material: debug_material.clone(),
+  //             transform: Transform {
+  //                 translation: Vec3::new(
+  //                     -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
+  //                     2.0,
+  //                     0.0,
+  //                 ),
+  //                 rotation: quat.clone(),
+                  
+  //                 ..Default::default()
+  //             },
+  //             ..Default::default()
+  //         })
+  //         .insert(GroundTile {x: i as i32 , y: 1} );
+  //         // .insert(Shape);
+  // }
 
   commands.spawn_bundle(PointLightBundle {
       point_light: PointLight {
@@ -108,6 +135,8 @@ fn setup(
       material: materials.add(Color::SILVER.into()),
       ..Default::default()
   });
+
+  commands.insert_resource(game);
 
   // commands.spawn_bundle(PerspectiveCameraBundle {
   //     transform: Transform::from_xyz(0.0, 0.0, 64.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
@@ -190,6 +219,7 @@ pub fn run_hex2d_demo() {
   .add_startup_system(setup)
   // .add_system(crate::examples::movement)
   .add_system(mouse_button_input)
+  
   // .add_system(rotate_hexes)
   .run();
 
