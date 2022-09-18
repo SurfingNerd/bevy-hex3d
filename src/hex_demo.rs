@@ -1,4 +1,4 @@
-use bevy::{prelude::*, render::texture::ImageSettings};
+use bevy::{prelude::*, render::texture::ImageSettings, log};
 use bevy_ecs_tilemap::{prelude::*};
 
 
@@ -81,7 +81,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
             storage: tile_storage,
             texture: TilemapTexture(texture_handle),
             tile_size,
-            map_type: TilemapType::Hexagon(HexCoordSystem::Column),
+            map_type: TilemapType::Hexagon(HexCoordSystem::ColumnOdd),
             ..Default::default()
         });
 }
@@ -105,6 +105,48 @@ fn swap_mesh_type(mut query: Query<&mut TilemapType>, keyboard_input: Res<Input<
     }
 }
 
+fn mouse_button_input(
+    buttons: Res<Input<MouseButton>> ,
+    windows: Res<Windows>,
+    // tile_storage_query: Query<(Entity, &TileStorage)>,
+    tile_storage: Res<TileStorage>,
+) {
+    // log::info!("mouse_button_input");
+    if buttons.just_pressed(MouseButton::Left) {
+
+        // Left button was pressed
+        let window = windows.get_primary().unwrap();
+        
+        if let Some(pos) = window.cursor_position() {
+            log::info!("Left Mouse clicked: {:?}", pos);
+
+            //todo: get tile from click.
+
+            
+
+            if let Some(tile) = tile_storage.get(&TilePos::new(10, 10)) {
+                
+            }
+        }
+
+        
+
+    }
+    if buttons.just_released(MouseButton::Left) {
+        // Left Button was released
+    }
+    if buttons.pressed(MouseButton::Right) {
+        // Right Button is being held down
+    }
+    // we can check multiple at once with `.any_*`
+    if buttons.any_just_pressed([MouseButton::Left, MouseButton::Right]) {
+        // Either the left or the right button was just pressed
+    }
+}
+
+
+
+
 #[allow(dead_code)]
 pub fn run_hex_demo() {
     App::new()
@@ -120,5 +162,6 @@ pub fn run_hex_demo() {
         .add_startup_system(startup)
         .add_system(crate::examples::movement)
         .add_system(swap_mesh_type)
+        .add_system(mouse_button_input)
         .run();
 }

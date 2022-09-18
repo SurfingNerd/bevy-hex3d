@@ -37,6 +37,8 @@ pub fn movement(
             ortho.scale = 0.5;
         }
 
+        info!("movement: {:?}", direction);
+
         let z = transform.translation.z;
         transform.translation += time.delta_seconds() * direction * 500.;
         // Important! We need to restore the Z values when moving the camera around.

@@ -7,6 +7,7 @@ mod hexagon;
 mod map;
 mod examples;
 mod hex_demo;
+mod hex2d_demo;
 // use crate::map::TiledMapPlugin;
 
 
@@ -16,19 +17,22 @@ use bevy::{
     render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
 };
 use examples::run_hexagon_columns;
+use hex2d_demo::run_hex2d_demo;
 // use bevy_ecs_tilemap::TilemapPlugin;
 // use bevy_flycam::{PlayerPlugin, MovementSettings};
-// use hex_demo::run_hex_demo;
+use hex_demo::run_hex_demo;
 use hexagon::Hexagon3D;
 // use bevy::log;
+
 
 
 
 fn main() {
 
     // runHexagonColums();
-    run_hexagon_columns();
-    //run_hex_demo();
+    // run_hexagon_columns();
+    // run_hex_demo();
+    run_hex2d_demo();
 
     // App::new()
     //     .insert_resource(Msaa { samples: 4 })
