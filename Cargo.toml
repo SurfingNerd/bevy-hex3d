@@ -11,7 +11,8 @@ resolver = "2" # Important! wgpu/Bevy needs this!
 
 [dependencies]
 bevy = { version = "0.8.1", features = ["dynamic"] }
-bevy_ecs_tilemap = { path = "../bevy_ecs_tilemap" }
+bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap.git", rev = "1a6022d439e1bf65fcee54d78e30bbb2daa95a2b" }
+
 bevy_flycam = "0.8.1"
 tiled = "0.10.2"
 anyhow = "1.0"
