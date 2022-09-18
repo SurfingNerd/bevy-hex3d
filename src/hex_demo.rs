@@ -1,10 +1,6 @@
 use bevy::{prelude::*, render::texture::ImageSettings};
 use bevy_ecs_tilemap::{prelude::*};
 
-use crate::examples;
-
-//use super::examples::helpers::;
-
 
 
 // Side length of a colored quadrant (in "number of tiles").
@@ -109,6 +105,7 @@ fn swap_mesh_type(mut query: Query<&mut TilemapType>, keyboard_input: Res<Input<
     }
 }
 
+#[allow(dead_code)]
 pub fn run_hex_demo() {
     App::new()
         .insert_resource(WindowDescriptor {

@@ -82,7 +82,7 @@ fn startup(mut commands: Commands, asset_server: Res<AssetServer>) {
             storage: tile_storage,
             texture: TilemapTexture(texture_handle),
             tile_size,
-            map_type: TilemapType::Hexagon(HexCoordSystem::Column),
+            map_type: TilemapType::Hexagon(HexCoordSystem::ColumnEven),
             ..Default::default()
         });
 }

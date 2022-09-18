@@ -15,19 +15,20 @@ use bevy::{
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
 };
+use examples::run_hexagon_columns;
 // use bevy_ecs_tilemap::TilemapPlugin;
 // use bevy_flycam::{PlayerPlugin, MovementSettings};
-use hex_demo::run_hex_demo;
+// use hex_demo::run_hex_demo;
 use hexagon::Hexagon3D;
 // use bevy::log;
-// use examples::runGameOfLife;
-// use examples::runHexagonColums;
+
 
 
 fn main() {
 
     // runHexagonColums();
-    run_hex_demo();
+    run_hexagon_columns();
+    //run_hex_demo();
 
     // App::new()
     //     .insert_resource(Msaa { samples: 4 })
@@ -53,6 +54,7 @@ struct Shape;
 
 const X_EXTENT: f32 = 14.;
 
+#[allow(dead_code)]
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -165,7 +167,7 @@ fn rotate(mut query: Query<&mut Transform, With<Shape>>, time: Res<Time>) {
 
 // }
 
-/// Creates a colorful test pattern
+// Creates a colorful test pattern
 fn uv_debug_texture() -> Image {
     const TEXTURE_SIZE: usize = 8;
 

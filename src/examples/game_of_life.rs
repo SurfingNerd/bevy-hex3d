@@ -92,6 +92,8 @@ fn update(
     }
 }
 
+
+#[allow(dead_code)]
 pub fn run_game_of_life() {
     App::new()
         .insert_resource(WindowDescriptor {
