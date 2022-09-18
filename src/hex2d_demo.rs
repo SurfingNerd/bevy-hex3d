@@ -1,4 +1,6 @@
-use bevy::{prelude::{App, Commands, ResMut, Assets, Mesh, Image, StandardMaterial, info, PbrBundle, Transform, Vec3, Res, Input, MouseButton, shape::{self, Quad}, Color, PointLightBundle, PointLight, Camera3dBundle, Component, Query, KeyCode, Vec2}, window::{WindowDescriptor, Windows}, render::{texture::ImageSettings, render_resource::{Extent3d, TextureDimension, TextureFormat}}, DefaultPlugins, log};
+use std::default::Default;
+
+use bevy::{prelude::{App, Commands, ResMut, Assets, Mesh, Image, StandardMaterial, PbrBundle, Transform, Vec3, Res, Input, MouseButton, shape::{self, Quad}, Color, PointLightBundle, PointLight, Component, Query, KeyCode, Vec2, AssetServer, Handle, AlphaMode}, window::{WindowDescriptor, Windows}, render::{texture::ImageSettings, render_resource::{Extent3d, TextureDimension, TextureFormat}}, DefaultPlugins, log, sprite::TextureAtlas};
 
 use crate::{hexagon::Hexagon3D, Shape};
 use bevy_flycam::PlayerPlugin;
@@ -53,12 +55,28 @@ fn setup(
   mut meshes: ResMut<Assets<Mesh>>,
   mut images: ResMut<Assets<Image>>,
   mut materials: ResMut<Assets<StandardMaterial>>,
+  asset_server: Res<AssetServer>,
 ) {
   let debug_material = materials.add(StandardMaterial {
       base_color_texture: Some(images.add(uv_debug_texture())),
       ..Default::default()
   });
+
+
   
+  let texture_handle: Handle<Image>  = asset_server.load("terrain.png");
+
+  // let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(128.0, 128.0), 4, 3);
+  
+  let texture_material = materials.add(
+    StandardMaterial {
+        base_color_texture: Some(texture_handle), 
+        alpha_mode: AlphaMode::Blend,
+        ..Default::default()
+     }
+  );
+  // let texture = texture_atlas.textures[0];
+
   let game = Game { width: 10, height: 10};
 
  
@@ -78,7 +96,7 @@ fn setup(
       commands
           .spawn_bundle(PbrBundle {
               mesh: hex_mesh.clone(), // does only the handle get cloned here ? so we reuse the mesh ?
-              material: debug_material.clone(),
+              material: texture_material.clone(),
               transform: Transform {
                   translation: Vec3::new(
                       x_pixel,
@@ -122,7 +140,7 @@ fn setup(
       point_light: PointLight {
           intensity: 9000.0,
           range: 10000.,
-          shadows_enabled: true,
+          shadows_enabled: false,
           ..Default::default()
       },
       transform: Transform::from_xyz(8.0, 16.0, 8.0),
