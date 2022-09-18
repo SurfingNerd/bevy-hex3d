@@ -8,6 +8,7 @@ mod map;
 mod examples;
 mod hex_demo;
 mod hex2d_demo;
+mod components;
 // use crate::map::TiledMapPlugin;
 
 

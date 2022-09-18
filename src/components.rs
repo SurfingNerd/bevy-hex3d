@@ -1,3 +1,5 @@
+use bevy::prelude::Component;
+
 
 
 #[derive(Debug, Component)]
@@ -10,8 +12,8 @@ pub struct MoveComponent {
 
 #[derive(Debug, Component)]
 pub struct HPComponent {
-  pub currentHP: i32,
-  pub maxHP: i32
+  pub hp_current: i32,
+  pub hp_max: i32
 }
 
 #[derive(Debug, Component)]

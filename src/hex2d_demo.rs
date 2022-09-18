@@ -1,9 +1,10 @@
 use std::default::Default;
 
-use bevy::{prelude::{App, Commands, ResMut, Assets, Mesh, Image, StandardMaterial, PbrBundle, Transform, Vec3, Res, Input, MouseButton, shape::{self, Quad}, Color, PointLightBundle, PointLight, Component, Query, KeyCode, Vec2, AssetServer, Handle, AlphaMode}, window::{WindowDescriptor, Windows}, render::{texture::ImageSettings, render_resource::{Extent3d, TextureDimension, TextureFormat}}, DefaultPlugins, log, sprite::TextureAtlas};
+use bevy::{prelude::{App, Commands, ResMut, Assets, Mesh, Image, StandardMaterial, PbrBundle, Transform, Vec3, Res, Input, MouseButton, shape::{self, Quad, Cube}, Color, PointLightBundle, PointLight, Component, Query, KeyCode, Vec2, AssetServer, Handle, AlphaMode, info}, window::{WindowDescriptor, Windows}, render::{texture::ImageSettings, render_resource::{Extent3d, TextureDimension, TextureFormat}}, DefaultPlugins, log, sprite::TextureAtlas};
 
 use crate::{hexagon::Hexagon3D, Shape};
 use bevy_flycam::PlayerPlugin;
+use crate::components::*;
 
 const X_EXTENT: f32 = 2.;
 const Y_EXTENT: f32 = 2.;
@@ -154,6 +155,29 @@ fn setup(
       ..Default::default()
   });
 
+  let cube = Cube::new(0.1);
+  let cube_mesh = meshes.add(cube.into());
+
+  
+  commands
+  .spawn_bundle(PbrBundle {
+      mesh: cube_mesh, // does only the handle get cloned here ? so we reuse the mesh ?
+      material: texture_material.clone(),
+      transform: Transform {
+          translation: Vec3::new(
+              0.0,
+              0.3,
+              0.0,
+          ),
+          ..Default::default()
+      },
+      ..Default::default()
+  })
+  .insert(MoveComponent { ticks_to_move: 100, ticks_passed: 0})
+  .insert( PositionComponent {x:0, y:0 } );
+
+
+
   commands.insert_resource(game);
 
   // commands.spawn_bundle(PerspectiveCameraBundle {
@@ -221,6 +245,26 @@ fn rotate_hexes(mut query: Query<(&mut GroundTile, &mut Transform)>, keys: Res<I
   
 }
 
+fn move_entites(mut query: Query<(&mut PositionComponent, &mut MoveComponent, &mut Transform)>, game: Res<Game>) {
+
+  for (mut position,mut movement, mut transform) in query.iter_mut() {
+    movement.ticks_passed+=1;
+    if (movement.ticks_passed >= movement.ticks_to_move) {
+      position.x += 1;
+      movement.ticks_passed = 0;
+
+      // update the UI Pos.
+      let c = hex2d::Coordinate::new( position.x ,  position.y);
+      let (x_pixel, y_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
+      transform.translation.x =  x_pixel;
+      transform.translation.z =  y_pixel;
+      // transform.translation = Vec3:: { x_pixel, 0.01, y_pixel };
+      
+      info!("Updated Position to {:?} to {:?}", position, transform.translation);
+    }
+  }
+}
+
 
 pub fn run_hex2d_demo() {
 
@@ -237,7 +281,7 @@ pub fn run_hex2d_demo() {
   .add_startup_system(setup)
   // .add_system(crate::examples::movement)
   .add_system(mouse_button_input)
-  
+  .add_system(move_entites)
   // .add_system(rotate_hexes)
   .run();
 
