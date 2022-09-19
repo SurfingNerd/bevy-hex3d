@@ -1,9 +1,9 @@
 use std::default::Default;
 
-use bevy::{prelude::{App, Commands, ResMut, Assets, Mesh, Image, StandardMaterial, PbrBundle, Transform, Vec3, Res, Input, MouseButton, shape::{self, Quad, Cube}, Color, PointLightBundle, PointLight, Component, Query, KeyCode, Vec2, AssetServer, Handle, AlphaMode, info}, window::{WindowDescriptor, Windows}, render::{texture::ImageSettings, render_resource::{Extent3d, TextureDimension, TextureFormat}}, DefaultPlugins, log, sprite::TextureAtlas};
+use bevy::{prelude::{App, Commands, ResMut, Assets, Mesh, Image, StandardMaterial, PbrBundle, Transform, Vec3, Res, Input, MouseButton, shape::{self, Quad, Cube}, Color, PointLightBundle, PointLight, Component, Query, KeyCode, Vec2, AssetServer, Handle, AlphaMode, info, Entity}, window::{WindowDescriptor, Windows}, render::{texture::ImageSettings, render_resource::{Extent3d, TextureDimension, TextureFormat}}, DefaultPlugins, log, sprite::{TextureAtlas, Sprite}};
 
 use crate::{hexagon::Hexagon3D, Shape};
-use bevy_flycam::PlayerPlugin;
+use bevy_flycam::{PlayerPlugin, MovementSettings};
 use crate::components::*;
 
 const X_EXTENT: f32 = 2.;
@@ -56,8 +56,15 @@ fn setup(
   mut meshes: ResMut<Assets<Mesh>>,
   mut images: ResMut<Assets<Image>>,
   mut materials: ResMut<Assets<StandardMaterial>>,
+  mut movement_settings: ResMut<MovementSettings>,
   asset_server: Res<AssetServer>,
 ) {
+
+  let game = Game { width: 10, height: 10};
+
+  //info!("movement speed: {}", movement_settings.speed);
+  movement_settings.speed = 50.;
+
   let debug_material = materials.add(StandardMaterial {
       base_color_texture: Some(images.add(uv_debug_texture())),
       ..Default::default()
@@ -65,81 +72,75 @@ fn setup(
 
 
   
-  let texture_handle: Handle<Image>  = asset_server.load("terrain.png");
+  let texture_handle: Handle<Image>  = asset_server.load("wood_pointy_top.png");
 
-  // let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(128.0, 128.0), 4, 3);
+  //let into : Image = Image.
+  
+
+  // let sprite = Sprite
+
+  let texture_atlas = TextureAtlas::from_grid(texture_handle.clone(), Vec2::new(128.0, 128.0), 4, 3);
+
+  // info!("atlas {:?}", texture_atlas.texture_handles);
   
   let texture_material = materials.add(
     StandardMaterial {
         base_color_texture: Some(texture_handle), 
-        alpha_mode: AlphaMode::Blend,
+        alpha_mode: AlphaMode::Opaque,
         ..Default::default()
      }
   );
   // let texture = texture_atlas.textures[0];
 
-  let game = Game { width: 10, height: 10};
-
- 
-
   //let quat = bevy::math::Quat{size: Vec2 {x: -1.0, y: 0.0}, flip: false};
   let quat = bevy::math::Quat::from_rotation_x(std::f32::consts::PI * 1.50);
 
-  let hex_mesh = meshes.add(Hexagon3D::default().into());
+  // let hex_mesh = meshes.add(Hexagon3D::default().into());
+
+  let mut hexes : Vec<Hexagon3D> = vec!();
 
   
+  let cube = Cube::new(0.1);
+  let cube_mesh = meshes.add(cube.into());
+
 
 // for (i, shape) in shapes.into_iter().enumerate() {
   for x in 0..game.width {
     for y in 0..game.height {
       let c = hex2d::Coordinate::new(x, y);
       let (x_pixel, y_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
-      commands
-          .spawn_bundle(PbrBundle {
-              mesh: hex_mesh.clone(), // does only the handle get cloned here ? so we reuse the mesh ?
-              material: texture_material.clone(),
-              transform: Transform {
-                  translation: Vec3::new(
-                      x_pixel,
-                      0.01,
-                      y_pixel,
-                  ),
-                  rotation: quat.clone(),
-                  
-                  ..Default::default()
-              },
-              ..Default::default()
-          })
-          .insert(GroundTile {x , y});
-          // .insert(Shape);
-    } 
+      // info!("pixel x {} y {} ", x_pixel, y_pixel);
+      let hex = Hexagon3D { diameter: 1., height: 0., x: x_pixel, y: y_pixel, z: 0. };
+      
+      hexes.push(hex);
+    }
   }
-   
-  
-  //     info!(i);
-  //     commands
-  //         .spawn_bundle(PbrBundle {
-  //             mesh: shape,
-  //             material: debug_material.clone(),
-  //             transform: Transform {
-  //                 translation: Vec3::new(
-  //                     -X_EXTENT / 2. + i as f32 / (num_shapes - 1) as f32 * X_EXTENT,
-  //                     2.0,
-  //                     0.0,
-  //                 ),
-  //                 rotation: quat.clone(),
-                  
-  //                 ..Default::default()
-  //             },
-  //             ..Default::default()
-  //         })
-  //         .insert(GroundTile {x: i as i32 , y: 1} );
-  //         // .insert(Shape);
-  // }
+
+  let mesh = Hexagon3D::create_mesh_for_hexes(&hexes);
+  let mesh_handle = meshes.add(mesh);
+
+  commands
+      .spawn_bundle(PbrBundle {
+          mesh: mesh_handle, 
+          material: texture_material.clone(),
+          transform: Transform {
+              translation: Vec3::new(
+                  0.,
+                  0.,
+                  0.,
+              ),
+              rotation: quat.clone(),
+              
+              ..Default::default()
+          },
+          ..Default::default()
+      });
+          // .insert(GroundTile {x , y});
+          // .insert(Shape);
 
   commands.spawn_bundle(PointLightBundle {
       point_light: PointLight {
-          intensity: 9000.0,
+          intensity: 4000.0,
           range: 10000.,
           shadows_enabled: false,
           ..Default::default()
@@ -149,18 +150,15 @@ fn setup(
   });
 
   // ground plane
-  commands.spawn_bundle(PbrBundle {
-      mesh: meshes.add(shape::Plane { size: 50. }.into()),
-      material: materials.add(Color::SILVER.into()),
-      ..Default::default()
-  });
-
-  let cube = Cube::new(0.1);
-  let cube_mesh = meshes.add(cube.into());
+  // commands.spawn_bundle(PbrBundle {
+  //     mesh: meshes.add(shape::Plane { size: 50. }.into()),
+  //     material: materials.add(Color::SILVER.into()),
+  //     ..Default::default()
+  // });
 
   
-  commands
-  .spawn_bundle(PbrBundle {
+  
+  commands.spawn_bundle(PbrBundle {
       mesh: cube_mesh, // does only the handle get cloned here ? so we reuse the mesh ?
       material: texture_material.clone(),
       transform: Transform {
@@ -175,8 +173,6 @@ fn setup(
   })
   .insert(MoveComponent { ticks_to_move: 100, ticks_passed: 0})
   .insert( PositionComponent {x:0, y:0 } );
-
-
 
   commands.insert_resource(game);
 
@@ -249,8 +245,9 @@ fn move_entites(mut query: Query<(&mut PositionComponent, &mut MoveComponent, &m
 
   for (mut position,mut movement, mut transform) in query.iter_mut() {
     movement.ticks_passed+=1;
-    if (movement.ticks_passed >= movement.ticks_to_move) {
+    if movement.ticks_passed >= movement.ticks_to_move {
       position.x += 1;
+      position.y += 1;
       movement.ticks_passed = 0;
 
       // update the UI Pos.
@@ -272,14 +269,14 @@ pub fn run_hex2d_demo() {
   .insert_resource(WindowDescriptor {
       width: 1270.0,
       height: 720.0,
-      title: String::from("Hexagon Column Example"),
+      title: String::from("Hexagon hex2d demo"),
       ..Default::default()
   })
   .insert_resource(ImageSettings::default_nearest())
   .add_plugins(DefaultPlugins)
   .add_plugin(PlayerPlugin)
   .add_startup_system(setup)
-  // .add_system(crate::examples::movement)
+  .add_system(crate::examples::movement)
   .add_system(mouse_button_input)
   .add_system(move_entites)
   // .add_system(rotate_hexes)
