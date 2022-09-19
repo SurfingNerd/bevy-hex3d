@@ -64,23 +64,24 @@ impl Hexagon3D {
         let x = self.x;
         let y = self.y;
         let z = self.z;
-        let center = ([self.x, self.y, self.z], [0., 0., 1.], [0.5, 0.5]);
+        let center = ([self.x, self.y, self.z], [0., 1., 0.], [0.5, 0.5]);
 
         let radius = self.diameter / 2.0;
-        let radius_f64: f64 = (self.diameter / 2.0) as f64;
+        
         let x = |root: f32| (root * 2. * PI / 6.).cos() * radius + x;
-        let y = |root: f32| (root * 2. * PI / 6.).sin() * radius + y;
+        let z = |root: f32| (root * 2. * PI / 6.).sin() * radius + z;
 
-        let x_uv = |root: f64| ((root * 2. * PI as f64 / 6.).cos() * radius_f64 + 0.5) as f32;
-        let y_uv = |root: f64| ((root * 2. * PI as f64 / 6.).sin() * radius_f64 + 0.5) as f32;
+        let x_uv = |root: f32| ((root * 2. * PI / 6.).cos() * radius + 0.5);
+        let y_uv = |root: f32| ((root * 2. * PI / 6.).sin() * radius + 0.5);
 
+        
         //                                                x              y      z     n-x n-y n-z  uv-x uvy
-        let spike0 = ([x(0.), y(0.), z], [0., 0., 1.], [x_uv(0.5), y_uv(0.5)]);
-        let spike1 = ([x(1.), y(1.), z], [0., 0., 1.], [x_uv(1.), y_uv(1.)]);
-        let spike2 = ([x(2.), y(2.), z], [0., 0., 1.], [x_uv(2.), y_uv(2.)]);
-        let spike3 = ([x(3.), y(3.), z], [0., 0., 1.], [x_uv(3.), y_uv(3.)]);
-        let spike4 = ([x(4.), y(4.), z], [0., 0., 1.], [x_uv(4.), y_uv(4.)]);
-        let spike5 = ([x(5.), y(5.), z], [0., 0., 1.], [x_uv(5.), y_uv(5.)]);
+        let spike0 = ([x(0.), y, z(0.)], [0., 1., 0.], [x_uv(0.5), y_uv(0.5)]);
+        let spike1 = ([x(1.), y, z(1.)], [0., 1., 0.], [x_uv(1.), y_uv(1.)]);
+        let spike2 = ([x(2.), y, z(2.)], [0., 1., 0.], [x_uv(2.), y_uv(2.)]);
+        let spike3 = ([x(3.), y, z(3.)], [0., 1., 0.], [x_uv(3.), y_uv(3.)]);
+        let spike4 = ([x(4.), y, z(4.)], [0., 1., 0.], [x_uv(4.), y_uv(4.)]);
+        let spike5 = ([x(5.), y, z(5.)], [0., 1., 0.], [x_uv(5.), y_uv(5.)]);
         let vertices = [center, spike0, spike1, spike2, spike3, spike4, spike5];
       
       let mut ic: u32 = 0; // indeces count.
@@ -89,29 +90,29 @@ impl Hexagon3D {
         ic = positions.len() as u32;
         let mut add = |i| vec.push( ic + i );
 
-        add(0);
+        add(2);
         add(1);
-        add(2);
-
         add(0);
-        add(2);
+
         add(3);
-
+        add(2);
         add(0);
+
+        add(4);
         add(3);
-        add(4);
-
         add(0);
-        add(4);
-        add(5);
 
-        add(0);
         add(5);
+        add(4);
+        add(0);
+
         add(6);
+        add(5);
+        add(0);
         
-        add(0);
-        add(6);
         add(1);
+        add(6);
+        add(0);
 
         for (position, normal, uv) in vertices.iter() {
             positions.push(*position);

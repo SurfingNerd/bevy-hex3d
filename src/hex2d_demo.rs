@@ -79,7 +79,7 @@ fn setup(
 
   // let sprite = Sprite
 
-  let texture_atlas = TextureAtlas::from_grid(texture_handle.clone(), Vec2::new(128.0, 128.0), 4, 3);
+  // let texture_atlas = TextureAtlas::from_grid(texture_handle.clone(), Vec2::new(128.0, 128.0), 4, 3);
 
   // info!("atlas {:?}", texture_atlas.texture_handles);
   
@@ -93,7 +93,7 @@ fn setup(
   // let texture = texture_atlas.textures[0];
 
   //let quat = bevy::math::Quat{size: Vec2 {x: -1.0, y: 0.0}, flip: false};
-  let quat = bevy::math::Quat::from_rotation_x(std::f32::consts::PI * 1.50);
+  // let quat = bevy::math::Quat::from_rotation_x(std::f32::consts::PI * 1.50);
 
   // let hex_mesh = meshes.add(Hexagon3D::default().into());
 
@@ -110,7 +110,7 @@ fn setup(
       let c = hex2d::Coordinate::new(x, y);
       let (x_pixel, y_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
       // info!("pixel x {} y {} ", x_pixel, y_pixel);
-      let hex = Hexagon3D { diameter: 1., height: 0., x: x_pixel, y: y_pixel, z: 0. };
+      let hex = Hexagon3D { diameter: 1., height: 0., x: x_pixel, y: 0., z: y_pixel };
       
       hexes.push(hex);
     }
@@ -129,7 +129,7 @@ fn setup(
                   0.,
                   0.,
               ),
-              rotation: quat.clone(),
+              // rotation: quat.clone(),
               
               ..Default::default()
           },
