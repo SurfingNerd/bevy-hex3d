@@ -9,6 +9,8 @@ mod examples;
 mod hex_demo;
 mod hex2d_demo;
 mod components;
+mod resources;
+mod glow_line;
 // use crate::map::TiledMapPlugin;
 
 
