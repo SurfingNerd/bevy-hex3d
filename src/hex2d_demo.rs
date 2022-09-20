@@ -308,6 +308,7 @@ fn tower_shoot(
     mut query_hp: Query<(&mut HPComponent, &Transform)>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     game: Res<Game>,
     
 ) {
@@ -328,7 +329,7 @@ fn tower_shoot(
           if let Ok((mut hp, transform_target)) = query_hp.get_mut(entity) {
             
             info!("shooting at {:?} hp: {}", entity, hp.hp_current);
-            GlowLine::create(&mut commands, &mut meshes, transform.translation.clone(), transform_target.translation.clone(), 0.1);
+            GlowLine::create(&mut commands, &mut meshes, &mut materials,transform.translation.clone(), transform_target.translation.clone(), 0.1);
             shoot.notify_shoot();
 
             // 

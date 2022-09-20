@@ -1,6 +1,6 @@
 use std::{ops::{Index, Mul}, f32::consts::PI};
 
-use bevy::{prelude::{Component, Commands, ResMut, Assets, Mesh, Vec3, shape::Quad, Vec2, info, PbrBundle, Transform}, render::{mesh::Indices, render_resource::PrimitiveTopology}, core::Zeroable};
+use bevy::{prelude::{Component, Commands, ResMut, Assets, Mesh, Vec3, shape::Quad, Vec2, info, PbrBundle, Transform, StandardMaterial, AlphaMode}, render::{mesh::Indices, render_resource::PrimitiveTopology}, core::Zeroable};
 
 
 
@@ -16,7 +16,7 @@ pub struct GlowLine {
 impl GlowLine {
 
   /// creates a glowing line. 
-  pub(crate) fn create(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>, start: Vec3, end: Vec3, radius: f32) -> GlowLine {
+  pub(crate) fn create(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>, materials: &mut ResMut<Assets<StandardMaterial>>, start: Vec3, end: Vec3, radius: f32) -> GlowLine {
 
     // todo: reuse mesh somehow.
     // meshes.get_or_insert_with(handle, insert_fn)
@@ -105,9 +105,17 @@ impl GlowLine {
     
     let mesh_handle = meshes.add(mesh);
 
+    let mat = StandardMaterial {
+      base_color: bevy::prelude::Color::Rgba { red: 1., green: 1., blue: 1., alpha: 0.5 },
+      alpha_mode: AlphaMode::Blend,
+      ..Default::default()
+    };
+
+    let mat_handle = materials.add(mat);
+
     commands.spawn_bundle(PbrBundle {
       mesh: mesh_handle,
-      // material: texture_material.clone(),
+      material: mat_handle.clone(),
       transform: Transform {
           translation: start,
           // rotation: quat.clone(),
