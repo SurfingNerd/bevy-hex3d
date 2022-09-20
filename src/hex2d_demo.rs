@@ -19,7 +19,7 @@ use bevy::{
 };
 
 use crate::{components::*, resources::Game, glow_line::GlowLine};
-use crate::{hexagon::Hexagon3D, Shape};
+use crate::{hexagon::Hexagon3D};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
 const X_EXTENT: f32 = 2.;
@@ -359,7 +359,6 @@ pub fn run_hex2d_demo() {
         .add_plugin(PlayerPlugin)
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_startup_system(setup)
-        .add_system(crate::examples::movement)
         .add_system(mouse_button_input)
         .add_system(move_entites)
         .add_system(tower_shoot)

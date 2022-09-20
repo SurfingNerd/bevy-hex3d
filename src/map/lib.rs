@@ -1,3 +1,0 @@
-
-mod map;
-mod tiled;
