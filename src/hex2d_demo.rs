@@ -1,4 +1,4 @@
-use std::default::Default;
+use std::default::{Default, self};
 
 use bevy::{
     log,
@@ -18,7 +18,7 @@ use bevy::{
     DefaultPlugins, diagnostic::FrameTimeDiagnosticsPlugin,
 };
 
-use crate::{components::*, resources::Game, glow_line::GlowLine};
+use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system};
 use crate::{hexagon::Hexagon3D};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
@@ -68,7 +68,7 @@ fn setup(
     mut movement_settings: ResMut<MovementSettings>,
     asset_server: Res<AssetServer>,
 ) {
-    let mut game = Game::new(10,10);
+    let mut game = Game::new(500,500);
 
     //info!("movement speed: {}", movement_settings.speed);
     movement_settings.speed = 3.;
@@ -126,10 +126,20 @@ fn setup(
     let mesh = Hexagon3D::create_mesh_for_hexes(&hexes);
     let mesh_handle = meshes.add(mesh);
     
+    let mat2 = materials.add(
+        StandardMaterial {
+            base_color: Color::rgb(123.0 / 255., 130. / 255., 78. / 255.),
+            metallic: 0.8,
+            reflectance: 0.95,
+            perceptual_roughness: 0.9,
+            
+            ..Default::default()
+        }
+    );
 
     commands.spawn_bundle(PbrBundle {
         mesh: mesh_handle,
-        material: texture_material.clone(),
+        material: mat2.clone(),
         transform: Transform {
             translation: Vec3::new(0., 0., 0.),
             // rotation: quat.clone(),
@@ -170,8 +180,8 @@ fn setup(
             .insert(ShootComponent {
                 damage: 1000.,
                 range: 3,
-                ticks_passed: 1000,
-                ticks_to_fire: 1000,
+                ticks_passed: 0,
+                ticks_to_fire: 10,
             }).id();
 
          game.set_entity(x, y, tower_id);
@@ -363,6 +373,7 @@ pub fn run_hex2d_demo() {
         .add_system(mouse_button_input)
         .add_system(move_entites)
         .add_system(tower_shoot)
-        // .add_system(rotate_hexes)
+        .add_system(glow_line_system)
+        // .add_system(debug_resources_system)
         .run();
 }
