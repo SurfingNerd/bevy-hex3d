@@ -18,7 +18,7 @@ use bevy::{
     DefaultPlugins, diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}, ecs::world, time::Time,
 };
 
-use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::{spawn_tower, spawn_enemy}, textures::uv_debug_texture, pools::MaterialPool};
+use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::{spawn_tower, spawn_enemy}, textures::uv_debug_texture, pools::MaterialRegistry};
 use crate::{hexagon::Hexagon3D};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
@@ -38,7 +38,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut images: ResMut<Assets<Image>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut materials_pool: ResMut<MaterialPool>,
+    mut materials_pool: ResMut<MaterialRegistry>,
     mut movement_settings: ResMut<MovementSettings>,
     asset_server: Res<AssetServer>,
 ) {
@@ -278,7 +278,7 @@ fn enemy_spawner(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut images: ResMut<Assets<Image>>,
     mut game: ResMut<Game>,
-    mut material_pool: ResMut<MaterialPool>
+    mut material_pool: ResMut<MaterialRegistry>
 ) {
     if game.get_entity(0, 0) == None {
         spawn_enemy(&mut meshes, &mut materials, &mut material_pool,  &mut images, &mut game, &mut commands, 0, 0);
@@ -293,7 +293,7 @@ pub fn run_hex2d_demo() {
             ..Default::default()
         })
         .insert_resource(ImageSettings::default_nearest())
-        .insert_resource(MaterialPool::new())
+        .insert_resource(MaterialRegistry::new())
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())

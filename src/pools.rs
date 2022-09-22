@@ -1,48 +1,41 @@
-use bevy::prelude::{Handle, StandardMaterial, Assets, ResMut};
+use bevy::{prelude::{Handle, StandardMaterial, Assets, ResMut, info}, utils::HashMap};
 
 
 
-
-#[derive(Debug)]
-pub struct MaterialPool {
-
-  current_handle: Option<Handle<StandardMaterial>>
-
+pub struct MaterialRegistry {
+  current_handles: HashMap<usize, Handle<StandardMaterial>>
 }
 
-impl MaterialPool {
+/// MaterialRegistry can store often used materials by indexing it by a `create` function that creates the materials one time
+/// and returns the stored material on subsequent calls, see function get_or_create
+impl MaterialRegistry {
   
   pub fn new() -> Self {
-    MaterialPool{ current_handle: None }
+    MaterialRegistry{ current_handles: HashMap::new() }
   }
 
-  // pub fn set(&mut self, assets: &mut Assets<StandardMaterial>, mut value: Handle<StandardMaterial>) {
-  //   value.make_strong(assets);
-  //   self.current_handle = Some(value);
-  // }
 
-  // pub fn get(&mut self) -> &Option<Handle<StandardMaterial>> {
-  //   return &self.current_handle;
-  // }
-
+  /// creates material created by create function and returns stored Material Handle in subsequent calls.
   pub fn get_or_create(&mut self, assets: &mut ResMut<Assets<StandardMaterial>>, create: fn(&mut ResMut<Assets<StandardMaterial>>) -> Handle<StandardMaterial>) -> Handle<StandardMaterial> {
-    if let Some(result) = &self.current_handle {
-      return result.as_weak();
+
+    let address = create as usize;
+    info!("material at: {}", address);
+
+    if let Some(result) = self.current_handles.get(&address) {
+      return result.as_weak(); // not sure if i should return as_weak() here or just a clone ?
     } else {
       let mut handle = create(assets);
       handle.make_strong(assets);
-      self.current_handle = Some(handle);
-      if let Some(handle) = &self.current_handle {
-        return handle.clone();
-      }
-      panic!();
+      let result = handle.as_weak(); // not sure if i should return as_weak() here or just a clone ?
+      self.current_handles.insert(address, handle);
+      return result;
     }
   }
 }
 
-impl Default for MaterialPool {
+impl Default for MaterialRegistry {
 
   fn default() -> Self {
-    MaterialPool { current_handle: None }
+    MaterialRegistry { current_handles: HashMap::new() }
   }
 }
