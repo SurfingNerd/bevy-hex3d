@@ -18,7 +18,7 @@ use bevy::{
     DefaultPlugins, diagnostic::FrameTimeDiagnosticsPlugin, ecs::world,
 };
 
-use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::spawn_tower};
+use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::{spawn_tower, spawn_enemy}, textures::uv_debug_texture};
 use crate::{hexagon::Hexagon3D};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
@@ -32,33 +32,6 @@ struct GroundTile {
     y: i32,
 }
 
-// Creates a colorful test pattern
-fn uv_debug_texture() -> Image {
-    const TEXTURE_SIZE: usize = 8;
-
-    let mut palette: [u8; 32] = [
-        255, 102, 159, 255, 255, 159, 102, 255, 236, 255, 102, 255, 121, 255, 102, 255, 102, 255,
-        198, 255, 102, 198, 255, 255, 121, 102, 255, 255, 236, 102, 255, 255,
-    ];
-
-    let mut texture_data = [0; TEXTURE_SIZE * TEXTURE_SIZE * 4];
-    for y in 0..TEXTURE_SIZE {
-        let offset = TEXTURE_SIZE * y * 4;
-        texture_data[offset..(offset + TEXTURE_SIZE * 4)].copy_from_slice(&palette);
-        palette.rotate_right(4);
-    }
-
-    Image::new_fill(
-        Extent3d {
-            width: TEXTURE_SIZE as u32,
-            height: TEXTURE_SIZE as u32,
-            depth_or_array_layers: 1,
-        },
-        TextureDimension::D2,
-        &texture_data,
-        TextureFormat::Rgba8UnormSrgb,
-    )
-}
 
 fn setup(
     mut commands: Commands,
@@ -73,11 +46,8 @@ fn setup(
     //info!("movement speed: {}", movement_settings.speed);
     movement_settings.speed = 3.;
 
-    let debug_material = materials.add(StandardMaterial {
-        base_color_texture: Some(images.add(uv_debug_texture())),
-        ..Default::default()
-    });
 
+    // materials
     let texture_handle: Handle<Image> = asset_server.load("wood_pointy_top.png");
 
     //let into : Image = Image.
@@ -102,9 +72,7 @@ fn setup(
 
     let mut hexes: Vec<Hexagon3D> = vec![];
 
-    let cube = Cube::new(0.1);
-    let cube_mesh = meshes.add(cube.into());
-
+    
     // for (i, shape) in shapes.into_iter().enumerate() {
     for x in 0..game.width {
         for y in 0..game.height {
@@ -165,7 +133,7 @@ fn setup(
     for x in 1..game.height - 1 {
         for y in 1..game.width - 1 {
             if x % 2 == 0 && y % 2 == 0 {
-                spawn_tower(&mut meshes, &debug_material, &mut game, &mut commands,  x, y);
+                spawn_tower(&mut meshes, &mut materials, &mut game, &mut commands,  x, y);
             }
         }
     }
@@ -178,26 +146,8 @@ fn setup(
     //     ..Default::default()
     // });
 
-    let unit = commands.spawn_bundle(
-          PbrBundle {
-            mesh: cube_mesh, // does only the handle get cloned here ? so we reuse the mesh ?
-            material: texture_material.clone(),
-            transform: Transform {
-                translation: Vec3::new(0.0, 0.3, 0.0),
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(MoveComponent {
-            ticks_to_move: 100,
-            ticks_passed: 0,
-        })
-        .insert(PositionComponent { x: 0, y: 0 })
-        .insert(HPComponent::new(100.))
-        .id();
+    spawn_enemy(&mut meshes, &mut materials, &mut images, &mut game, &mut commands, 0, 0);
 
-    
-    game.set_entity(0, 0, unit);
     commands.insert_resource(game);
 
     // commands.spawn_bundle(PerspectiveCameraBundle {

@@ -1,20 +1,65 @@
 use bevy::prelude::{
     shape::Cube, Assets, Commands, Handle, Material, Mesh, PbrBundle, ResMut, StandardMaterial,
-    Transform, Vec3,
+    Transform, Vec3, Image, Color,
 };
 
 use crate::{
-    components::{PositionComponent, ShootComponent},
-    resources::Game,
+    components::{PositionComponent, ShootComponent, MoveComponent, HPComponent},
+    resources::Game, textures::{uv_debug_texture, color_texture}, materials::get_color_material,
 };
 
 // pub fn monster_spawner() {
 
 // }
 
+pub fn spawn_enemy(
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    images: &mut ResMut<Assets<Image>>,
+    game: &mut Game,
+    commands: &mut Commands,
+    x: i32,
+    y: i32,
+) {
+
+
+
+    let cube = Cube::new(0.1);
+    let cube_mesh = meshes.add(cube.into());
+
+    let coord = hex2d::Coordinate::new(x, y);
+    let (x_pixel, z_pixel) = coord.to_pixel(hex2d::Spacing::FlatTop(0.51));
+
+    let material = get_color_material(materials, Color::RED);
+
+    let unit = commands.spawn_bundle(
+        PbrBundle {
+          mesh: cube_mesh, // does only the handle get cloned here ? so we reuse the mesh ?
+          material: material,
+          transform: Transform {
+              translation: Vec3::new(x_pixel, 0.3, z_pixel),
+              ..Default::default()
+          },
+          ..Default::default()
+      })
+      .insert(MoveComponent {
+          ticks_to_move: 100,
+          ticks_passed: 0,
+      })
+      .insert(PositionComponent { x: 0, y: 0 })
+      .insert(HPComponent::new(100.))
+      .id();
+  
+  game.set_entity(0, 0, unit);
+
+  
+
+}
+
+
 pub fn spawn_tower(
     meshes: &mut ResMut<Assets<Mesh>>,
-    material: &Handle<StandardMaterial>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
     game: &mut Game,
     commands: &mut Commands,
     x: i32,
@@ -25,6 +70,9 @@ pub fn spawn_tower(
 
     let c = hex2d::Coordinate::new(x, y);
     let (x_pixel, z_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
+
+    let material = get_color_material(materials, Color::AQUAMARINE);
+
     // tower:
     let tower_id = commands
         .spawn_bundle(PbrBundle {
