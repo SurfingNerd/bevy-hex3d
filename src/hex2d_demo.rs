@@ -15,10 +15,10 @@ use bevy::{
     },
     sprite::{Sprite, TextureAtlas},
     window::{WindowDescriptor, Windows},
-    DefaultPlugins, diagnostic::FrameTimeDiagnosticsPlugin,
+    DefaultPlugins, diagnostic::FrameTimeDiagnosticsPlugin, ecs::world,
 };
 
-use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system};
+use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::spawn_tower};
 use crate::{hexagon::Hexagon3D};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
@@ -68,7 +68,7 @@ fn setup(
     mut movement_settings: ResMut<MovementSettings>,
     asset_server: Res<AssetServer>,
 ) {
-    let mut game = Game::new(500,500);
+    let mut game = Game::new(50,50);
 
     //info!("movement speed: {}", movement_settings.speed);
     movement_settings.speed = 3.;
@@ -161,33 +161,15 @@ fn setup(
         ..Default::default()
     });
 
-    let mut spawn_tower = |x: i32, y: i32| {
-        let c = hex2d::Coordinate::new(x, y);
-        let (x_pixel, z_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
-        // tower:
-        let tower_id = commands
-            .spawn_bundle(PbrBundle {
-                mesh: cube_mesh.clone(), // does only the handle get cloned here ? so we reuse the mesh ?
-                material: debug_material.clone(),
-                transform: Transform {
-                    translation: Vec3::new(x_pixel, 0.3, z_pixel),
-                    scale: Vec3::new(1., 3., 1.),
-                    ..Default::default()
-                },
-                ..Default::default()
-            })
-            .insert(PositionComponent { x, y })
-            .insert(ShootComponent {
-                damage: 1000.,
-                range: 3,
-                ticks_passed: 0,
-                ticks_to_fire: 10,
-            }).id();
-
-         game.set_entity(x, y, tower_id);
-    };
-
-    spawn_tower(1, 1);
+    
+    for x in 1..game.height - 1 {
+        for y in 1..game.width - 1 {
+            if x % 2 == 0 && y % 2 == 0 {
+                spawn_tower(&mut meshes, &debug_material, &mut game, &mut commands,  x, y);
+            }
+        }
+    }
+    
 
     // ground plane
     // commands.spawn_bundle(PbrBundle {

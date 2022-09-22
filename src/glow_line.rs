@@ -30,6 +30,7 @@ pub fn glow_line_system(mut commands: Commands, time: Res<Time>, mut lines: Quer
     for (entity, mut glow_line) in lines.iter_mut() {
         glow_line.time_to_live -= time.delta().as_secs_f32();
         
+        
         // info!("processing glow line");
         if glow_line.time_to_live <= 0. {
           commands.entity(entity).despawn();
