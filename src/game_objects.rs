@@ -5,16 +5,21 @@ use bevy::prelude::{
 
 use crate::{
     components::{PositionComponent, ShootComponent, MoveComponent, HPComponent},
-    resources::Game, textures::{uv_debug_texture, color_texture}, materials::get_color_material,
+    resources::Game, textures::{uv_debug_texture, color_texture}, materials::get_color_material, pools::MaterialPool,
 };
 
 // pub fn monster_spawner() {
 
 // }
 
+fn get_red_color(materials: &mut ResMut<Assets<StandardMaterial>>) -> Handle<StandardMaterial> {
+    get_color_material(materials, Color::RED)
+}
+
 pub fn spawn_enemy(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
+    material_pool: &mut ResMut<MaterialPool>,
     images: &mut ResMut<Assets<Image>>,
     game: &mut Game,
     commands: &mut Commands,
@@ -31,6 +36,8 @@ pub fn spawn_enemy(
     let (x_pixel, z_pixel) = coord.to_pixel(hex2d::Spacing::FlatTop(0.51));
 
     let material = get_color_material(materials, Color::RED);
+
+    material_pool.get_or_create(materials, get_red_color);
 
     let unit = commands.spawn_bundle(
         PbrBundle {

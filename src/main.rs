@@ -10,6 +10,7 @@ mod debug_systems;
 mod game_objects;
 mod textures;
 mod materials;
+mod pools;
 // use crate::map::TiledMapPlugin;
 
 use hex2d_demo::run_hex2d_demo;

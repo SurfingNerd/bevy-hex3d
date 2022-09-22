@@ -15,10 +15,10 @@ use bevy::{
     },
     sprite::{Sprite, TextureAtlas},
     window::{WindowDescriptor, Windows},
-    DefaultPlugins, diagnostic::FrameTimeDiagnosticsPlugin, ecs::world,
+    DefaultPlugins, diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}, ecs::world, time::Time,
 };
 
-use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::{spawn_tower, spawn_enemy}, textures::uv_debug_texture};
+use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::{spawn_tower, spawn_enemy}, textures::uv_debug_texture, pools::MaterialPool};
 use crate::{hexagon::Hexagon3D};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
@@ -38,6 +38,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut images: ResMut<Assets<Image>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials_pool: ResMut<MaterialPool>,
     mut movement_settings: ResMut<MovementSettings>,
     asset_server: Res<AssetServer>,
 ) {
@@ -128,7 +129,6 @@ fn setup(
         transform: Transform::from_xyz(8.0, 16.0, 8.0),
         ..Default::default()
     });
-
     
     for x in 1..game.height - 1 {
         for y in 1..game.width - 1 {
@@ -137,32 +137,11 @@ fn setup(
             }
         }
     }
-    
 
-    // ground plane
-    // commands.spawn_bundle(PbrBundle {
-    //     mesh: meshes.add(shape::Plane { size: 50. }.into()),
-    //     material: materials.add(Color::SILVER.into()),
-    //     ..Default::default()
-    // });
-
-    spawn_enemy(&mut meshes, &mut materials, &mut images, &mut game, &mut commands, 0, 0);
+    spawn_enemy(&mut meshes, &mut materials, &mut materials_pool, &mut images, &mut game, &mut commands, 0, 0);
 
     commands.insert_resource(game);
 
-    // commands.spawn_bundle(PerspectiveCameraBundle {
-    //     transform: Transform::from_xyz(0.0, 0.0, 64.0).looking_at(Vec3::new(0., 0., 0.), Vec3::Y),
-    //     ..Default::default()
-    // });
-
-    // let cam = Camera3dBundle {
-    //     transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-    //     ..Default::default()
-    // };
-
-    //log::info!("{:?}", cam.transform);
-
-    // commands.spawn_bundle(cam);
 }
 
 fn mouse_button_input(
@@ -237,10 +216,10 @@ fn move_entites(
             transform.translation.z = y_pixel;
             // transform.translation = Vec3:: { x_pixel, 0.01, y_pixel };
 
-            info!(
-                "Updated Position to {:?} to {:?}",
-                position, transform.translation
-            );
+            // info!(
+            //     "Updated Position to {:?} to {:?}",
+            //     position, transform.translation
+            // );
         }
     }
 }
@@ -270,14 +249,16 @@ fn tower_shoot(
           // info!("trying to shoot at {:?}", neighbor);
           if let Ok((mut hp, transform_target)) = query_hp.get_mut(entity) {
             
-            info!("shooting at {:?} hp: {}", entity, hp.hp_current);
+            // info!("shooting at {:?} hp: {}", entity, hp.hp_current);
             GlowLine::create(&mut commands, &mut meshes, &mut materials,transform.translation.clone(), transform_target.translation.clone(), 0.1);
             shoot.notify_shoot();
 
             // 
             if hp.damage_is_dead(shoot.damage) {
-              info!("Entity is dead! {:?}", entity);
+            //  info!("Entity is dead! {:?}", entity);
             }
+
+            break; // we have  been shooting, can not shoot a second time...
           }
 
           // we have a neighbor!
@@ -289,6 +270,20 @@ fn tower_shoot(
     }
 }
 
+
+fn enemy_spawner(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut meshes:ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut images: ResMut<Assets<Image>>,
+    mut game: ResMut<Game>,
+    mut material_pool: ResMut<MaterialPool>
+) {
+    if game.get_entity(0, 0) == None {
+        spawn_enemy(&mut meshes, &mut materials, &mut material_pool,  &mut images, &mut game, &mut commands, 0, 0);
+    }
+}
 pub fn run_hex2d_demo() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -298,14 +293,18 @@ pub fn run_hex2d_demo() {
             ..Default::default()
         })
         .insert_resource(ImageSettings::default_nearest())
+        .insert_resource(MaterialPool::new())
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
+        .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        // .add_plugin(bevy_screen_diags::ScreenDiagsPlugin)
         .add_startup_system(setup)
         .add_system(mouse_button_input)
         .add_system(move_entites)
         .add_system(tower_shoot)
         .add_system(glow_line_system)
+        .add_system(enemy_spawner)
         // .add_system(debug_resources_system)
         .run();
 }

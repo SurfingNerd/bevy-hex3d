@@ -74,28 +74,20 @@ impl GlowLine {
         let point_edge1 = dir1 * (radius * 0.5);
         let point_edge2 = dir2 * (radius * 0.5);
 
-        info!("main vector: {:?} l:{}", main_vector, main_vector.length());
-        info!(
-            "dir1: {:?} l:{} a {}: ",
-            dir1,
-            dir1.length(),
-            dir1.angle_between(direction)
-        );
-        info!(
-            "dir2: {:?} l:{} a: {}",
-            dir2,
-            dir2.length(),
-            dir2.angle_between(direction)
-        );
-        // let dir1 = direction * rotate1;
+        // info!("main vector: {:?} l:{}", main_vector, main_vector.length());
+        // info!(
+        //     "dir1: {:?} l:{} a {}: ",
+        //     dir1,
+        //     dir1.length(),
+        //     dir1.angle_between(direction)
+        // );
+        // info!(
+        //     "dir2: {:?} l:{} a: {}",
+        //     dir2,
+        //     dir2.length(),
+        //     dir2.angle_between(direction)
+        // );
 
-        //let rotate1 = Rotation::from_rotation_x(1.);
-
-        //let dir_right_angle_1 = Vec3::new(direction.y, direction.x, direction.z);
-        // let dir_right_angle_2 = Vec3::new(-direction.y, direction.x, direction.z);
-
-        // let rhs = Rhs::new();
-        // direction.mul(rhs)
         let mut positions: Vec<[f32; 3]> = Vec::with_capacity(4);
 
         positions.push(point_origin.to_array());

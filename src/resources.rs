@@ -44,7 +44,7 @@ impl Game {
         match existing {
             Some(existing) => panic!("Entity already set!") ,
             None => {
-                info!("setting entity {} {}: {:?}",x, y, entity);
+                // info!("setting entity {} {}: {:?}",x, y, entity);
                 self.entities[x as usize][y as usize] = Some(entity);
             }
         }
