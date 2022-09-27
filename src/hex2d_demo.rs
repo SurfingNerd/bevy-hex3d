@@ -1,4 +1,6 @@
 use std::default::{Default, self};
+use bevy_inspector_egui::{WorldInspectorPlugin};
+
 
 use bevy::{
     log,
@@ -278,6 +280,7 @@ fn enemy_spawner(
         spawn_enemy(&mut meshes, &mut materials, &mut material_pool,  &mut images, &mut game, &mut commands, 0, 0);
     }
 }
+
 pub fn run_hex2d_demo() {
     App::new()
         .insert_resource(WindowDescriptor {
@@ -292,6 +295,7 @@ pub fn run_hex2d_demo() {
         .add_plugin(PlayerPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(WorldInspectorPlugin::new())   
         // .add_plugin(bevy_screen_diags::ScreenDiagsPlugin)
         .add_startup_system(setup)
         .add_system(mouse_button_input)
@@ -299,6 +303,6 @@ pub fn run_hex2d_demo() {
         .add_system(tower_shoot)
         .add_system(glow_line_system)
         .add_system(enemy_spawner)
-        // .add_system(debug_resources_system)
+         // .add_system(debug_resources_system)
         .run();
 }
