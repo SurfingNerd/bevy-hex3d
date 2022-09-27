@@ -136,7 +136,7 @@ impl GlowLine {
                 blue: 1.,
                 alpha: 0.5,
             },
-            emissive: bevy::prelude::Color::rgb(1., 1., 1.),
+            emissive: bevy::prelude::Color::rgb(100., 100., 100.),
             alpha_mode: AlphaMode::Blend,
             ..Default::default()
         };
@@ -157,21 +157,21 @@ impl GlowLine {
             .insert(GlowLine { time_to_live: 0.1 })
             .id();
 
-            let spot_location = start + direction * 0.1;
+//            let spot_location = start + direction * 0.1;
 
-            commands.spawn_bundle(SpotLightBundle {
-                spot_light: SpotLight {
-                    intensity: 10000.0,
-                    range: 1.5,
-                    shadows_enabled: false,
-                    outer_angle: 0.05,
-                    inner_angle: 0.02,
-                    ..Default::default()
-                },
-                transform: Transform::from_xyz(spot_location.x, spot_location.y, spot_location.z).looking_at(end, Vec3::Y),
-                ..Default::default()
-            })
-            .insert(GlowLine { time_to_live: 0.1 });
+            // commands.spawn_bundle(SpotLightBundle {
+            //     spot_light: SpotLight {
+            //         intensity: 10000.0,
+            //         range: 1.5,
+            //         shadows_enabled: false,
+            //         outer_angle: 0.05,
+            //         inner_angle: 0.02,
+            //         ..Default::default()
+            //     },
+            //     transform: Transform::from_xyz(spot_location.x, spot_location.y, spot_location.z).looking_at(end, Vec3::Y),
+            //     ..Default::default()
+            // })
+            // .insert(GlowLine { time_to_live: 0.1 });
 
 
         return id;
