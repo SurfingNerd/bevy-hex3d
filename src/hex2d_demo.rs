@@ -42,37 +42,29 @@ fn setup(
     mut movement_settings: ResMut<MovementSettings>,
     asset_server: Res<AssetServer>,
 ) {
-    let mut game = Game::new(50,50);
+    let mut game = Game::new(100,100);
+    let max_tower_x = 3;
+    let max_tower_y = 3;
 
-    //info!("movement speed: {}", movement_settings.speed);
-    movement_settings.speed = 3.;
+    movement_settings.speed = 30.;
 
 
     // materials
     let texture_handle: Handle<Image> = asset_server.load("wood_pointy_top.png");
 
     //let into : Image = Image.
-
     // let sprite = Sprite
-
     // let texture_atlas = TextureAtlas::from_grid(texture_handle.clone(), Vec2::new(128.0, 128.0), 4, 3);
 
     // info!("atlas {:?}", texture_atlas.texture_handles);
 
-    let texture_material = materials.add(StandardMaterial {
-        base_color_texture: Some(texture_handle),
-        alpha_mode: AlphaMode::Opaque,
-        ..Default::default()
-    });
-    // let texture = texture_atlas.textures[0];
-
-    //let quat = bevy::math::Quat{size: Vec2 {x: -1.0, y: 0.0}, flip: false};
-    // let quat = bevy::math::Quat::from_rotation_x(std::f32::consts::PI * 1.50);
-
-    // let hex_mesh = meshes.add(Hexagon3D::default().into());
-
+    // let texture_material = materials.add(StandardMaterial {
+    //     base_color_texture: Some(texture_handle),
+    //     alpha_mode: AlphaMode::Opaque,
+    //     ..Default::default()
+    // });
+ 
     let mut hexes: Vec<Hexagon3D> = vec![];
-
     
     // for (i, shape) in shapes.into_iter().enumerate() {
     for x in 0..game.width {
@@ -130,8 +122,10 @@ fn setup(
         ..Default::default()
     });
     
-    for x in 1..game.height - 1 {
-        for y in 1..game.width - 1 {
+    
+    
+    for x in 1..std::cmp::min(max_tower_x, game.height) - 1 {
+        for y in 1..std::cmp::min(max_tower_y, game.width) - 1 {
             if x % 2 == 0 && y % 2 == 0 {
                 spawn_tower(&mut meshes, &mut materials, &mut game, &mut commands,  x, y);
             }
