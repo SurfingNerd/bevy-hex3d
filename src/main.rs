@@ -12,6 +12,7 @@ mod textures;
 mod materials;
 mod pools;
 mod hello_plugin;
+mod playground;
 // use crate::map::TiledMapPlugin;
 
 use hex2d_demo::run_hex2d_demo;

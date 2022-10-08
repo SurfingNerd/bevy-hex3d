@@ -1,13 +1,12 @@
 use std::{
     f32::consts::PI,
-    ops::{Index, Mul},
 };
 
 use bevy::{
     core::Zeroable,
     prelude::{
-        info, shape::Quad, AlphaMode, Assets, Commands, Component, Entity, Handle, Mesh, PbrBundle,
-        Query, Res, ResMut, StandardMaterial, Transform, Vec2, Vec3, PointLightBundle, PointLight, SpotLightBundle, SpotLight,
+        AlphaMode, Assets, Commands, Component, Entity, Mesh, PbrBundle,
+        Query, Res, ResMut, StandardMaterial, Transform, Vec3,
     },
     render::{mesh::Indices, render_resource::PrimitiveTopology},
     time::Time,

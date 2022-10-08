@@ -19,7 +19,7 @@ impl MaterialRegistry {
   pub fn get_or_create(&mut self, assets: &mut ResMut<Assets<StandardMaterial>>, create: fn(&mut ResMut<Assets<StandardMaterial>>) -> Handle<StandardMaterial>) -> Handle<StandardMaterial> {
 
     let address = create as usize;
-    info!("material at: {}", address);
+    // info!("material at: {}", address);
 
     if let Some(result) = self.current_handles.get(&address) {
       return result.as_weak(); // not sure if i should return as_weak() here or just a clone ?

@@ -4,24 +4,15 @@ use bevy_inspector_egui::{WorldInspectorPlugin};
 
 use bevy::{
     log,
-    prelude::{
-        info,
-        shape::{self, Cube, Quad},
-        AlphaMode, App, AssetServer, Assets, Color, Commands, Component, Entity, Handle, Image,
-        Input, KeyCode, Mesh, MouseButton, PbrBundle, PointLight, PointLightBundle, Query, Res,
-        ResMut, StandardMaterial, Transform, Vec2, Vec3, World,
-    },
+    prelude::*,
     render::{
-        render_resource::{Extent3d, TextureDimension, TextureFormat},
-        texture::ImageSettings,
+        texture::ImageSettings, primitives::Frustum,
     },
-    sprite::{Sprite, TextureAtlas},
     window::{WindowDescriptor, Windows},
-    DefaultPlugins, diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin}, ecs::world, time::Time,
+    DefaultPlugins, diagnostic::*, time::Time,
 };
 
-use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::{spawn_tower, spawn_enemy}, textures::uv_debug_texture, pools::MaterialRegistry};
-use crate::{hexagon::Hexagon3D};
+use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::{spawn_tower, spawn_enemy}, textures::uv_debug_texture, pools::MaterialRegistry, playground::PlaygroundPlugin};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
 const X_EXTENT: f32 = 2.;
@@ -35,6 +26,7 @@ struct GroundTile {
 }
 
 
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -44,13 +36,14 @@ fn setup(
     mut movement_settings: ResMut<MovementSettings>,
     asset_server: Res<AssetServer>,
 ) {
-    let mut game = Game::new(100,100);
-    let max_tower_x = 3;
-    let max_tower_y = 3;
+    let mut game = Game::new(500,500);
+    let max_tower_x = 20;
+    let max_tower_y = 20;
 
     movement_settings.speed = 30.;
 
-
+    
+    
     // materials
     let texture_handle: Handle<Image> = asset_server.load("wood_pointy_top.png");
 
@@ -66,62 +59,63 @@ fn setup(
     //     ..Default::default()
     // });
  
-    let mut hexes: Vec<Hexagon3D> = vec![];
+    // let heighmap = images.get(&heighmap);  
     
-    // for (i, shape) in shapes.into_iter().enumerate() {
-    for x in 0..game.width {
-        for y in 0..game.height {
-            let c = hex2d::Coordinate::new(x, y);
-            let (x_pixel, y_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
-            // info!("pixel x {} y {} ", x_pixel, y_pixel);
-            let hex = Hexagon3D {
-                diameter: 1.,
-                height: 0.,
-                x: x_pixel,
-                y: 0.,
-                z: y_pixel,
-            };
-
-            hexes.push(hex);
-        }
-    }
-
-    let mesh = Hexagon3D::create_mesh_for_hexes(&hexes);
-    let mesh_handle = meshes.add(mesh);
-    
-    let mat2 = materials.add(
-        StandardMaterial {
-            base_color: Color::rgb(123.0 / 255., 130. / 255., 78. / 255.),
-            metallic: 0.8,
-            reflectance: 0.95,
-            perceptual_roughness: 0.9,
-            
-            ..Default::default()
-        }
-    );
-
-    commands.spawn_bundle(PbrBundle {
-        mesh: mesh_handle,
-        material: mat2.clone(),
-        transform: Transform {
-            translation: Vec3::new(0., 0., 0.),
-            // rotation: quat.clone(),
-            ..Default::default()
-        },
-        ..Default::default()
-    });
     // .insert(GroundTile {x , y});
     // .insert(Shape);
-
+    let color_sun = Color::rgb(0.976, 0.685, 0.04);
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
-            intensity: 4000.0,
+            color: color_sun,
+            intensity: 400000.0,
+            range: 1000.,
+            shadows_enabled: false,
+            ..Default::default()
+        },
+        transform: Transform::from_xyz(160.0, 64.0, -222.0),
+        ..Default::default()
+    });
+
+    
+
+    // Snow Top
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            color: Color::rgb(0.80,0.8,0.8),
+            intensity: 40000.0,
             range: 10000.,
             shadows_enabled: false,
             ..Default::default()
         },
-        transform: Transform::from_xyz(8.0, 16.0, 8.0),
+        transform: Transform::from_xyz(236.0, 137.0, -180.0),
         ..Default::default()
+    });
+
+    const HALF_SIZE: f32 = 1000.0;
+    //let skyblue = Color::rgb(0.5294, 0.878, 0.9216);
+    let skyblue_light = Color::rgb(0.95, 0.96, 0.99916);
+    commands.spawn_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            color: skyblue_light,
+            // Configure the projection to better fit the scene
+            shadow_projection: OrthographicProjection {
+                left: -HALF_SIZE,
+                right: HALF_SIZE,
+                bottom: -HALF_SIZE,
+                top: HALF_SIZE,
+                near: -10.0 * HALF_SIZE,
+                far: 10.0 * HALF_SIZE,
+                ..default()
+            },
+            shadows_enabled: false,
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0.0, 2.0, 0.0),
+            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+            ..default()
+        },
+        ..default()
     });
     
     
@@ -281,7 +275,13 @@ fn enemy_spawner(
     }
 }
 
+
+
 pub fn run_hex2d_demo() {
+
+    let game = Game::new(700, 700);
+
+
     App::new()
         .insert_resource(WindowDescriptor {
             width: 1270.0,
@@ -291,12 +291,15 @@ pub fn run_hex2d_demo() {
         })
         .insert_resource(ImageSettings::default_nearest())
         .insert_resource(MaterialRegistry::new())
+        .insert_resource(game)
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(PlaygroundPlugin::new())
+        // .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugin(WorldInspectorPlugin::new())   
         // .add_plugin(bevy_screen_diags::ScreenDiagsPlugin)
+        //.add_startup_system(load_heighmap_startup_system)
         .add_startup_system(setup)
         .add_system(mouse_button_input)
         .add_system(move_entites)

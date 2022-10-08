@@ -5,7 +5,7 @@ use bevy::prelude::{
 
 use crate::{
     components::{PositionComponent, ShootComponent, MoveComponent, HPComponent},
-    resources::Game, textures::{uv_debug_texture, color_texture}, materials::get_color_material, pools::MaterialRegistry,
+    resources::Game, materials::get_color_material, pools::MaterialRegistry,
 };
 
 // pub fn monster_spawner() {
