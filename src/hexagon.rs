@@ -58,30 +58,42 @@ impl Hexagon3D {
 
     }
 
+    pub fn get_spike_x(&self, spike_num: f32) -> f32 {
+      return (spike_num * 2. * PI / 6.).cos() * (self.diameter * 0.5) + self.x;
+    }
+
+    pub fn get_spike_z(&self, spike_num: f32) -> f32 {
+      return (spike_num * 2. * PI / 6.).sin() * (self.diameter * 0.5) + self.z;
+    }
+
+    pub fn get_spike_x_uv(&self, spike_num: f32) -> f32 {
+      return (spike_num * 2. * PI / 6.).cos() * self.diameter * 0.5 + 0.5;
+    }
+
+    pub fn get_spike_z_uv(&self, spike_num: f32) -> f32 {
+      return (spike_num * 2. * PI / 6.).sin() * self.diameter * 0.5 + 0.5;
+    }
+
+    //
+    pub fn get_spike(&self, spike_num: f32) -> ([f32;3],[f32;3],[f32;2]) {
+      // does the center (spike_num 0) has UV 0.5, 0.5 ?
+
+      return (
+        [self.get_spike_x(spike_num), self.y, self.get_spike_z(spike_num)],
+         [0., 1., 0.], 
+         [self.get_spike_x_uv(spike_num), self.get_spike_z_uv(spike_num)]);
+    }
+
     /// adds mesh artifacts to the provided arrays.
     pub fn get_mesh_artifacts(&self, positions: &mut Vec<[f32;3]>, normals: &mut Vec<[f32;3]>, uvs: &mut Vec<[f32;2]>, indeces: &mut Indices) {
       
-        let x = self.x;
-        let y = self.y;
-        let z = self.z;
         let center = ([self.x, self.y, self.z], [0., 1., 0.], [0.5, 0.5]);
-
-        let radius = self.diameter / 2.0;
-        
-        let x = |root: f32| (root * 2. * PI / 6.).cos() * radius + x;
-        let z = |root: f32| (root * 2. * PI / 6.).sin() * radius + z;
-
-        let x_uv = |root: f32| ((root * 2. * PI / 6.).cos() * radius + 0.5);
-        let y_uv = |root: f32| ((root * 2. * PI / 6.).sin() * radius + 0.5);
-
-        
-        //                                                x              y      z     n-x n-y n-z  uv-x uvy
-        let spike0 = ([x(0.), y, z(0.)], [0., 1., 0.], [x_uv(0.5), y_uv(0.5)]);
-        let spike1 = ([x(1.), y, z(1.)], [0., 1., 0.], [x_uv(1.), y_uv(1.)]);
-        let spike2 = ([x(2.), y, z(2.)], [0., 1., 0.], [x_uv(2.), y_uv(2.)]);
-        let spike3 = ([x(3.), y, z(3.)], [0., 1., 0.], [x_uv(3.), y_uv(3.)]);
-        let spike4 = ([x(4.), y, z(4.)], [0., 1., 0.], [x_uv(4.), y_uv(4.)]);
-        let spike5 = ([x(5.), y, z(5.)], [0., 1., 0.], [x_uv(5.), y_uv(5.)]);
+        let spike0 = self.get_spike(0.);
+        let spike1 = self.get_spike(1.);
+        let spike2 = self.get_spike(2.);
+        let spike3 = self.get_spike(3.);
+        let spike4 = self.get_spike(4.);
+        let spike5 = self.get_spike(5.);
         let vertices = [center, spike0, spike1, spike2, spike3, spike4, spike5];
       
       let mut ic: u32 = 0; // indeces count.
