@@ -24,7 +24,8 @@ impl Hexagon3D {
         }
     }
 
-    pub fn create_mesh_for_hexes(hexes: &Vec<Hexagon3D>) -> Mesh{
+
+    pub fn create_mesh_for_hexes(hexes: &Vec<Vec<Hexagon3D>> ) -> Mesh{
 
         // while hexes
       //Some(hex) = hexes.next();
@@ -32,16 +33,40 @@ impl Hexagon3D {
 
       // positions: &mut Vec<[f32;3]>, normals: &mut Vec<[f32;3]>, uvs: &mut Vec<[f32;2]>
       //let iter = hexes.iter();
-      let count_of_hexes = hexes.len();
+      let count_of_hexes = hexes.len() * hexes[0].len();
       let mut positions: Vec<[f32;3]> = Vec::with_capacity(6 * count_of_hexes);
       let mut normals: Vec<[f32;3]> = Vec::with_capacity(6 * count_of_hexes);
       let mut uvs: Vec<[f32;2]> = Vec::with_capacity(6 * count_of_hexes);
       
       let mut indices = Indices::U32(vec![]);
 
-      for hex in hexes.into_iter() { 
-        hex.get_mesh_artifacts(&mut positions, &mut normals, &mut uvs, &mut indices);
+      for hex_x in hexes.into_iter() {
+        for hex in hex_x.into_iter() { 
+          hex.get_mesh_artifacts(&mut positions, &mut normals, &mut uvs, &mut indices);
+        }
       }
+
+      // build mesh that connects every hex to it's neighbours.
+
+      // iterate over all indexes of the 2D hex array, and connect them to their neighbours, if it is not already done
+      for x in 0..hexes.len() { 
+        for y in 0..hexes[x].len() { 
+          let hex = &hexes[x][y];
+          let index = x * hexes[x].len() + y;
+
+          // we connect to the rigth, top, and top reight neighbour
+          // we do not have to connecto to left, bottomleft, and bottom neighbours, because they will connect to us
+          
+
+
+          let c = hex2d::Coordinate::new(x as i32, y as i32);
+          let neighbours = c.neighbors();
+          
+          hex.connect_to_neighbour(neighbours[0], &hexes,&mut positions, &mut normals, &mut uvs, &mut indices);
+          // let neighbour1 = c + hex2d::Direction::XY;
+        }
+      }
+
 
       // sp.get_mesh_artifacts(0., 0., 0., &mut positions, &mut normals, &mut uvs, &mut indices);
       //   info!("pos: {:?}", positions);
@@ -141,6 +166,109 @@ impl Hexagon3D {
       }
       //mesh
     }
+
+    /// adds mesh artifacts to the provided arrays.
+    /// connects to the neighbour at the given coordinate, if it exists.
+    /// if the neighbour does not exist, it will not connect to it.
+    fn connect_to_neighbour(&self, neighbour: hex2d::Coordinate, hexes: &Vec<Vec<Hexagon3D>>, positions: &mut Vec<[f32; 3]>, normals: &mut Vec<[f32; 3]>, uvs: &mut Vec<[f32; 2]>, indices: &mut Indices) {
+
+      //check if neighbour is in bounds
+      if neighbour.x < 0 || neighbour.y < 0 || neighbour.x >= hexes.len() as i32 || neighbour.y >= hexes[neighbour.x as usize].len() as i32 {
+        return;
+      }
+
+      let n_hex = &hexes[neighbour.x as usize][neighbour.y as usize];
+      
+      // figure out if what edges we have to connect.
+      // we have to connect the edges that are between our hexagon and the neighbour hexagon.
+
+      // spike 0 is the center of the hexagon, so we do not have to connect it.
+
+      // spike 1 has to be connected with spike 4
+      // spike 2 has to be connected with spike 5
+
+      let spike1 = self.get_spike(4.);
+      let spike2 = self.get_spike(5.);
+      
+      let spike_neighbour1 = n_hex.get_spike(1.);
+      let spike_neighbour2 = n_hex.get_spike(2.);
+
+      //let vertices = [spike1, spike2, spike_neighbour4, spike_neighbour5];
+      
+      //positions.push(spike1.0);
+      let pos_origin: u32 = positions.len() as u32;
+      positions.push(spike1.0); // +0
+      positions.push(spike2.0); // +1
+      positions.push(spike_neighbour1.0); // +2
+      positions.push(spike_neighbour2.0); // +3
+
+      // uvs: just write dummy uvs for now.
+      uvs.push(spike1.2);
+      uvs.push(spike2.2);
+      uvs.push(spike_neighbour1.2);
+      uvs.push(spike_neighbour2.2);
+
+      // normals: calculate normals for the new vertices.
+      // for now, use some dummy normals that hopefully matches somehow.
+
+      normals.push([1.,0., 0.]);
+      normals.push([1.,0., 0.]);
+      normals.push([1.,0., 0.]);
+      normals.push([1.,0., 0.]);
+
+
+      match indices {
+        Indices::U32(vec) => {
+
+          let mut add = |i| vec.push( pos_origin + i );
+
+
+          //           /\          /\   
+          //         /    \0   2 /    \
+          //        |      |    |      |
+          //        |      |    |      |
+          //         \    /1   3 \    /
+          //           \/          \/
+
+          
+          // add vertice from first spike of self to first spike of neighbour
+          add(0);
+          add(1);
+          add(2);
+
+          add(3);
+          add(2);
+          add(1);
+
+          add(1);
+          add(2);
+          add(3);
+
+          add(2);
+          add(1);
+          add(0);
+
+
+          add(0);
+          add(1);
+          add(3);
+
+          add(3);
+          add(0);
+          add(1);
+
+          // add(3);
+          // add(2);
+          // add(1);
+
+
+          
+        },
+        _ => {}
+      }
+      
+
+    }
 }
 
 impl Default for Hexagon3D {
@@ -169,3 +297,6 @@ impl From<Hexagon3D> for Mesh {
       mesh
     }
 }
+
+
+

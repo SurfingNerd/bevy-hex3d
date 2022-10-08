@@ -39,7 +39,6 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 }
 
 
-
 // fn load_playground_resources(mut heighmap_cache: ResMut<HeightmapCache>, asset_server: Res<AssetServer>) {
 
 //   heighmap_cache.heightmap = asset_server.load("textures/heightmap.png");
@@ -101,10 +100,16 @@ fn setup_playground(
   // }
 
 
-  let mut hexes: Vec<Hexagon3D> = vec![];
+  //let mut hexes: Vec<Hexagon3D> = vec![];
+
+  // 2 dimensional array of hexagons
+  let mut hexes_2d: Vec<Vec<Hexagon3D>> = vec![];
+
   
   // for (i, shape) in shapes.into_iter().enumerate() {
   for x in 0..game.width {
+      let mut hexes_x: Vec<Hexagon3D> = vec![];
+      
       for y in 0..game.height {
           let c = hex2d::Coordinate::new(x, y);
           let (x_pixel, y_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
@@ -132,11 +137,14 @@ fn setup_playground(
               z: y_pixel,
           };
 
-          hexes.push(hex);
+          hexes_x.push(hex);
+
+          //hexes.push(hex);
       }
+      hexes_2d.push(hexes_x);
   }
 
-  let mesh = Hexagon3D::create_mesh_for_hexes(&hexes);
+  let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d);
   let mesh_handle = meshes.add(mesh);
   
   // green: 6d9862

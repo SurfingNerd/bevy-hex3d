@@ -37,8 +37,8 @@ fn setup(
     asset_server: Res<AssetServer>,
 ) {
     let mut game = Game::new(500,500);
-    let max_tower_x = 20;
-    let max_tower_y = 20;
+    let max_tower_x = 0;
+    let max_tower_y = 0;
 
     movement_settings.speed = 30.;
 
@@ -63,6 +63,9 @@ fn setup(
     
     // .insert(GroundTile {x , y});
     // .insert(Shape);
+
+
+
     let color_sun = Color::rgb(0.976, 0.685, 0.04);
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
@@ -76,6 +79,7 @@ fn setup(
         ..Default::default()
     });
 
+    // Grass light
     
 
     // Snow Top
@@ -279,7 +283,8 @@ fn enemy_spawner(
 
 pub fn run_hex2d_demo() {
 
-    let game = Game::new(700, 700);
+    //let game = Game::new(700, 700);
+    let game = Game::new(10, 10);
 
 
     App::new()
@@ -305,7 +310,7 @@ pub fn run_hex2d_demo() {
         .add_system(move_entites)
         .add_system(tower_shoot)
         .add_system(glow_line_system)
-        .add_system(enemy_spawner)
+        //.add_system(enemy_spawner)
          // .add_system(debug_resources_system)
         .run();
 }
