@@ -34,6 +34,9 @@ impl Game {
     }
 
     pub fn get_entity(&self, x: i32, y: i32) -> Option<Entity> {
+        if x < 0 || y < 0 || x >= self.width || y >= self.height {
+            return Option::None;
+        }
         self.entities[x as usize][y as usize]
     }
 
