@@ -124,42 +124,15 @@ fn setup(
     //     ..default()
     // });
 
-    // spawn a new blue pointlight at the origin of the world a little bit elevated
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            color: Color::rgb(0.3,0.3,0.99),
-            intensity: 4000000.0,
-            range: 100000.,
-            shadows_enabled: false,
-            ..Default::default()
-        },
-        transform: Transform::from_xyz(5.0, 15.0, -5.0),
-        ..Default::default()
-    });
 
-
-    // spawn a new red pointlight at the origin of the world a little bit elevated
-    // outside of game area so the wrong normals get illuminated
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            color: Color::rgb(0.99,0.3,0.3),
-            intensity: 4000000.0,
-            range: 100000.,
-            shadows_enabled: false,
-            ..Default::default()
-        },
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
-        ..Default::default()
-    });
-
-    // spawn red cube for location debug purpose.
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
-        material: materials.add(Color::rgb(0.99,0.3,0.3).into()),
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
-        ..Default::default()
-    }); 
-
+    // spawn a red pointlight top outside of the game.
+    spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.99,0.3,0.3), Transform::from_xyz(5.0, 5.0, 5.0));
+    
+     // spawn a blue pointlight at the origin of the world a little bit elevated
+    spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.3,0.3,0.99), Transform::from_xyz(5.0, 15.0, -5.0));
+    
+    // spawn a green pointlight left outside of the world
+    spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.1,0.99,0.1), Transform::from_xyz(-10.0, 13.0, -10.0));
     
     //directional sun light with 45 degree angle
     commands.spawn_bundle(DirectionalLightBundle {
@@ -199,6 +172,34 @@ fn setup(
     }
 
     spawn_enemy(&mut meshes, &mut materials, &mut materials_pool, &mut images, &mut game.as_mut(), &mut commands, 0, 0);
+
+
+}
+
+fn spawn_debug_light(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>, color: Color, transform: Transform) {
+    
+    // spawn a new red pointlight at the origin of the world a little bit elevated
+    // outside of game area so the wrong normals get illuminated
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            color,
+            intensity: 4000000.0,
+            range: 100000.,
+            shadows_enabled: false,
+            ..Default::default()
+        },
+        transform,
+        ..Default::default()
+    });
+
+    // spawn red ball for location debug purpose.
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Icosphere { radius: 0.1, subdivisions: 4 })),
+        material: materials.add(color.into()),
+        transform: Transform::from_xyz(5.0, 5.0, 5.0),
+        ..Default::default()
+    }); 
 
 
 }
