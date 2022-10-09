@@ -34,9 +34,10 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut materials_pool: ResMut<MaterialRegistry>,
     mut movement_settings: ResMut<MovementSettings>,
+    mut game: ResMut<Game>,
     asset_server: Res<AssetServer>,
 ) {
-    let mut game = Game::new(500,500);
+    // let mut game = Game::new(500,500);
     let max_tower_x = 0;
     let max_tower_y = 0;
 
@@ -67,40 +68,41 @@ fn setup(
 
 
     let color_sun = Color::rgb(0.976, 0.685, 0.04);
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            color: color_sun,
-            intensity: 400000.0,
-            range: 1000.,
-            shadows_enabled: false,
-            ..Default::default()
-        },
-        transform: Transform::from_xyz(160.0, 64.0, -222.0),
-        ..Default::default()
-    });
+    // commands.spawn_bundle(PointLightBundle {
+    //     point_light: PointLight {
+    //         color: color_sun,
+    //         intensity: 400000.0,
+    //         range: 1000.,
+    //         shadows_enabled: false,
+    //         ..Default::default()
+    //     },
+    //     transform: Transform::from_xyz(160.0, 64.0, -222.0),
+    //     ..Default::default()
+    // });
 
     // Grass light
     
 
     // Snow Top
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            color: Color::rgb(0.80,0.8,0.8),
-            intensity: 40000.0,
-            range: 10000.,
-            shadows_enabled: false,
-            ..Default::default()
-        },
-        transform: Transform::from_xyz(236.0, 137.0, -180.0),
-        ..Default::default()
-    });
+    // commands.spawn_bundle(PointLightBundle {
+    //     point_light: PointLight {
+    //         color: Color::rgb(0.80,0.8,0.8),
+    //         intensity: 4000000.0,
+    //         range: 100000.,
+    //         shadows_enabled: false,
+    //         ..Default::default()
+    //     },
+    //     transform: Transform::from_xyz(236.0, 137.0, -180.0),
+    //     ..Default::default()
+    // });
 
     const HALF_SIZE: f32 = 1000.0;
-    //let skyblue = Color::rgb(0.5294, 0.878, 0.9216);
+    let skyblue = Color::rgb(0.5294, 0.878, 0.9216);
     let skyblue_light = Color::rgb(0.95, 0.96, 0.99916);
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: skyblue_light,
+            illuminance: 1000.0,
             // Configure the projection to better fit the scene
             shadow_projection: OrthographicProjection {
                 left: -HALF_SIZE,
@@ -122,19 +124,45 @@ fn setup(
         ..default()
     });
     
+    //directional sun light with 45 degree angle
+    commands.spawn_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            color: color_sun,
+            illuminance: 10000000000.0,
+            // Configure the projection to better fit the scene
+            shadow_projection: OrthographicProjection {
+                left: -HALF_SIZE,
+                right: HALF_SIZE,
+                bottom: -HALF_SIZE,
+                top: HALF_SIZE,
+                near: -10.0 * HALF_SIZE,
+                far: 10.0 * HALF_SIZE,
+                ..default()
+            },
+            shadows_enabled: false,
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0.0, 2.0, 0.0),
+            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_8),
+            ..default()
+        },
+        ..default()
+    }); 
     
+
+
     
     for x in 1..std::cmp::min(max_tower_x, game.height) - 1 {
         for y in 1..std::cmp::min(max_tower_y, game.width) - 1 {
             if x % 2 == 0 && y % 2 == 0 {
-                spawn_tower(&mut meshes, &mut materials, &mut game, &mut commands,  x, y);
+                spawn_tower(&mut meshes, &mut materials, &mut game.as_mut(), &mut commands,  x, y);
             }
         }
     }
 
-    spawn_enemy(&mut meshes, &mut materials, &mut materials_pool, &mut images, &mut game, &mut commands, 0, 0);
+    spawn_enemy(&mut meshes, &mut materials, &mut materials_pool, &mut images, &mut game.as_mut(), &mut commands, 0, 0);
 
-    commands.insert_resource(game);
 
 }
 
@@ -284,7 +312,7 @@ fn enemy_spawner(
 pub fn run_hex2d_demo() {
 
     //let game = Game::new(700, 700);
-    let game = Game::new(10, 10);
+    let game = Game::new(700, 700);
 
 
     App::new()
