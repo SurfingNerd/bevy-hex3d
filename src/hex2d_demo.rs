@@ -41,7 +41,7 @@ fn setup(
     let max_tower_x = 0;
     let max_tower_y = 0;
 
-    movement_settings.speed = 30.;
+    movement_settings.speed = 5.;
 
     
     
@@ -97,32 +97,69 @@ fn setup(
     // });
 
     const HALF_SIZE: f32 = 1000.0;
-    let skyblue = Color::rgb(0.5294, 0.878, 0.9216);
-    let skyblue_light = Color::rgb(0.95, 0.96, 0.99916);
-    commands.spawn_bundle(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            color: skyblue_light,
-            illuminance: 1000.0,
-            // Configure the projection to better fit the scene
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
-                ..default()
-            },
+    // let skyblue = Color::rgb(0.5294, 0.878, 0.9216);
+    // let skyblue_light = Color::rgb(0.95, 0.96, 0.99916);
+    // commands.spawn_bundle(DirectionalLightBundle {
+    //     directional_light: DirectionalLight {
+    //         color: skyblue_light,
+    //         illuminance: 1000.0,
+    //         // Configure the projection to better fit the scene
+    //         shadow_projection: OrthographicProjection {
+    //             left: -HALF_SIZE,
+    //             right: HALF_SIZE,
+    //             bottom: -HALF_SIZE,
+    //             top: HALF_SIZE,
+    //             near: -10.0 * HALF_SIZE,
+    //             far: 10.0 * HALF_SIZE,
+    //             ..default()
+    //         },
+    //         shadows_enabled: false,
+    //         ..default()
+    //     },
+    //     transform: Transform {
+    //         translation: Vec3::new(0.0, 2.0, 0.0),
+    //         rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+    //         ..default()
+    //     },
+    //     ..default()
+    // });
+
+    // spawn a new blue pointlight at the origin of the world a little bit elevated
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            color: Color::rgb(0.3,0.3,0.99),
+            intensity: 4000000.0,
+            range: 100000.,
             shadows_enabled: false,
-            ..default()
+            ..Default::default()
         },
-        transform: Transform {
-            translation: Vec3::new(0.0, 2.0, 0.0),
-            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
-            ..default()
-        },
-        ..default()
+        transform: Transform::from_xyz(5.0, 15.0, -5.0),
+        ..Default::default()
     });
+
+
+    // spawn a new red pointlight at the origin of the world a little bit elevated
+    // outside of game area so the wrong normals get illuminated
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            color: Color::rgb(0.99,0.3,0.3),
+            intensity: 4000000.0,
+            range: 100000.,
+            shadows_enabled: false,
+            ..Default::default()
+        },
+        transform: Transform::from_xyz(5.0, 5.0, 5.0),
+        ..Default::default()
+    });
+
+    // spawn red cube for location debug purpose.
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
+        material: materials.add(Color::rgb(0.99,0.3,0.3).into()),
+        transform: Transform::from_xyz(5.0, 5.0, 5.0),
+        ..Default::default()
+    }); 
+
     
     //directional sun light with 45 degree angle
     commands.spawn_bundle(DirectionalLightBundle {
@@ -225,6 +262,13 @@ fn move_entites(
             } else {
               info!("nowhere to go ?!");
             }
+
+            // if the entity would move outside of the game, 
+            // we do not move and it just stays where it is.
+            if position.x >= game.height || position.y >= game.width {
+                // info!("reached the edge of the world.");
+                continue;
+            }
             
             let entity = game.delete_entity(old_x, old_y);
             game.set_entity(position.x, position.y, entity);
@@ -312,7 +356,7 @@ fn enemy_spawner(
 pub fn run_hex2d_demo() {
 
     //let game = Game::new(700, 700);
-    let game = Game::new(700, 700);
+    let game = Game::new(10, 10);
 
 
     App::new()
