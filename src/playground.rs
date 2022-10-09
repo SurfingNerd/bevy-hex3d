@@ -2,12 +2,11 @@ use std::{thread, time::Duration, fs};
 
 use bevy::{prelude::{Plugin, App, Handle, Image, Res, ResMut, AssetServer, Assets, Mesh, StandardMaterial, Color, Commands, PbrBundle, Transform, Vec3, info}, render::texture::{ImageType, CompressedImageFormats}};
 
-use crate::{hexagon::Hexagon3D, resources::Game};
+use crate::{hexagon::{Hexagon3D, Hexagon3DTexturing}, resources::Game};
 
 pub struct PlaygroundPlugin {
 
 }
-
 
 struct HeightmapCache {
   pub heightmap: Handle<Image>
@@ -83,10 +82,6 @@ fn setup_playground(
     }
   }
 
-  info!("235 178 should be white: {}", get_grayscale(&hm.data, 235, 178, hm.size().x as usize));
-  info!("240 32 should be gray: {}", get_grayscale(&hm.data, 240, 32, hm.size().x as usize));
-  info!("450 334 should be black: {}", get_grayscale(&hm.data, 450, 334, hm.size().x as usize));
-  
   // while !is_loaded {
   //   if let Some(heighmap) = images.get(&heightmap_cache.heightmap) {
   //     info!("heighmap: {:?}", heighmap);
@@ -144,16 +139,19 @@ fn setup_playground(
       hexes_2d.push(hexes_x);
   }
 
-  let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d);
+  let texturing = Hexagon3DTexturing::new_height_based_texturing(&asset_server);
+
+  let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
   let mesh_handle = meshes.add(mesh);
-  
+
   // green: 6d9862
   // yellow? // base_color: Color::rgb(123.0 / 255., 130. / 255., 78. / 255.),
   // green: base_color: Color::rgb(0.43, 0.596, 0.384),
   // stonegrey: base_color: Color::rgb(0.647, 0.627, 0.616),
   let mat2 = materials.add(
       StandardMaterial {
-          base_color: Color::rgb(0.647, 0.627, 0.616),
+          base_color_texture: Some(texturing.texture.clone()),
+          // base_color: Color::rgb(0.647, 0.627, 0.616),
           metallic: 0.12,
           reflectance: 0.01,
           perceptual_roughness: 0.9,
@@ -181,23 +179,6 @@ impl PlaygroundPlugin {
   pub fn new() -> Self {
     Self {}
   }
-
-
-  
-  fn process_heighmap(
-    heighmap: Res<HeightmapCache>,
-    images: ResMut<Assets<Image>>
-) {
-    if let Some(map) =  images.get(&heighmap.heightmap) {
-        info!("Heighmap found!" );
-    } else {
-        info!("Heighmap not found!" );
-    }
-    
-    // if let Some(heighmap) = heighmap.heighmap  {
-    //     info!("Heighmap found!", );
-    // }
-}
 
 }
 
