@@ -61,8 +61,23 @@ impl Hexagon3D {
 
           let c = hex2d::Coordinate::new(x as i32, y as i32);
           let neighbours = c.neighbors();
+
           
-          hex.connect_to_neighbour(neighbours[0], &hexes,&mut positions, &mut normals, &mut uvs, &mut indices);
+          
+          // right top spikes: 5-0
+          // right bottom spikes: 0-1
+          // bottom spikes: 1-2
+          // left bottom spikes: 2-3
+          // left top spikes: 3-4
+          // top spikes: 4-5
+
+          // top -> bottom connection
+          hex.connect_to_neighbour(neighbours[0], 4.,5.,1.,2., &hexes,&mut positions, &mut normals, &mut uvs, &mut indices);
+          // top right  -> bottom left connection.
+          hex.connect_to_neighbour(neighbours[1], 5.,0.,2.,3., &hexes,&mut positions, &mut normals, &mut uvs, &mut indices);
+          
+          // right bottom => top left connection
+          hex.connect_to_neighbour(neighbours[2], 0.,1.,3.,4., &hexes,&mut positions, &mut normals, &mut uvs, &mut indices);
           // let neighbour1 = c + hex2d::Direction::XY;
         }
       }
@@ -170,7 +185,7 @@ impl Hexagon3D {
     /// adds mesh artifacts to the provided arrays.
     /// connects to the neighbour at the given coordinate, if it exists.
     /// if the neighbour does not exist, it will not connect to it.
-    fn connect_to_neighbour(&self, neighbour: hex2d::Coordinate, hexes: &Vec<Vec<Hexagon3D>>, positions: &mut Vec<[f32; 3]>, normals: &mut Vec<[f32; 3]>, uvs: &mut Vec<[f32; 2]>, indices: &mut Indices) {
+    fn connect_to_neighbour(&self, neighbour: hex2d::Coordinate, spike_1: f32, spike_2: f32, n_spike_1: f32, n_spike_2: f32, hexes: &Vec<Vec<Hexagon3D>>, positions: &mut Vec<[f32; 3]>, normals: &mut Vec<[f32; 3]>, uvs: &mut Vec<[f32; 2]>, indices: &mut Indices) {
 
       //check if neighbour is in bounds
       if neighbour.x < 0 || neighbour.y < 0 || neighbour.x >= hexes.len() as i32 || neighbour.y >= hexes[neighbour.x as usize].len() as i32 {
@@ -187,11 +202,11 @@ impl Hexagon3D {
       // spike 1 has to be connected with spike 4
       // spike 2 has to be connected with spike 5
 
-      let spike1 = self.get_spike(4.);
-      let spike2 = self.get_spike(5.);
+      let spike1 = self.get_spike(spike_1);
+      let spike2 = self.get_spike(spike_2);
       
-      let spike_neighbour1 = n_hex.get_spike(1.);
-      let spike_neighbour2 = n_hex.get_spike(2.);
+      let spike_neighbour1 = n_hex.get_spike(n_spike_1);
+      let spike_neighbour2 = n_hex.get_spike(n_spike_2);
 
       //let vertices = [spike1, spike2, spike_neighbour4, spike_neighbour5];
       
