@@ -91,9 +91,12 @@ impl Hexagon3D {
 
       let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
       mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-      mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+      // mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
       mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
       mesh.set_indices(Some(indices));
+
+      mesh.duplicate_vertices();
+      mesh.compute_flat_normals();
       return mesh;
 
     }
@@ -218,10 +221,10 @@ impl Hexagon3D {
       positions.push(spike_neighbour2.0); // +3
 
       // uvs: just write dummy uvs for now.
-      uvs.push(spike1.2);
-      uvs.push(spike2.2);
-      uvs.push(spike_neighbour1.2);
-      uvs.push(spike_neighbour2.2);
+      uvs.push([0.0,0.0]);
+      uvs.push([10.0,10.0]);
+      uvs.push([0.0,0.0]);
+      uvs.push([10.0,10.0]);
 
       // normals: calculate normals for the new vertices.
       // for now, use some dummy normals that hopefully matches somehow.
@@ -251,29 +254,42 @@ impl Hexagon3D {
           add(1);
           add(2);
 
-          add(3);
-          add(2);
-          add(1);
+          // this normal points into the wrong direction
+          // add(1);
+          // add(3);
+          // add(2);
 
-          add(1);
-          add(2);
-          add(3);
+          // this way, the normal points into the right direction
+          // but it does not fill a square.
+          // add(2);
+          // add(3);
+          // add(1);
 
           add(2);
-          add(1);
+          add(3);
           add(0);
 
 
-          add(0);
-          add(1);
-          add(3);
+          // add(2);
+          // add(1);
+          // add(0);
 
-          add(3);
-          add(0);
-          add(1);
 
           // add(3);
           // add(2);
+          // add(1);
+
+          // add(1);
+          // add(2);
+          // add(3);
+
+
+          // add(0);
+          // add(1);
+          // add(3);
+
+          // add(3);
+          // add(0);
           // add(1);
 
 
