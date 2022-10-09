@@ -42,7 +42,7 @@ impl Hexagon3D {
 
       for hex_x in hexes.into_iter() {
         for hex in hex_x.into_iter() { 
-          hex.get_mesh_artifacts(&mut positions, &mut normals, &mut uvs, &mut indices);
+          hex.get_mesh_artifacts(&mut positions, &mut uvs, &mut indices);
         }
       }
 
@@ -118,19 +118,18 @@ impl Hexagon3D {
     }
 
     //
-    pub fn get_spike(&self, spike_num: f32) -> ([f32;3],[f32;3],[f32;2]) {
+    pub fn get_spike(&self, spike_num: f32) -> ([f32;3],[f32;2]) {
       // does the center (spike_num 0) has UV 0.5, 0.5 ?
 
       return (
         [self.get_spike_x(spike_num), self.y, self.get_spike_z(spike_num)],
-         [0., 1., 0.], 
          [self.get_spike_x_uv(spike_num), self.get_spike_z_uv(spike_num)]);
     }
 
     /// adds mesh artifacts to the provided arrays.
-    pub fn get_mesh_artifacts(&self, positions: &mut Vec<[f32;3]>, normals: &mut Vec<[f32;3]>, uvs: &mut Vec<[f32;2]>, indeces: &mut Indices) {
+    pub fn get_mesh_artifacts(&self, positions: &mut Vec<[f32;3]>, uvs: &mut Vec<[f32;2]>, indeces: &mut Indices) {
       
-        let center = ([self.x, self.y, self.z], [0., 1., 0.], [0.5, 0.5]);
+        let center = ([self.x, self.y, self.z], [0.5, 0.5]);
         let spike0 = self.get_spike(0.);
         let spike1 = self.get_spike(1.);
         let spike2 = self.get_spike(2.);
@@ -169,9 +168,8 @@ impl Hexagon3D {
         add(6);
         add(0);
 
-        for (position, normal, uv) in vertices.iter() {
+        for (position, uv) in vertices.iter() {
             positions.push(*position);
-            normals.push(*normal);
             // info!("uv: {:?} pos: {:?}", uv, position);
             uvs.push(*uv);
         }
@@ -313,17 +311,15 @@ impl From<Hexagon3D> for Mesh {
       
 
       let mut positions = Vec::with_capacity(6);
-      let mut normals = Vec::with_capacity(6);
       let mut uvs = Vec::with_capacity(6);
       
       let mut indices = Indices::U32(vec![]);
 
-      sp.get_mesh_artifacts(&mut positions, &mut normals, &mut uvs, &mut indices);
+      sp.get_mesh_artifacts(&mut positions, &mut uvs, &mut indices);
   
       let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
       mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-      mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-      // mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+      mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
       mesh.set_indices(Some(indices));
       mesh
     }
