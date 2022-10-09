@@ -98,7 +98,7 @@ fn setup(
 
     const HALF_SIZE: f32 = 1000.0;
     // let skyblue = Color::rgb(0.5294, 0.878, 0.9216);
-    // let skyblue_light = Color::rgb(0.95, 0.96, 0.99916);
+     let skyblue_light = Color::rgb(0.96, 0.96, 0.99916);
     // commands.spawn_bundle(DirectionalLightBundle {
     //     directional_light: DirectionalLight {
     //         color: skyblue_light,
@@ -125,16 +125,16 @@ fn setup(
     // });
 
 
-    // spawn a red pointlight top outside of the game.
-    spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.99,0.3,0.3), Transform::from_xyz(5.0, 5.0, 5.0));
+    // // spawn a red pointlight top outside of the game.
+    // spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.99,0.3,0.3), Transform::from_xyz(5.0, 5.0, 5.0));
     
-     // spawn a blue pointlight at the origin of the world a little bit elevated
-    spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.3,0.3,0.99), Transform::from_xyz(5.0, 15.0, -5.0));
+    //  // spawn a blue pointlight at the origin of the world a little bit elevated
+    // spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.3,0.3,0.99), Transform::from_xyz(5.0, 15.0, -5.0));
     
-    // spawn a green pointlight left outside of the world
-    spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.1,0.99,0.1), Transform::from_xyz(-10.0, 13.0, -10.0));
+    // // spawn a green pointlight left outside of the world
+    // spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.1,0.99,0.1), Transform::from_xyz(-10.0, 13.0, -10.0));
     
-    //directional sun light with 45 degree angle
+    // directional sun light with 45 degree angle
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: color_sun,
@@ -149,7 +149,7 @@ fn setup(
                 far: 10.0 * HALF_SIZE,
                 ..default()
             },
-            shadows_enabled: false,
+            shadows_enabled: true,
             ..default()
         },
         transform: Transform {
@@ -159,6 +159,12 @@ fn setup(
         },
         ..default()
     }); 
+
+    // spawn an ambient light to light up the scene in skyblue
+    commands.insert_resource(AmbientLight {
+        color: skyblue_light,
+        brightness: 10.,
+    });
     
 
 
@@ -278,7 +284,7 @@ fn move_entites(
 
             // update the UI Pos.
             let c = hex2d::Coordinate::new(position.x, position.y);
-            let (x_pixel, y_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
+            let (x_pixel, y_pixel) = c.to_pixel(game.hex_spacing);
             transform.translation.x = x_pixel;
             transform.translation.z = y_pixel;
             // transform.translation = Vec3:: { x_pixel, 0.01, y_pixel };

@@ -112,7 +112,7 @@ fn setup_playground(
       
       for y in 0..game.height {
           let c = hex2d::Coordinate::new(x, y);
-          let (x_pixel, y_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
+          let (x_pixel, y_pixel) = c.to_pixel(game.hex_spacing);
 
           let mut z_pixel = 0.;
 
@@ -170,6 +170,7 @@ fn setup_playground(
           // rotation: quat.clone(),
           ..Default::default()
       },
+      
       ..Default::default()
   });
 }

@@ -4,7 +4,8 @@ pub struct Game {
     pub current_tick: u32,
     pub width: i32,
     pub height: i32,
-    entities: Vec<Vec<Option<Entity>>>, //maybe refactor to sparse set - lets see if memory becomes a problem or not.
+    entities: Vec<Vec<Option<Entity>>>, //maybe refactor to sparse set - lets see if memory becomes a problem or not.,
+    pub hex_spacing: hex2d::Spacing
 }
 
 impl Game {
@@ -23,7 +24,8 @@ impl Game {
             width,
             height,
             entities,
-            current_tick: 0
+            current_tick: 0,
+            hex_spacing: hex2d::Spacing::FlatTop(0.50),
         }
 
         //return Game {width, height, };

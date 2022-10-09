@@ -33,7 +33,7 @@ pub fn spawn_enemy(
     let cube_mesh = meshes.add(cube.into());
 
     let coord = hex2d::Coordinate::new(x, y);
-    let (x_pixel, z_pixel) = coord.to_pixel(hex2d::Spacing::FlatTop(0.51));
+    let (x_pixel, z_pixel) = coord.to_pixel(game.hex_spacing);
 
     // let material = get_color_material(materials, Color::RED);
 
@@ -78,7 +78,7 @@ pub fn spawn_tower(
     let cube_mesh = meshes.add(cube.into());
 
     let c = hex2d::Coordinate::new(x, y);
-    let (x_pixel, z_pixel) = c.to_pixel(hex2d::Spacing::FlatTop(0.51));
+    let (x_pixel, z_pixel) = c.to_pixel(game.hex_spacing);
 
     let material = get_color_material(materials, Color::AQUAMARINE);
 
