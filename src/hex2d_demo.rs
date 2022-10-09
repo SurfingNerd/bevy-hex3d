@@ -37,11 +37,11 @@ fn setup(
     mut game: ResMut<Game>,
     asset_server: Res<AssetServer>,
 ) {
-    // let mut game = Game::new(500,500);
+
     let max_tower_x = 0;
     let max_tower_y = 0;
 
-    movement_settings.speed = 5.;
+    movement_settings.speed = 30.;
 
     
     
@@ -138,7 +138,7 @@ fn setup(
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: color_sun,
-            illuminance: 10000000000.0,
+            illuminance: 100000.0,
             // Configure the projection to better fit the scene
             shadow_projection: OrthographicProjection {
                 left: -HALF_SIZE,
@@ -197,7 +197,7 @@ fn spawn_debug_light(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>,
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Icosphere { radius: 0.1, subdivisions: 4 })),
         material: materials.add(color.into()),
-        transform: Transform::from_xyz(5.0, 5.0, 5.0),
+        transform,
         ..Default::default()
     }); 
 
@@ -357,7 +357,7 @@ fn enemy_spawner(
 pub fn run_hex2d_demo() {
 
     //let game = Game::new(700, 700);
-    let game = Game::new(10, 10);
+    let game = Game::new(700, 700);
 
 
     App::new()
