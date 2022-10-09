@@ -25,55 +25,64 @@ pub struct Hexagon3DTexturing {
     pub get_uv_connector: fn(
         hex: &Hexagon3D,
         neighbor: &Hexagon3D,
+        pos: &[[f32;3];4],
         spike1: f32,
         spike2: f32,
         n_spike1: f32,
         n_spike2: f32,
-    ) -> [f32; 2],
+    ) -> [[f32; 2]; 4],
 }
 
 fn get_uv_spike_height_based(hex: &Hexagon3D, spike_root: f32) -> [f32; 2] {
-    return [0.0, 0.0];
+    return [f32::clamp(hex.y * 0.01, 0.0, 1.0) , if spike_root < 0.0 { 0.5 } else { 0.0 }];
 }
+
+static mut lowest_y: f32 = f32::MAX;
+static mut highest_y: f32 = f32::MIN;
+
 
 fn get_uv_connector_height_based(
     hex: &Hexagon3D,
     neighbor: &Hexagon3D,
+    pos: &[[f32;3];4],
     spike1: f32,
     spike2: f32,
     n_spike1: f32,
     n_spike2: f32,
-) -> [f32; 2]  {
-    return [0.0, 0.0];
+) ->  [[f32; 2]; 4] {
+
+    let y = pos[0][1];
+    
+    unsafe {
+        
+        // store lowest and highest y
+        if y < lowest_y {
+            lowest_y = y;
+            info!("y: {} < {}", lowest_y, highest_y);
+        }
+
+        if y > highest_y {
+            highest_y = y;
+            info!("y: {} < {}", lowest_y, highest_y);
+        }
+    }
+
+    // make sure y is within the specified range
+    let uvx = f32::clamp(y * 0.01, 0.0, 1.0);
+
+
+    //info!("y: {}", pos[1]);
+    return [[uvx, 0.0],[uvx, 1.0],[uvx, 1.0],[uvx, 0.0]];
 }
 
 impl Hexagon3DTexturing {
     pub fn new_height_based_texturing(asset_server: &AssetServer) -> Self {
         Hexagon3DTexturing {
-            texture: asset_server.load("mountain_texture.png"),
+            texture: asset_server.load("mountain_texture_less_sat.png"),
             get_uv_spike: get_uv_spike_height_based,
             get_uv_connector: get_uv_connector_height_based,
         }
     }
-
-    // pub fn new(
-    //     texture: Handle<Image>,
-    //     get_uv_spike: fn(hex: &Hexagon3D, spike_root: f32) -> (f32, f32),
-    //     get_uv_connector: fn(
-    //         hex: &Hexagon3D,
-    //         neighbor: &Hexagon3D,
-    //         spike1: f32,
-    //         spike2: f32,
-    //         n_spike1: f32,
-    //         n_spike2: f32,
-    //     ) -> (f32, f32),
-    // ) -> Self {
-    //     Hexagon3DTexturing {
-    //         texture,
-    //         get_uv_spike,
-    //         get_uv_connector,
-    //     }
-    // }
 }
 
 impl Hexagon3D {
@@ -100,7 +109,7 @@ impl Hexagon3D {
         //let iter = hexes.iter();
         let count_of_hexes = hexes.len() * hexes[0].len();
         let mut positions: Vec<[f32; 3]> = Vec::with_capacity(6 * count_of_hexes);
-        let mut normals: Vec<[f32; 3]> = Vec::with_capacity(6 * count_of_hexes);
+        
         let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(6 * count_of_hexes);
 
         let mut indices = Indices::U32(vec![]);
@@ -134,6 +143,7 @@ impl Hexagon3D {
 
                 // top -> bottom connection
                 hex.connect_to_neighbour(
+                    &texturing,
                     neighbours[0],
                     4.,
                     5.,
@@ -141,12 +151,12 @@ impl Hexagon3D {
                     2.,
                     &hexes,
                     &mut positions,
-                    &mut normals,
                     &mut uvs,
                     &mut indices,
                 );
                 // top right  -> bottom left connection.
                 hex.connect_to_neighbour(
+                    &texturing,
                     neighbours[1],
                     5.,
                     0.,
@@ -154,13 +164,13 @@ impl Hexagon3D {
                     3.,
                     &hexes,
                     &mut positions,
-                    &mut normals,
                     &mut uvs,
                     &mut indices,
                 );
 
                 // right bottom => top left connection
                 hex.connect_to_neighbour(
+                    &texturing,
                     neighbours[2],
                     0.,
                     1.,
@@ -168,7 +178,6 @@ impl Hexagon3D {
                     4.,
                     &hexes,
                     &mut positions,
-                    &mut normals,
                     &mut uvs,
                     &mut indices,
                 );
@@ -232,7 +241,7 @@ impl Hexagon3D {
 
         let uv = |r| (texturing.get_uv_spike)(&self, r);
 
-        let center = ([self.x, self.y, self.z], [0.5, 0.5]);
+        let center = ([self.x, self.y, self.z], uv(-1.));
         let spike0 = (self.get_spike(0.), uv(0.));
         let spike1 = (self.get_spike(1.), uv(1.));
         let spike2 = (self.get_spike(2.), uv(2.));
@@ -290,6 +299,7 @@ impl Hexagon3D {
     /// if the neighbour does not exist, it will not connect to it.
     fn connect_to_neighbour(
         &self,
+        texturing: &Hexagon3DTexturing,
         neighbour: hex2d::Coordinate,
         spike_1: f32,
         spike_2: f32,
@@ -297,7 +307,6 @@ impl Hexagon3D {
         n_spike_2: f32,
         hexes: &Vec<Vec<Hexagon3D>>,
         positions: &mut Vec<[f32; 3]>,
-        normals: &mut Vec<[f32; 3]>,
         uvs: &mut Vec<[f32; 2]>,
         indices: &mut Indices,
     ) {
@@ -335,19 +344,33 @@ impl Hexagon3D {
         positions.push(spike_neighbour1); // +2
         positions.push(spike_neighbour2); // +3
 
-        // uvs: just write dummy uvs for now.
-        uvs.push([0.0, 0.0]);
-        uvs.push([10.0, 10.0]);
-        uvs.push([0.0, 0.0]);
-        uvs.push([10.0, 10.0]);
 
-        // normals: calculate normals for the new vertices.
-        // for now, use some dummy normals that hopefully matches somehow.
+        let uvs_connector = (texturing.get_uv_connector)(
+            &self,
+            &n_hex,
+            &[spike1, spike2, spike_neighbour1, spike_neighbour2],
+            spike_1,
+            spike_2,
+            n_spike_1,
+            n_spike_2,
+        );
 
-        normals.push([1., 0., 0.]);
-        normals.push([1., 0., 0.]);
-        normals.push([1., 0., 0.]);
-        normals.push([1., 0., 0.]);
+        // add uvs_connector to uvs.
+        uvs.push(uvs_connector[0]);
+        uvs.push(uvs_connector[1]);
+        uvs.push(uvs_connector[2]);
+        uvs.push(uvs_connector[3]);
+
+
+        // let mut add_uv = | pos : &[f32; 3] | {
+            
+        // };
+
+        // add_uv(&spike1);
+        // add_uv(&spike2);
+        // add_uv(&spike_neighbour1);
+        // add_uv(&spike_neighbour2);
+        
 
         match indices {
             Indices::U32(vec) => {
