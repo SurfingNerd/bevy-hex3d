@@ -19,7 +19,7 @@ type ThreadsafeBox<T> = Arc<Mutex<Option<Box<T>>>>;
 
 #[derive(Component)]
 pub struct MeshGenTask {
-    pub mesh: Arc<Mutex<Option<Box<Mesh>>>>,
+    pub mesh: ThreadsafeBox<Mesh>,
 }
 
 fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
@@ -46,9 +46,6 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 
 fn setup_playground(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     game: ResMut<Game>,
 ) {
     info!("setting up playground");
@@ -102,7 +99,6 @@ fn setup_playground(
             if x_pixel < hm.size().x && -y_pixel < hm.size().y {
                 let img_x = x_pixel as usize;
                 let img_y = -y_pixel as usize;
-                let img_height = hm.size().y as usize;
                 let img_width = hm.size().x as usize;
 
                 let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
@@ -126,10 +122,7 @@ fn setup_playground(
         hexes_2d.push(hexes_x);
     }
 
-    let pool = AsyncComputeTaskPool::get();
-
-    let mutex: Arc<Mutex<Option<Box<Mesh>>>> = Arc::new(Mutex::new( None ));
-
+    let mutex: ThreadsafeBox<Mesh> = Arc::new(Mutex::new( None ));
     let mutex2 = mutex.clone();
     //let mesh_gen_task = MeshGenTask { mesh: Arc::new(Mutex::new(None)) };
 

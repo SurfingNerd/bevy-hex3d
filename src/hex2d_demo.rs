@@ -170,6 +170,7 @@ fn setup(
 
 }
 
+#[allow(dead_code)]
 fn spawn_debug_light(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>, color: Color, transform: Transform) {
     
@@ -317,7 +318,7 @@ fn tower_shoot(
     }
 }
 
-
+#[allow(dead_code)]
 fn enemy_spawner(
     mut commands: Commands,
     time: Res<Time>,

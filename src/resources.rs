@@ -47,7 +47,7 @@ impl Game {
     pub fn set_entity(&mut self, x: i32, y: i32, entity: Entity) {
         let existing = self.entities[x as usize][y as usize];
         match existing {
-            Some(existing) => panic!("Entity already set!") ,
+            Some(_) => panic!("Entity already set!") ,
             None => {
                 // info!("setting entity {} {}: {:?}",x, y, entity);
                 self.entities[x as usize][y as usize] = Some(entity);

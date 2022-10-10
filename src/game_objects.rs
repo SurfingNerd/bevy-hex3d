@@ -19,7 +19,6 @@ fn get_red_color(materials: &mut ResMut<Assets<StandardMaterial>>) -> Handle<Sta
 pub fn spawn_enemy(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
-    images: &mut ResMut<Assets<Image>>,
     game: &mut Game,
     commands: &mut Commands,
     x: i32,
