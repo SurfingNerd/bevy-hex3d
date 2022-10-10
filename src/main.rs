@@ -11,7 +11,6 @@ mod game_objects;
 mod textures;
 mod materials;
 mod pools;
-mod hello_plugin;
 mod playground;
 // use crate::map::TiledMapPlugin;
 

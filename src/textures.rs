@@ -1,6 +1,7 @@
 use bevy::{prelude::{Image, Color}, render::render_resource::{Extent3d, TextureDimension, TextureFormat}};
 
 
+#[allow(dead_code)]
 pub fn color_texture(color: Color) -> Image {
   const TEXTURE_SIZE: usize = 1;
 
@@ -30,6 +31,7 @@ pub fn color_texture(color: Color) -> Image {
 }
 
 // Creates a colorful test pattern
+#[allow(dead_code)]
 pub fn uv_debug_texture() -> Image {
   const TEXTURE_SIZE: usize = 8;
 

@@ -1,11 +1,10 @@
 use bevy::{
-    prelude::{info, AssetServer, Handle, Image, Mesh},
+    prelude::*,
     render::{
         mesh::{Indices, PrimitiveTopology},
-        render_resource::encase::impl_wrapper,
     },
 };
-use std::{f32::consts::PI, fmt::Error, slice::Iter};
+use std::{f32::consts::PI};
 
 /// An axis-aligned Hexagon3D defined by its minimum and maximum point.
 #[derive(Debug, Copy, Clone)]
@@ -37,35 +36,17 @@ fn get_uv_spike_height_based(hex: &Hexagon3D, spike_root: f32) -> [f32; 2] {
     return [f32::clamp(hex.y * 0.01, 0.0, 1.0) , if spike_root < 0.0 { 0.5 } else { 0.0 }];
 }
 
-static mut lowest_y: f32 = f32::MAX;
-static mut highest_y: f32 = f32::MIN;
-
-
 fn get_uv_connector_height_based(
-    hex: &Hexagon3D,
-    neighbor: &Hexagon3D,
+    _hex: &Hexagon3D,
+    _neighbor: &Hexagon3D,
     pos: &[[f32;3];4],
-    spike1: f32,
-    spike2: f32,
-    n_spike1: f32,
-    n_spike2: f32,
+    _spike1: f32,
+    _spike2: f32,
+    _n_spike1: f32,
+    _n_spike2: f32,
 ) ->  [[f32; 2]; 4] {
 
     let y = pos[0][1];
-    
-    unsafe {
-        
-        // store lowest and highest y
-        if y < lowest_y {
-            lowest_y = y;
-            info!("y: {} < {}", lowest_y, highest_y);
-        }
-
-        if y > highest_y {
-            highest_y = y;
-            info!("y: {} < {}", lowest_y, highest_y);
-        }
-    }
 
     // make sure y is within the specified range
     let uvx = f32::clamp(y * 0.01, 0.0, 1.0);
@@ -210,13 +191,13 @@ impl Hexagon3D {
         return (spike_num * 2. * PI / 6.).sin() * (self.diameter * 0.5) + self.z;
     }
 
-    pub fn get_spike_x_uv(&self, spike_num: f32) -> f32 {
-        return (spike_num * 2. * PI / 6.).cos() * self.diameter * 0.5 + 0.5;
-    }
+    // pub fn get_spike_x_uv(&self, spike_num: f32) -> f32 {
+    //     return (spike_num * 2. * PI / 6.).cos() * self.diameter * 0.5 + 0.5;
+    // }
 
-    pub fn get_spike_z_uv(&self, spike_num: f32) -> f32 {
-        return (spike_num * 2. * PI / 6.).sin() * self.diameter * 0.5 + 0.5;
-    }
+    // pub fn get_spike_z_uv(&self, spike_num: f32) -> f32 {
+    //     return (spike_num * 2. * PI / 6.).sin() * self.diameter * 0.5 + 0.5;
+    // }
 
     //
     pub fn get_spike(&self, spike_num: f32) -> [f32; 3] {

@@ -1,4 +1,4 @@
-use std::default::{Default, self};
+use std::default::{Default};
 use bevy_inspector_egui::{WorldInspectorPlugin};
 
 
@@ -6,25 +6,14 @@ use bevy::{
     log,
     prelude::*,
     render::{
-        texture::ImageSettings, primitives::Frustum,
+        texture::ImageSettings,
     },
     window::{WindowDescriptor, Windows},
     DefaultPlugins, diagnostic::*, time::Time,
 };
 
-use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, debug_systems::debug_resources_system, game_objects::{spawn_tower, spawn_enemy}, textures::uv_debug_texture, pools::MaterialRegistry, playground::PlaygroundPlugin};
+use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, game_objects::{spawn_tower, spawn_enemy}, pools::MaterialRegistry, playground::PlaygroundPlugin};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
-
-const X_EXTENT: f32 = 2.;
-const Y_EXTENT: f32 = 2.;
-
-
-#[derive(Component, Debug)]
-struct GroundTile {
-    x: i32,
-    y: i32,
-}
-
 
 
 fn setup(
@@ -236,20 +225,6 @@ fn mouse_button_input(
     // we can check multiple at once with `.any_*`
     if buttons.any_just_pressed([MouseButton::Left, MouseButton::Right]) {
         // Either the left or the right button was just pressed
-    }
-}
-
-#[allow(dead_code)]
-fn rotate_hexes(mut query: Query<(&mut GroundTile, &mut Transform)>, keys: Res<Input<KeyCode>>) {
-    // if (keys.just_pressed(KeyCode::F)) {
-    //   query.for_each_mut(|(&mut muttile, &mut transform)| {
-    //      transform.rotate_local_x(std::f32::consts::PI / 360.0);
-    //      info!("GroundTile: {:?} rotation: {:?}", tile, transform.rotation);
-    //   });
-    // }
-
-    for mut i in query.iter_mut() {
-        i.1.rotate_local_x(std::f32::consts::PI / 360.0);
     }
 }
 

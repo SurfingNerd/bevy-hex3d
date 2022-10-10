@@ -8,18 +8,6 @@ pub struct PlaygroundPlugin {
 
 }
 
-struct HeightmapCache {
-  pub heightmap: Handle<Image>
-}
-
-impl HeightmapCache {
-  pub fn new() -> Self {
-      HeightmapCache {
-          heightmap: Handle::default()
-      }
-  }
-}
-
 fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
   let index = (y * width + x) * 4;
   //let index = (x * height + y) * 4;
@@ -46,9 +34,7 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 
 fn setup_playground(
   mut commands: Commands,
-  heightmap_cache: Res<HeightmapCache>,
   asset_server: Res<AssetServer>,
-  images: Res<Assets<Image>>,
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<StandardMaterial>>,
   game: ResMut<Game>
@@ -58,16 +44,18 @@ fn setup_playground(
   //   info!("waiting for heightmap");
   // }
   
-  let mut hm: Image;
-  let mut is_loaded = false;
+  let hm: Image;
 
-  match fs::read("assets/heighmap_mt_taranaki.png")
+  //let asset_to_load = "assets/heighmap_mt_taranaki.png";
+  let asset_to_load = "assets/heighmap_schweinskopf.png";
+    
+
+  match fs::read(asset_to_load)
   {
     Ok(read_file) => {
       match Image::from_buffer(&read_file, ImageType::Extension("png"), CompressedImageFormats::all(), false) {
         Ok(image) => {
           hm = image;
-          is_loaded = true;
           info!("Image loaded: {}", hm.data.len());
         },
         Err(e) => {
@@ -186,7 +174,6 @@ impl Plugin for PlaygroundPlugin {
   fn build(&self, app: &mut App) {
 
     app
-    .insert_resource(HeightmapCache::new())
     //.add_startup_system(load_playground_resources)
     .add_startup_system(setup_playground)
     ;
