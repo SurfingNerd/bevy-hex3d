@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     render::{
         mesh::{Indices, PrimitiveTopology},
-    },
+    }, math::vec3,
 };
 use std::{f32::consts::PI};
 
@@ -18,7 +18,7 @@ pub struct Hexagon3D {
 }
 
 pub struct Hexagon3DTexturing {
-    pub texture: Handle<Image>,
+    
 
     pub get_uv_spike: fn(hex: &Hexagon3D, spike_root: f32) -> [f32; 2],
     pub get_uv_connector: fn(
@@ -57,9 +57,8 @@ fn get_uv_connector_height_based(
 }
 
 impl Hexagon3DTexturing {
-    pub fn new_height_based_texturing(asset_server: &AssetServer) -> Self {
+    pub fn new_height_based_texturing() -> Self {
         Hexagon3DTexturing {
-            texture: asset_server.load("mountain_texture_less_sat.png"),
             get_uv_spike: get_uv_spike_height_based,
             get_uv_connector: get_uv_connector_height_based,
         }
@@ -319,6 +318,21 @@ impl Hexagon3D {
         //let vertices = [spike1, spike2, spike_neighbour4, spike_neighbour5];
 
         //positions.push(spike1.0);
+
+        // don't create connectors if the neighbour is already close by
+
+        let spike1_vec = Vec3::from_array(spike1);
+        let spike_neighbour2_vec = Vec3::from_array(spike_neighbour2);
+
+        // because of the hex geometry, the distance between the other spike pair is the same.
+        // so we can save some computation time by only checking one of the pairs.
+        let dist = (spike1_vec - spike_neighbour2_vec).length();
+        
+        if dist < 0.0001 {
+            // info!("not connecting because distance is too small: {} {}-{}-{} {}-{}", dist, self.x, self.y, self.z, neighbour.x, neighbour.y);
+            return;
+        }
+
         let pos_origin: u32 = positions.len() as u32;
         positions.push(spike1); // +0
         positions.push(spike2); // +1
@@ -358,10 +372,10 @@ impl Hexagon3D {
                 let mut add = |i| vec.push(pos_origin + i);
 
                 //           /\          /\
-                //         /    \0   2 /    \
+                //         /    \0   3 /    \
                 //        |      |    |      |
                 //        |      |    |      |
-                //         \    /1   3 \    /
+                //         \    /1   2 \    /
                 //           \/          \/
 
                 // add vertice from first spike of self to first spike of neighbour
@@ -369,40 +383,9 @@ impl Hexagon3D {
                 add(1);
                 add(2);
 
-                // this normal points into the wrong direction
-                // add(1);
-                // add(3);
-                // add(2);
-
-                // this way, the normal points into the right direction
-                // but it does not fill a square.
-                // add(2);
-                // add(3);
-                // add(1);
-
                 add(2);
                 add(3);
                 add(0);
-
-                // add(2);
-                // add(1);
-                // add(0);
-
-                // add(3);
-                // add(2);
-                // add(1);
-
-                // add(1);
-                // add(2);
-                // add(3);
-
-                // add(0);
-                // add(1);
-                // add(3);
-
-                // add(3);
-                // add(0);
-                // add(1);
             }
             _ => {}
         }
