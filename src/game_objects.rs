@@ -5,7 +5,7 @@ use bevy::prelude::{
 
 use crate::{
     components::{PositionComponent, ShootComponent, MoveComponent, HPComponent},
-    resources::Game, materials::get_color_material, pools::MaterialRegistry,
+    resources::Game, materials::get_color_material,
 };
 
 // pub fn monster_spawner() {
@@ -19,7 +19,6 @@ fn get_red_color(materials: &mut ResMut<Assets<StandardMaterial>>) -> Handle<Sta
 pub fn spawn_enemy(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
-    material_registry: &mut ResMut<MaterialRegistry>,
     images: &mut ResMut<Assets<Image>>,
     game: &mut Game,
     commands: &mut Commands,
@@ -37,7 +36,7 @@ pub fn spawn_enemy(
 
     // let material = get_color_material(materials, Color::RED);
 
-    let material = material_registry.get_or_create(materials, get_red_color);
+    let material = get_red_color(materials);
 
     //let handle = Handle::<StandardMaterial> { }
 
