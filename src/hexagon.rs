@@ -46,14 +46,15 @@ fn get_uv_connector_height_based(
     _n_spike2: f32,
 ) ->  [[f32; 2]; 4] {
 
-    let y = pos[0][1];
 
     // make sure y is within the specified range
-    let uvx = f32::clamp(y * 0.01, 0.0, 1.0);
+    let uvx = |y: f32 | f32::clamp(y * 0.01, 0.0, 1.0);
 
 
+
+    //let y = pos[0][1];
     //info!("y: {}", pos[1]);
-    return [[uvx, 0.0],[uvx, 1.0],[uvx, 1.0],[uvx, 0.0]];
+    return [[uvx(pos[0][1]), 0.0],[uvx(pos[1][1]), 1.0],[uvx(pos[2][1]), 1.0],[uvx(pos[3][1]), 0.0]];
 }
 
 impl Hexagon3DTexturing {

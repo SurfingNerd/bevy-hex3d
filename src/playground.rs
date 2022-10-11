@@ -1,11 +1,7 @@
-use std::future::{self, Future, IntoFuture};
-use std::sync::mpsc::Receiver;
-use std::sync::{Arc, Mutex, MutexGuard};
-use std::{fs, thread, time::Duration};
+use std::fs;
+use std::sync::{Arc, Mutex};
 
 use bevy::render::texture::ImageType;
-use bevy::tasks::*;
-use bevy::utils::futures;
 use bevy::{prelude::*, render::texture::CompressedImageFormats};
 
 use crate::{
@@ -44,90 +40,89 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 //   heighmap_cache.heightmap = asset_server.load("textures/heightmap.png");
 // }
 
-fn setup_playground(
-    mut commands: Commands,
-    game: ResMut<Game>,
-) {
+fn setup_playground(mut commands: Commands, game: ResMut<Game>) {
     info!("setting up playground");
     // while!images.contains(&heightmap_cache.heightmap) {
     //   info!("waiting for heightmap");
     // }
 
-    let hm: Image;
+    let game_width = game.width;
+    let game_height = game.height;
+    let game_hex_spacing = game.hex_spacing;
 
-    //let asset_to_load = "assets/heighmap_mt_taranaki.png";
-    //let asset_to_load = "assets/heighmap_schweinskopf.png";
-    let asset_to_load = "assets/heightmap_alps.png";
-
-    match fs::read(asset_to_load) {
-        Ok(read_file) => {
-            match Image::from_buffer(
-                &read_file,
-                ImageType::Extension("png"),
-                CompressedImageFormats::all(),
-                false,
-            ) {
-                Ok(image) => {
-                    hm = image;
-                    info!("Image loaded: {}", hm.data.len());
-                }
-                Err(e) => {
-                    info!("error loading image {:?}", e);
-                    return;
-                }
-            }
-        }
-        Err(_) => {
-            info!("file does not exist");
-            return;
-        }
-    }
-
-    // 2 dimensional array of hexagons
-    let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
-
-    // for (i, shape) in shapes.into_iter().enumerate() {
-    for x in 0..game.width {
-        let mut hexes_x: Vec<Hexagon3D> = vec![];
-
-        for y in 0..game.height {
-            let c = hex2d::Coordinate::new(x, y);
-            let (x_pixel, y_pixel) = c.to_pixel(game.hex_spacing);
-
-            let mut z_pixel = 0.;
-
-            if x_pixel < hm.size().x && -y_pixel < hm.size().y {
-                let img_x = x_pixel as usize;
-                let img_y = -y_pixel as usize;
-                let img_width = hm.size().x as usize;
-
-                let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
-                //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
-                z_pixel = 100. - (1. - (pixel_value / 255.0)) * 100.;
-            }
-
-            // info!("pixel x {} y {} ", x_pixel, y_pixel);
-            let hex = Hexagon3D {
-                diameter: 1.,
-                height: 0.,
-                x: x_pixel,
-                y: z_pixel,
-                z: y_pixel,
-            };
-
-            hexes_x.push(hex);
-
-            //hexes.push(hex);
-        }
-        hexes_2d.push(hexes_x);
-    }
-
-    let mutex: ThreadsafeBox<Mesh> = Arc::new(Mutex::new( None ));
+    let mutex: ThreadsafeBox<Mesh> = Arc::new(Mutex::new(None));
     let mutex2 = mutex.clone();
     //let mesh_gen_task = MeshGenTask { mesh: Arc::new(Mutex::new(None)) };
 
     info!("start mesh generation in own thread");
-    std::thread::spawn( move || {
+    std::thread::spawn(move || {
+        let hm: Image;
+
+        //let asset_to_load = "assets/heighmap_mt_taranaki.png";
+        //let asset_to_load = "assets/heighmap_schweinskopf.png";
+        let asset_to_load = "assets/heightmap_lower_alps.png";
+
+        match fs::read(asset_to_load) {
+            Ok(read_file) => {
+                match Image::from_buffer(
+                    &read_file,
+                    ImageType::Extension("png"),
+                    CompressedImageFormats::all(),
+                    false,
+                ) {
+                    Ok(image) => {
+                        hm = image;
+                    }
+                    Err(e) => {
+                        info!("error loading image {:?}", e);
+                        return;
+                    }
+                }
+            }
+            Err(_) => {
+                info!("file does not exist");
+                return;
+            }
+        }
+
+        // 2 dimensional array of hexagons
+        let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
+
+        // for (i, shape) in shapes.into_iter().enumerate() {
+        for x in 0..game_width {
+            let mut hexes_x: Vec<Hexagon3D> = vec![];
+
+            for y in 0..game_height {
+                let c = hex2d::Coordinate::new(x, y);
+                let (x_pixel, y_pixel) = c.to_pixel(game_hex_spacing);
+
+                let mut z_pixel = 0.;
+
+                if x_pixel < hm.size().x && -y_pixel < hm.size().y {
+                    let img_x = x_pixel as usize;
+                    let img_y = -y_pixel as usize;
+                    let img_width = hm.size().x as usize;
+
+                    let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
+                    //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
+                    z_pixel = 100. - (1. - (pixel_value / 255.0)) * 100.;
+                }
+
+                // info!("pixel x {} y {} ", x_pixel, y_pixel);
+                let hex = Hexagon3D {
+                    diameter: 1.,
+                    height: 0.,
+                    x: x_pixel,
+                    y: z_pixel,
+                    z: y_pixel,
+                };
+
+                hexes_x.push(hex);
+
+                //hexes.push(hex);
+            }
+            hexes_2d.push(hexes_x);
+        }
         info!("start creating mesh");
         let texturing = Hexagon3DTexturing::new_height_based_texturing();
         let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
@@ -146,47 +141,43 @@ fn finish_setup_playgroud(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    
     for (entity, mesh_gen_task) in mesh_gen_task.iter() {
-
         let lock_guard = mesh_gen_task.mesh.lock().unwrap();
         // info!("checking if mesh is ready");
         if lock_guard.is_some() {
-
             let mesh = lock_guard.as_ref().unwrap();
-        let texture: Handle<Image> = asset_server.load("mountain_texture_less_sat.png");
-        
-        let mesh_handle = meshes.add(*mesh.clone());
+            let texture: Handle<Image> = asset_server.load("mountain_texture_less_sat.png");
 
-        // green: 6d9862
-        // yellow? // base_color: Color::rgb(123.0 / 255., 130. / 255., 78. / 255.),
-        // green: base_color: Color::rgb(0.43, 0.596, 0.384),
-        // stonegrey: base_color: Color::rgb(0.647, 0.627, 0.616),
-        let mat2 = materials.add(StandardMaterial {
-            base_color_texture: Some(texture),
-            // base_color: Color::rgb(0.647, 0.627, 0.616),
-            metallic: 0.12,
-            reflectance: 0.01,
-            perceptual_roughness: 0.9,
-            ..Default::default()
-        });
+            let mesh_handle = meshes.add(*mesh.clone());
 
-        commands.spawn_bundle(PbrBundle {
-            mesh: mesh_handle,
-            material: mat2.clone(),
-            transform: Transform {
-                translation: Vec3::new(0., 0., 0.),
-                // rotation: quat.clone(),
+            // green: 6d9862
+            // yellow? // base_color: Color::rgb(123.0 / 255., 130. / 255., 78. / 255.),
+            // green: base_color: Color::rgb(0.43, 0.596, 0.384),
+            // stonegrey: base_color: Color::rgb(0.647, 0.627, 0.616),
+            let mat2 = materials.add(StandardMaterial {
+                base_color_texture: Some(texture),
+                // base_color: Color::rgb(0.647, 0.627, 0.616),
+                metallic: 0.12,
+                reflectance: 0.01,
+                perceptual_roughness: 0.9,
                 ..Default::default()
-            },
-            ..Default::default()
-        });
+            });
 
-        commands.entity(entity).despawn_recursive();
+            commands.spawn_bundle(PbrBundle {
+                mesh: mesh_handle,
+                material: mat2.clone(),
+                transform: Transform {
+                    translation: Vec3::new(0., 0., 0.),
+                    // rotation: quat.clone(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            });
+
+            commands.entity(entity).despawn_recursive();
         }
         //mesh_gen_task
     }
-
 }
 
 impl PlaygroundPlugin {

@@ -165,7 +165,7 @@ fn setup(
         }
     }
 
-    spawn_enemy(&mut meshes, &mut materials, &mut images, &mut game.as_mut(), &mut commands, 0, 0);
+    spawn_enemy(&mut meshes, &mut materials, &mut game.as_mut(), &mut commands, 0, 0);
 
 
 }
@@ -328,7 +328,7 @@ fn enemy_spawner(
     mut game: ResMut<Game>,
 ) {
     if game.get_entity(0, 0) == None {
-        spawn_enemy(&mut meshes, &mut materials, &mut images, &mut game, &mut commands, 0, 0);
+        spawn_enemy(&mut meshes, &mut materials, &mut game, &mut commands, 0, 0);
     }
 }
 
@@ -337,7 +337,7 @@ fn enemy_spawner(
 pub fn run_hex2d_demo() {
 
     //let game = Game::new(700, 700);
-    let game = Game::new(150, 150);
+    let game = Game::new(1000, 1000);
 
 
     App::new()
