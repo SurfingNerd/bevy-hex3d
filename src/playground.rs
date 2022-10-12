@@ -94,6 +94,12 @@ fn create_mesh_on_thread(
     // 2 dimensional array of hexagons
     let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
 
+    let mut highest_pixel_x: f32 = 0.;
+    let mut highest_pixel_y: f32 = 0.;
+    let mut lowest_pixel_x: usize = usize::MAX;
+    let mut lowest_pixel_y: usize = usize::MAX;
+
+
     // for (i, shape) in shapes.into_iter().enumerate() {
     for x in 0..game_width {
         let mut hexes_x: Vec<Hexagon3D> = vec![];
@@ -108,6 +114,24 @@ fn create_mesh_on_thread(
                 let img_x = x_pixel as usize;
                 let img_y = -y_pixel as usize;
                 let img_width = hm.size().x as usize;
+
+                //store the highest pixel x and y
+                if img_x > highest_pixel_x as usize {
+                    highest_pixel_x = img_x as f32;
+                }
+
+                if img_y > highest_pixel_y as usize {
+                    highest_pixel_y = img_y as f32;
+                }
+
+                // store the lowest pixel x and y
+                if img_x < lowest_pixel_x {
+                    lowest_pixel_x = img_x;
+                }
+
+                if img_y < lowest_pixel_y {
+                    lowest_pixel_y = img_y;
+                }
 
                 let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
                 //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
@@ -129,14 +153,15 @@ fn create_mesh_on_thread(
         }
         hexes_2d.push(hexes_x);
     }
-    info!("start creating mesh");
+    info!("start creating mesh highest x - y {} {} {} {}", highest_pixel_x, highest_pixel_y, lowest_pixel_x, lowest_pixel_y);
+    
     let texturing = Hexagon3DTexturing::new_height_based_texturing();
     let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
     info!("mesh created");
     mutex.lock().unwrap().replace(Box::new(mesh));
 }
 
-fn setup_playground(mut commands: Commands, game: ResMut<Game>) {
+fn setup_playground(mut commands: Commands) {
     info!("setting up playground");
     // while!images.contains(&heightmap_cache.heightmap) {
     //   info!("waiting for heightmap");

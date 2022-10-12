@@ -12,7 +12,7 @@ use bevy::{
     DefaultPlugins, diagnostic::*, time::Time,
 };
 
-use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, game_objects::{spawn_tower, spawn_enemy}, playground::PlaygroundPlugin};
+use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, game_objects::{spawn_tower, spawn_enemy}, playground::PlaygroundPlugin, cam_movement::camera_movement_speed};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
 
@@ -362,6 +362,7 @@ pub fn run_hex2d_demo() {
         .add_system(move_entites)
         .add_system(tower_shoot)
         .add_system(glow_line_system)
+        .add_system(camera_movement_speed)
         //.add_system(enemy_spawner)
          // .add_system(debug_resources_system)
         .run();

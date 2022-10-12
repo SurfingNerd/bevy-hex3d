@@ -31,6 +31,7 @@ impl Game {
         //return Game {width, height, };
     }
 
+    #[allow(dead_code)]
     pub fn tick(&mut self) {
       self.current_tick += 1;
     }
