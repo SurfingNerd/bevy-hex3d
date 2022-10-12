@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     render::{
         mesh::{Indices, PrimitiveTopology},
-    }, math::vec3,
+    },
 };
 use std::{f32::consts::PI};
 

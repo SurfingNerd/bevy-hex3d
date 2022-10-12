@@ -1,6 +1,6 @@
 use bevy::prelude::{
-    shape::Cube, Assets, Commands, Handle, Material, Mesh, PbrBundle, ResMut, StandardMaterial,
-    Transform, Vec3, Image, Color,
+    shape::Cube, Assets, Commands, Handle, Mesh, PbrBundle, ResMut, StandardMaterial,
+    Transform, Vec3, Color,
 };
 
 use crate::{

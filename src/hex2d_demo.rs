@@ -29,7 +29,7 @@ fn setup(
     let max_tower_x = 0;
     let max_tower_y = 0;
 
-    movement_settings.speed = 30.;
+    movement_settings.speed = 100.;
 
     
     
@@ -337,7 +337,7 @@ fn enemy_spawner(
 pub fn run_hex2d_demo() {
 
     //let game = Game::new(700, 700);
-    let game = Game::new(1000, 1000);
+    let game = Game::new(2100, 920);
 
 
     App::new()

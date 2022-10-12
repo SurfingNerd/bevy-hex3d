@@ -18,6 +18,19 @@ pub struct MeshGenTask {
     pub mesh: ThreadsafeBox<Mesh>,
 }
 
+// marker component so we know the current instantiated playground.
+#[derive(Component)]
+pub struct PlaygroundMarker {}
+
+// a resource that knows the selected an all available maps,
+// as well a status on loading to prevent loading of 2 maps at the same time.
+pub struct MapRegistry {
+    pub registered_heighmaps: Vec<String>,
+    pub current_loaded_index: usize,
+    pub is_loaded: bool,
+    pub is_loading: bool,
+}
+
 fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
     let index = (y * width + x) * 4;
     //let index = (x * height + y) * 4;
@@ -40,11 +53,156 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 //   heighmap_cache.heightmap = asset_server.load("textures/heightmap.png");
 // }
 
+//function that creates the mesh on a separate thread and stores it in the threadsafe box.
+fn create_mesh_on_thread(
+    mutex: ThreadsafeBox<Mesh>,
+    asset_to_load_plain: String,
+    game_width: i32,
+    game_height: i32,
+    game_hex_spacing: hex2d::Spacing,
+) {
+    let hm: Image;
+
+    //let asset_to_load = "assets/heighmap_mt_taranaki.png";
+    //let asset_to_load = "assets/heighmap_schweinskopf.png";
+    let asset_to_load = format!("assets/heightmap_{}.png", asset_to_load_plain);
+
+    info!("Loading: {}", asset_to_load);
+    match fs::read(asset_to_load.clone()) {
+        Ok(read_file) => {
+            match Image::from_buffer(
+                &read_file,
+                ImageType::Extension("png"),
+                CompressedImageFormats::all(),
+                false,
+            ) {
+                Ok(image) => {
+                    hm = image;
+                }
+                Err(e) => {
+                    info!("error loading image {:?}", e);
+                    return;
+                }
+            }
+        }
+        Err(_) => {
+            info!("file does not exist: {}", asset_to_load);
+            return;
+        }
+    }
+
+    // 2 dimensional array of hexagons
+    let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
+
+    // for (i, shape) in shapes.into_iter().enumerate() {
+    for x in 0..game_width {
+        let mut hexes_x: Vec<Hexagon3D> = vec![];
+
+        for y in 0..game_height {
+            let c = hex2d::Coordinate::new(x, y);
+            let (x_pixel, y_pixel) = c.to_pixel(game_hex_spacing);
+
+            let mut z_pixel = 0.;
+
+            if x_pixel < hm.size().x && -y_pixel < hm.size().y {
+                let img_x = x_pixel as usize;
+                let img_y = -y_pixel as usize;
+                let img_width = hm.size().x as usize;
+
+                let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
+                //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
+                z_pixel = 100. - (1. - (pixel_value / 255.0)) * 100.;
+            }
+
+            // info!("pixel x {} y {} ", x_pixel, y_pixel);
+            let hex = Hexagon3D {
+                diameter: 1.,
+                height: 0.,
+                x: x_pixel,
+                y: z_pixel,
+                z: y_pixel,
+            };
+
+            hexes_x.push(hex);
+
+            //hexes.push(hex);
+        }
+        hexes_2d.push(hexes_x);
+    }
+    info!("start creating mesh");
+    let texturing = Hexagon3DTexturing::new_height_based_texturing();
+    let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
+    info!("mesh created");
+    mutex.lock().unwrap().replace(Box::new(mesh));
+}
+
 fn setup_playground(mut commands: Commands, game: ResMut<Game>) {
     info!("setting up playground");
     // while!images.contains(&heightmap_cache.heightmap) {
     //   info!("waiting for heightmap");
     // }
+
+    let map_registry = MapRegistry {
+        registered_heighmaps: vec![
+            "mt_taranaki".to_string(),
+            "schweinskopf".to_string(),
+            "alps".to_string(),
+            "alps2".to_string(),
+            "autobahn".to_string(),
+            "lower_alps".to_string(),
+            "graz".to_string(),
+            "schoeckl".to_string(),
+            "baernbach".to_string(),
+        ],
+        current_loaded_index: 6,
+        is_loaded: false,
+        is_loading: false,
+    };
+
+    commands.insert_resource(map_registry);
+
+    //let mesh_gen_task = MeshGenTask { mesh: Arc::new(Mutex::new(None)) };
+}
+
+fn start_loading(
+    mut commands: Commands,
+    game: Res<Game>,
+    mut map_registry: ResMut<MapRegistry>,
+    input: Res<Input<KeyCode>>
+) {
+    // if we are already loading, don't do anything!
+    if map_registry.is_loading {
+        return;
+    }
+
+    let mut load = false;
+    if !map_registry.is_loaded {
+        load = true;
+    } else {
+        // if key page up is pressed, load next map
+        if input.just_pressed(KeyCode::PageUp) {
+            map_registry.current_loaded_index += 1;
+            if map_registry.current_loaded_index >= map_registry.registered_heighmaps.len() {
+                map_registry.current_loaded_index = 0;
+            }
+            load = true;
+        } else if input.just_pressed(KeyCode::PageDown) { 
+            // if key page down is pressed, load previous map
+            
+            if map_registry.current_loaded_index == 0 {
+                map_registry.current_loaded_index = map_registry.registered_heighmaps.len() - 1;
+            } else {
+                map_registry.current_loaded_index -= 1;
+            }
+
+            load = true;
+        }
+    }
+
+    if !load {
+        return;
+    }
+
 
     let game_width = game.width;
     let game_height = game.height;
@@ -52,99 +210,45 @@ fn setup_playground(mut commands: Commands, game: ResMut<Game>) {
 
     let mutex: ThreadsafeBox<Mesh> = Arc::new(Mutex::new(None));
     let mutex2 = mutex.clone();
-    //let mesh_gen_task = MeshGenTask { mesh: Arc::new(Mutex::new(None)) };
+    let map_to_load = map_registry.registered_heighmaps[map_registry.current_loaded_index].clone();
 
     info!("start mesh generation in own thread");
+    map_registry.is_loading = true;
     std::thread::spawn(move || {
-        let hm: Image;
-
-        //let asset_to_load = "assets/heighmap_mt_taranaki.png";
-        //let asset_to_load = "assets/heighmap_schweinskopf.png";
-        let asset_to_load = "assets/heightmap_lower_alps.png";
-
-        match fs::read(asset_to_load) {
-            Ok(read_file) => {
-                match Image::from_buffer(
-                    &read_file,
-                    ImageType::Extension("png"),
-                    CompressedImageFormats::all(),
-                    false,
-                ) {
-                    Ok(image) => {
-                        hm = image;
-                    }
-                    Err(e) => {
-                        info!("error loading image {:?}", e);
-                        return;
-                    }
-                }
-            }
-            Err(_) => {
-                info!("file does not exist");
-                return;
-            }
-        }
-
-        // 2 dimensional array of hexagons
-        let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
-
-        // for (i, shape) in shapes.into_iter().enumerate() {
-        for x in 0..game_width {
-            let mut hexes_x: Vec<Hexagon3D> = vec![];
-
-            for y in 0..game_height {
-                let c = hex2d::Coordinate::new(x, y);
-                let (x_pixel, y_pixel) = c.to_pixel(game_hex_spacing);
-
-                let mut z_pixel = 0.;
-
-                if x_pixel < hm.size().x && -y_pixel < hm.size().y {
-                    let img_x = x_pixel as usize;
-                    let img_y = -y_pixel as usize;
-                    let img_width = hm.size().x as usize;
-
-                    let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
-                    //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
-                    z_pixel = 100. - (1. - (pixel_value / 255.0)) * 100.;
-                }
-
-                // info!("pixel x {} y {} ", x_pixel, y_pixel);
-                let hex = Hexagon3D {
-                    diameter: 1.,
-                    height: 0.,
-                    x: x_pixel,
-                    y: z_pixel,
-                    z: y_pixel,
-                };
-
-                hexes_x.push(hex);
-
-                //hexes.push(hex);
-            }
-            hexes_2d.push(hexes_x);
-        }
-        info!("start creating mesh");
-        let texturing = Hexagon3DTexturing::new_height_based_texturing();
-        let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
-        info!("mesh created");
-        mutex.lock().unwrap().replace(Box::new(mesh));
+        create_mesh_on_thread(
+            mutex,
+            map_to_load,
+            game_width,
+            game_height,
+            game_hex_spacing,
+        );
     });
 
     let gen_task = MeshGenTask { mesh: mutex2 };
     commands.spawn().insert(gen_task);
 }
 
-fn finish_setup_playgroud(
+fn integrate_loaded_maps(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mesh_gen_task: Query<(Entity, &MeshGenTask)>,
+    old_playgrounds: Query<Entity, With<PlaygroundMarker>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut map_registry: ResMut<MapRegistry>,
 ) {
     for (entity, mesh_gen_task) in mesh_gen_task.iter() {
         let lock_guard = mesh_gen_task.mesh.lock().unwrap();
         // info!("checking if mesh is ready");
         if lock_guard.is_some() {
+
+            // despawn old entities.
+            for old_playground in old_playgrounds.iter() {
+                info!("despawning old playground");
+                commands.entity(old_playground).despawn();
+            }
+
+
             let mesh = lock_guard.as_ref().unwrap();
             let texture: Handle<Image> = asset_server.load("mountain_texture_less_sat.png");
 
@@ -172,7 +276,12 @@ fn finish_setup_playgroud(
                     ..Default::default()
                 },
                 ..Default::default()
-            });
+            }).insert(PlaygroundMarker {});
+
+            info!("mesh spawned");
+
+            map_registry.is_loading = false;
+            map_registry.is_loaded = true;
 
             commands.entity(entity).despawn_recursive();
         }
@@ -191,6 +300,7 @@ impl Plugin for PlaygroundPlugin {
         app
             //.add_startup_system(load_playground_resources)
             .add_startup_system(setup_playground)
-            .add_system(finish_setup_playgroud);
+            .add_system(start_loading)
+            .add_system(integrate_loaded_maps);
     }
 }

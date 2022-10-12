@@ -1,4 +1,4 @@
-use bevy::prelude::{Entity, info};
+use bevy::prelude::{Entity};
 
 pub struct Game {
     pub current_tick: u32,
