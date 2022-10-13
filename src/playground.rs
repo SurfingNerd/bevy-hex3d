@@ -11,11 +11,11 @@ use crate::{
 
 pub struct PlaygroundPlugin {}
 
-type ThreadsafeBox<T> = Arc<Mutex<Option<Box<T>>>>;
+type ThreadsafeValue<T> = Arc<Mutex<Option<T>>>;
 
 #[derive(Component)]
 pub struct MeshGenTask {
-    pub mesh: ThreadsafeBox<Mesh>,
+    pub mesh: ThreadsafeValue<Mesh>,
 }
 
 // marker component so we know the current instantiated playground.
@@ -53,9 +53,9 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 //   heighmap_cache.heightmap = asset_server.load("textures/heightmap.png");
 // }
 
-//function that creates the mesh on a separate thread and stores it in the threadsafe box.
+//function that creates the mesh on a separate thread and stores it in the ThreadsafeValue box.
 fn create_mesh_on_thread(
-    mutex: ThreadsafeBox<Mesh>,
+    mutex: ThreadsafeValue<Mesh>,
     asset_to_load_plain: String,
     game_width: i32,
     game_height: i32,
@@ -137,6 +137,9 @@ fn create_mesh_on_thread(
                 //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
                 z_pixel = 100. - (1. - (pixel_value / 255.0)) * 100.;
             }
+            else {
+                continue;
+            }
 
             // info!("pixel x {} y {} ", x_pixel, y_pixel);
             let hex = Hexagon3D {
@@ -158,7 +161,7 @@ fn create_mesh_on_thread(
     let texturing = Hexagon3DTexturing::new_height_based_texturing();
     let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
     info!("mesh created");
-    mutex.lock().unwrap().replace(Box::new(mesh));
+    mutex.lock().unwrap().replace(mesh);
 }
 
 fn setup_playground(mut commands: Commands) {
@@ -233,7 +236,7 @@ fn start_loading(
     let game_height = game.height;
     let game_hex_spacing = game.hex_spacing;
 
-    let mutex: ThreadsafeBox<Mesh> = Arc::new(Mutex::new(None));
+    let mutex: ThreadsafeValue<Mesh> = Arc::new(Mutex::new(None));
     let mutex2 = mutex.clone();
     let map_to_load = map_registry.registered_heighmaps[map_registry.current_loaded_index].clone();
 
@@ -263,7 +266,7 @@ fn integrate_loaded_maps(
     mut map_registry: ResMut<MapRegistry>,
 ) {
     for (entity, mesh_gen_task) in mesh_gen_task.iter() {
-        let lock_guard = mesh_gen_task.mesh.lock().unwrap();
+        let mut lock_guard = mesh_gen_task.mesh.lock().unwrap();
         // info!("checking if mesh is ready");
         if lock_guard.is_some() {
 
@@ -273,11 +276,13 @@ fn integrate_loaded_maps(
                 commands.entity(old_playground).despawn();
             }
 
+            
+            // consumes lock_guard and returns the mesh
+            let mesh = lock_guard.take().unwrap();
 
-            let mesh = lock_guard.as_ref().unwrap();
             let texture: Handle<Image> = asset_server.load("mountain_texture_less_sat.png");
 
-            let mesh_handle = meshes.add(*mesh.clone());
+            let mesh_handle = meshes.add(mesh);
 
             // green: 6d9862
             // yellow? // base_color: Color::rgb(123.0 / 255., 130. / 255., 78. / 255.),
