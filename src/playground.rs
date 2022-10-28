@@ -154,7 +154,9 @@ fn create_mesh_on_thread(
 
             //hexes.push(hex);
         }
-        hexes_2d.push(hexes_x);
+        if hexes_x.len() > 0 {
+            hexes_2d.push(hexes_x);
+        }
     }
     info!("start creating mesh highest x - y {} {} {} {}", highest_pixel_x, highest_pixel_y, lowest_pixel_x, lowest_pixel_y);
     
@@ -230,7 +232,6 @@ fn start_loading(
     if !load {
         return;
     }
-
 
     let game_width = game.width;
     let game_height = game.height;

@@ -337,7 +337,7 @@ fn enemy_spawner(
 pub fn run_hex2d_demo() {
 
     //let game = Game::new(700, 700);
-    let game = Game::new(2100, 920);
+    let game = Game::new(4000, 4000);
 
 
     App::new()
