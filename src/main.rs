@@ -5,7 +5,7 @@ mod components;
 mod glow_line;
 mod hex2d_demo;
 mod hexagon;
-mod resources;
+mod game;
 mod debug_systems;
 mod game_objects;
 mod textures;

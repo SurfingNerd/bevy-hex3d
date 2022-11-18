@@ -6,7 +6,7 @@ use bevy::{prelude::*, render::texture::CompressedImageFormats};
 
 use crate::{
     hexagon::{Hexagon3D, Hexagon3DTexturing},
-    resources::Game,
+    game::Game,
 };
 
 pub struct PlaygroundPlugin {}
@@ -16,6 +16,7 @@ type ThreadsafeValue<T> = Arc<Mutex<Option<T>>>;
 #[derive(Component)]
 pub struct MeshGenTask {
     pub mesh: ThreadsafeValue<Mesh>,
+    pub tiles_heigh_info: Vec<Vec<f32>>
 }
 
 // marker component so we know the current instantiated playground.
@@ -241,6 +242,7 @@ fn start_loading(
     let mutex2 = mutex.clone();
     let map_to_load = map_registry.registered_heighmaps[map_registry.current_loaded_index].clone();
 
+    
     info!("start mesh generation in own thread");
     map_registry.is_loading = true;
     std::thread::spawn(move || {
@@ -253,7 +255,7 @@ fn start_loading(
         );
     });
 
-    let gen_task = MeshGenTask { mesh: mutex2 };
+    let gen_task = MeshGenTask { mesh: mutex2, tiles_heigh_info: Vec<Vec<f32>>::new() };
     commands.spawn().insert(gen_task);
 }
 

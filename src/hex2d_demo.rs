@@ -12,7 +12,7 @@ use bevy::{
     DefaultPlugins, diagnostic::*, time::Time,
 };
 
-use crate::{components::*, resources::Game, glow_line::{GlowLine, glow_line_system}, game_objects::{spawn_tower, spawn_enemy}, playground::PlaygroundPlugin, cam_movement::camera_movement_speed};
+use crate::{components::*, game::Game, glow_line::{GlowLine, glow_line_system}, game_objects::{spawn_tower, spawn_enemy}, playground::PlaygroundPlugin, cam_movement::camera_movement_speed};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
 
@@ -56,61 +56,35 @@ fn setup(
 
 
     let color_sun = Color::rgb(0.976, 0.685, 0.04);
-    // commands.spawn_bundle(PointLightBundle {
-    //     point_light: PointLight {
-    //         color: color_sun,
-    //         intensity: 400000.0,
-    //         range: 1000.,
-    //         shadows_enabled: false,
-    //         ..Default::default()
-    //     },
-    //     transform: Transform::from_xyz(160.0, 64.0, -222.0),
-    //     ..Default::default()
-    // });
-
-    // Grass light
-    
-
-    // Snow Top
-    // commands.spawn_bundle(PointLightBundle {
-    //     point_light: PointLight {
-    //         color: Color::rgb(0.80,0.8,0.8),
-    //         intensity: 4000000.0,
-    //         range: 100000.,
-    //         shadows_enabled: false,
-    //         ..Default::default()
-    //     },
-    //     transform: Transform::from_xyz(236.0, 137.0, -180.0),
-    //     ..Default::default()
-    // });
+ 
 
     const HALF_SIZE: f32 = 1000.0;
     // let skyblue = Color::rgb(0.5294, 0.878, 0.9216);
      let skyblue_light = Color::rgb(0.96, 0.96, 0.99916);
-    // commands.spawn_bundle(DirectionalLightBundle {
-    //     directional_light: DirectionalLight {
-    //         color: skyblue_light,
-    //         illuminance: 1000.0,
-    //         // Configure the projection to better fit the scene
-    //         shadow_projection: OrthographicProjection {
-    //             left: -HALF_SIZE,
-    //             right: HALF_SIZE,
-    //             bottom: -HALF_SIZE,
-    //             top: HALF_SIZE,
-    //             near: -10.0 * HALF_SIZE,
-    //             far: 10.0 * HALF_SIZE,
-    //             ..default()
-    //         },
-    //         shadows_enabled: false,
-    //         ..default()
-    //     },
-    //     transform: Transform {
-    //         translation: Vec3::new(0.0, 2.0, 0.0),
-    //         rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
-    //         ..default()
-    //     },
-    //     ..default()
-    // });
+    commands.spawn_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            color: skyblue_light,
+            illuminance: 1000.0,
+            // Configure the projection to better fit the scene
+            shadow_projection: OrthographicProjection {
+                left: -HALF_SIZE,
+                right: HALF_SIZE,
+                bottom: -HALF_SIZE,
+                top: HALF_SIZE,
+                near: -10.0 * HALF_SIZE,
+                far: 10.0 * HALF_SIZE,
+                ..default()
+            },
+            shadows_enabled: false,
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0.0, 2.0, 0.0),
+            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+            ..default()
+        },
+        ..default()
+    });
 
 
     // // spawn a red pointlight top outside of the game.
@@ -262,6 +236,7 @@ fn move_entites(
             let (x_pixel, y_pixel) = c.to_pixel(game.hex_spacing);
             transform.translation.x = x_pixel;
             transform.translation.z = y_pixel;
+            transform.translation.y = game.get_height(position.x, position.y);
             // transform.translation = Vec3:: { x_pixel, 0.01, y_pixel };
 
             // info!(

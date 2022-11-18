@@ -5,19 +5,24 @@ pub struct Game {
     pub width: i32,
     pub height: i32,
     entities: Vec<Vec<Option<Entity>>>, //maybe refactor to sparse set - lets see if memory becomes a problem or not.,
-    pub hex_spacing: hex2d::Spacing
+    pub hex_spacing: hex2d::Spacing,
+    pub heights_z: Vec<Vec<f32>>,
 }
 
 impl Game {
     pub fn new(width: i32, height: i32) -> Self {
         let mut entities: Vec<Vec<Option<Entity>>> = Vec::new();
-
+        let mut heights: Vec<Vec<f32>> = Vec::new();
+        
         for _x in 0..width {
             let mut y_vec: Vec<Option<Entity>> = Vec::new();
+            let mut height_y_vec = Vec::<f32>::new();
             for _y in 0..height {
                 y_vec.push(Option::None);
+                height_y_vec.push(0.0);
             }
             entities.push(y_vec);
+            heights.push(height_y_vec);
         }
 
         Game {
@@ -26,9 +31,9 @@ impl Game {
             entities,
             current_tick: 0,
             hex_spacing: hex2d::Spacing::FlatTop(0.50),
+            heights_z: heights,
         }
-
-        //return Game {width, height, };
+        
     }
 
     #[allow(dead_code)]
@@ -54,6 +59,14 @@ impl Game {
                 self.entities[x as usize][y as usize] = Some(entity);
             }
         }
+    }
+
+    pub fn set_height(&mut self, x: i32, y: i32, height: f32) {
+        self.heights_z[x as usize][y as usize] = height;
+    }
+
+    pub fn get_height(&mut self, x: i32, y: i32) -> f32 {
+        self.heights_z[x as usize][y as usize]
     }
 
     /// sets entity to new id.
