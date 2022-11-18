@@ -4,6 +4,8 @@ use std::sync::{Arc, Mutex};
 use bevy::render::texture::ImageType;
 use bevy::{prelude::*, render::texture::CompressedImageFormats};
 
+use crate::components::PositionComponent;
+use crate::lib::field_2D::Field2D;
 use crate::{
     hexagon::{Hexagon3D, Hexagon3DTexturing},
     game::Game,
@@ -16,7 +18,8 @@ type ThreadsafeValue<T> = Arc<Mutex<Option<T>>>;
 #[derive(Component)]
 pub struct MeshGenTask {
     pub mesh: ThreadsafeValue<Mesh>,
-    pub tiles_heigh_info: Vec<Vec<f32>>
+    pub mutex_height: ThreadsafeValue<Field2D<f32>>,
+    // pub tiles_heigh_info: Vec<Vec<f32>>
 }
 
 // marker component so we know the current instantiated playground.
@@ -57,6 +60,7 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 //function that creates the mesh on a separate thread and stores it in the ThreadsafeValue box.
 fn create_mesh_on_thread(
     mutex: ThreadsafeValue<Mesh>,
+    mutex_heights: ThreadsafeValue<Field2D<f32>>,
     asset_to_load_plain: String,
     game_width: i32,
     game_height: i32,
@@ -100,6 +104,7 @@ fn create_mesh_on_thread(
     let mut lowest_pixel_x: usize = usize::MAX;
     let mut lowest_pixel_y: usize = usize::MAX;
 
+    let mut height_field = Field2D::new(game_width as usize, game_height as usize);
 
     // for (i, shape) in shapes.into_iter().enumerate() {
     for x in 0..game_width {
@@ -135,8 +140,10 @@ fn create_mesh_on_thread(
                 }
 
                 let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
+                 
                 //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
                 z_pixel = 100. - (1. - (pixel_value / 255.0)) * 100.;
+                height_field.set(x as usize, y as usize, z_pixel);
             }
             else {
                 continue;
@@ -164,7 +171,11 @@ fn create_mesh_on_thread(
     let texturing = Hexagon3DTexturing::new_height_based_texturing();
     let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
     info!("mesh created");
-    mutex.lock().unwrap().replace(mesh);
+    let mut lock = mutex.lock().unwrap();
+    let mut lock2 = mutex_heights.lock().unwrap();
+
+    lock2.replace(height_field);
+    lock.replace(mesh);
 }
 
 fn setup_playground(mut commands: Commands) {
@@ -242,12 +253,14 @@ fn start_loading(
     let mutex2 = mutex.clone();
     let map_to_load = map_registry.registered_heighmaps[map_registry.current_loaded_index].clone();
 
-    
+    let mutex_height: ThreadsafeValue<Field2D<f32>> = Arc::new(Mutex::new(None));
+    let mutex_height_clone = mutex_height.clone();
     info!("start mesh generation in own thread");
     map_registry.is_loading = true;
     std::thread::spawn(move || {
         create_mesh_on_thread(
             mutex,
+            mutex_height_clone,
             map_to_load,
             game_width,
             game_height,
@@ -255,18 +268,20 @@ fn start_loading(
         );
     });
 
-    let gen_task = MeshGenTask { mesh: mutex2, tiles_heigh_info: Vec<Vec<f32>>::new() };
+    let gen_task = MeshGenTask { mesh: mutex2, mutex_height: mutex_height };
     commands.spawn().insert(gen_task);
 }
 
 fn integrate_loaded_maps(
     mut commands: Commands,
+    mut game: ResMut<Game>,
     asset_server: Res<AssetServer>,
     mesh_gen_task: Query<(Entity, &MeshGenTask)>,
     old_playgrounds: Query<Entity, With<PlaygroundMarker>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut map_registry: ResMut<MapRegistry>,
+    mut query_positions: Query<(&PositionComponent, &mut Transform)>,
 ) {
     for (entity, mesh_gen_task) in mesh_gen_task.iter() {
         let mut lock_guard = mesh_gen_task.mesh.lock().unwrap();
@@ -315,6 +330,23 @@ fn integrate_loaded_maps(
 
             map_registry.is_loading = false;
             map_registry.is_loaded = true;
+
+
+
+            let mut lock_guard_heights = mesh_gen_task.mutex_height.lock().unwrap();
+
+            if lock_guard_heights.is_some() {
+                let heights = lock_guard_heights.take().unwrap();
+
+                for (pos, mut transform) in query_positions.iter_mut() {
+                    let height = heights.get_v(pos.x, pos.y).clone();
+                    transform.translation.y = height;
+                }
+
+                game.set_height_field(heights);
+            } else {
+                error!("Unexpected behavior: heights are not loaded");
+            }
 
             commands.entity(entity).despawn_recursive();
         }

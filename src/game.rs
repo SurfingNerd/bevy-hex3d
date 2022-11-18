@@ -1,37 +1,27 @@
 use bevy::prelude::{Entity};
 
+use crate::lib::field_2D::Field2D;
+
 pub struct Game {
     pub current_tick: u32,
     pub width: i32,
     pub height: i32,
-    entities: Vec<Vec<Option<Entity>>>, //maybe refactor to sparse set - lets see if memory becomes a problem or not.,
+    entities: Field2D<Option<Entity>>, //maybe refactor to sparse set - lets see if memory becomes a problem or not.,
     pub hex_spacing: hex2d::Spacing,
-    pub heights_z: Vec<Vec<f32>>,
+    pub heights_z: Field2D<f32>,
 }
 
 impl Game {
     pub fn new(width: i32, height: i32) -> Self {
-        let mut entities: Vec<Vec<Option<Entity>>> = Vec::new();
-        let mut heights: Vec<Vec<f32>> = Vec::new();
         
-        for _x in 0..width {
-            let mut y_vec: Vec<Option<Entity>> = Vec::new();
-            let mut height_y_vec = Vec::<f32>::new();
-            for _y in 0..height {
-                y_vec.push(Option::None);
-                height_y_vec.push(0.0);
-            }
-            entities.push(y_vec);
-            heights.push(height_y_vec);
-        }
 
         Game {
             width,
             height,
-            entities,
+            entities: Field2D::new(width as usize, height as usize),
             current_tick: 0,
             hex_spacing: hex2d::Spacing::FlatTop(0.50),
-            heights_z: heights,
+            heights_z: Field2D::new(width as usize, height as usize),
         }
         
     }
@@ -45,35 +35,40 @@ impl Game {
         if x < 0 || y < 0 || x >= self.width || y >= self.height {
             return Option::None;
         }
-        self.entities[x as usize][y as usize]
+        self.entities.get(x as usize,y as usize).clone()
     }
 
     /// sets entity to new id.
     /// if position already used, returns Error with existing entity id
     pub fn set_entity(&mut self, x: i32, y: i32, entity: Entity) {
-        let existing = self.entities[x as usize][y as usize];
+        let existing = self.entities.get(x as usize,y as usize);
         match existing {
             Some(_) => panic!("Entity already set!") ,
             None => {
                 // info!("setting entity {} {}: {:?}",x, y, entity);
-                self.entities[x as usize][y as usize] = Some(entity);
+                self.entities.set(x as usize,y as usize, Some(entity));
             }
         }
     }
 
     pub fn set_height(&mut self, x: i32, y: i32, height: f32) {
-        self.heights_z[x as usize][y as usize] = height;
+        //self.heights_z[x as usize][y as usize] = height;
+        self.heights_z.set(x as usize, y as usize, height);
     }
 
     pub fn get_height(&mut self, x: i32, y: i32) -> f32 {
-        self.heights_z[x as usize][y as usize]
+        self.heights_z.get(x as usize,y as usize).clone()
+    }
+
+    pub fn set_height_field(&mut self, field: Field2D<f32>) {
+        self.heights_z = field;
     }
 
     /// sets entity to new id.
     /// if position already used, returns Error with existing entity id
     pub fn delete_entity(&mut self, x: i32, y: i32) -> Entity {
-        let result = self.entities[x as usize][y as usize].expect("no entity to delete.");
-        self.entities[x as usize][y as usize] = None;
+        let result = self.entities.get(x as usize,y as usize).expect("no entity to delete.");
+        self.entities.set(x as usize,y as usize,None);
         return result;
     }
 }

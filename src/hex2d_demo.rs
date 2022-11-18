@@ -26,15 +26,15 @@ fn setup(
     asset_server: Res<AssetServer>,
 ) {
 
-    let max_tower_x = 0;
-    let max_tower_y = 0;
+    let max_tower_x = 20;
+    let max_tower_y = 20;
 
     movement_settings.speed = 100.;
 
     
     
     // materials
-    let texture_handle: Handle<Image> = asset_server.load("wood_pointy_top.png");
+    // let texture_handle: Handle<Image> = asset_server.load("wood_pointy_top.png");
 
     //let into : Image = Image.
     // let sprite = Sprite
