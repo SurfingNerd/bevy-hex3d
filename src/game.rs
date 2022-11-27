@@ -8,7 +8,8 @@ pub struct Game {
     pub height: i32,
     entities: Field2D<Option<Entity>>, //maybe refactor to sparse set - lets see if memory becomes a problem or not.,
     pub hex_spacing: hex2d::Spacing,
-    pub heights_z: Field2D<f32>,
+    // we divide the unit heigh throught 1000, to get the granularity we want.
+    pub heights_z: Field2D<i64>,
 }
 
 impl Game {
@@ -51,16 +52,17 @@ impl Game {
         }
     }
 
-    pub fn set_height(&mut self, x: i32, y: i32, height: f32) {
+    #[allow(dead_code)]
+    pub fn set_height(&mut self, x: i32, y: i32, height: i64) {
         //self.heights_z[x as usize][y as usize] = height;
         self.heights_z.set(x as usize, y as usize, height);
     }
 
-    pub fn get_height(&mut self, x: i32, y: i32) -> f32 {
+    pub fn get_height(&mut self, x: i32, y: i32) -> i64 {
         self.heights_z.get(x as usize,y as usize).clone()
     }
 
-    pub fn set_height_field(&mut self, field: Field2D<f32>) {
+    pub fn set_height_field(&mut self, field: Field2D<i64>) {
         self.heights_z = field;
     }
 

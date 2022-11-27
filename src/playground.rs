@@ -11,14 +11,13 @@ use crate::{
     game::Game,
 };
 
-pub struct PlaygroundPlugin {}
 
 type ThreadsafeValue<T> = Arc<Mutex<Option<T>>>;
 
 #[derive(Component)]
 pub struct MeshGenTask {
     pub mesh: ThreadsafeValue<Mesh>,
-    pub mutex_height: ThreadsafeValue<Field2D<f32>>,
+    pub mutex_height: ThreadsafeValue<Field2D<i64>>,
     // pub tiles_heigh_info: Vec<Vec<f32>>
 }
 
@@ -60,7 +59,7 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 //function that creates the mesh on a separate thread and stores it in the ThreadsafeValue box.
 fn create_mesh_on_thread(
     mutex: ThreadsafeValue<Mesh>,
-    mutex_heights: ThreadsafeValue<Field2D<f32>>,
+    mutex_heights: ThreadsafeValue<Field2D<i64>>,
     asset_to_load_plain: String,
     game_width: i32,
     game_height: i32,
@@ -140,10 +139,14 @@ fn create_mesh_on_thread(
                 }
 
                 let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
+
+                // we get a value between 0 and 255.
+                // 
                  
                 //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
                 z_pixel = 100. - (1. - (pixel_value / 255.0)) * 100.;
-                height_field.set(x as usize, y as usize, z_pixel);
+                // info!("z_pixel", z_pixel);
+                height_field.set(x as usize, y as usize, (z_pixel * 1000.0)  as i64);
             }
             else {
                 continue;
@@ -253,7 +256,7 @@ fn start_loading(
     let mutex2 = mutex.clone();
     let map_to_load = map_registry.registered_heighmaps[map_registry.current_loaded_index].clone();
 
-    let mutex_height: ThreadsafeValue<Field2D<f32>> = Arc::new(Mutex::new(None));
+    let mutex_height: ThreadsafeValue<Field2D<i64>> = Arc::new(Mutex::new(None));
     let mutex_height_clone = mutex_height.clone();
     info!("start mesh generation in own thread");
     map_registry.is_loading = true;
@@ -340,7 +343,7 @@ fn integrate_loaded_maps(
 
                 for (pos, mut transform) in query_positions.iter_mut() {
                     let height = heights.get_v(pos.x, pos.y).clone();
-                    transform.translation.y = height;
+                    transform.translation.y = (height / 1000) as f32 + 0.4;
                 }
 
                 game.set_height_field(heights);
@@ -354,18 +357,22 @@ fn integrate_loaded_maps(
     }
 }
 
+
+pub struct PlaygroundPlugin {}
+
+
 impl PlaygroundPlugin {
-    pub fn new() -> Self {
-        Self {}
-    }
+  pub fn new() -> Self {
+      Self {}
+  }
 }
 
 impl Plugin for PlaygroundPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            //.add_startup_system(load_playground_resources)
-            .add_startup_system(setup_playground)
-            .add_system(start_loading)
-            .add_system(integrate_loaded_maps);
-    }
+  fn build(&self, app: &mut App) {
+      app
+          //.add_startup_system(load_playground_resources)
+          .add_startup_system(setup_playground)
+          .add_system(start_loading)
+          .add_system(integrate_loaded_maps);
+  }
 }

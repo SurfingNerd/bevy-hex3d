@@ -236,7 +236,7 @@ fn move_entites(
             let (x_pixel, y_pixel) = c.to_pixel(game.hex_spacing);
             transform.translation.x = x_pixel;
             transform.translation.z = y_pixel;
-            transform.translation.y = game.get_height(position.x, position.y);
+            transform.translation.y = (game.get_height(position.x, position.y) as f32 / 1000.0) + 0.2;
             // transform.translation = Vec3:: { x_pixel, 0.01, y_pixel };
 
             // info!(
@@ -312,7 +312,7 @@ fn enemy_spawner(
 pub fn run_hex2d_demo() {
 
     //let game = Game::new(700, 700);
-    let game = Game::new(4000, 4000);
+    let game = Game::new(400, 400);
 
 
     App::new()
