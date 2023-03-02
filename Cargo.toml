@@ -24,9 +24,9 @@ codegen-units = 1
 
 [dependencies]
 #bevy_internal = "0.8.1"
-bevy = { version = "0.8.1", features = ["dynamic"] }
-bevy_flycam = "0.8.1"
-bevy-inspector-egui = "0.13.0"
+bevy = { version = "0.9.1", features = ["dynamic"] }
+bevy_flycam = "0.9.0"
+bevy-inspector-egui = "0.17.0"
 tiled = "0.10.2"
 anyhow = "1.0"
 hex2d = "1.1.0"

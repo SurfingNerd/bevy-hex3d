@@ -143,7 +143,7 @@ impl GlowLine {
         let mat_handle = materials.add(mat);
 
         let id = commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 mesh: mesh_handle,
                 material: mat_handle.clone(),
                 transform: Transform {
@@ -158,7 +158,7 @@ impl GlowLine {
 
 //            let spot_location = start + direction * 0.1;
 
-            // commands.spawn_bundle(SpotLightBundle {
+            // commands.spawn(SpotLightBundle {
             //     spot_light: SpotLight {
             //         intensity: 10000.0,
             //         range: 1.5,

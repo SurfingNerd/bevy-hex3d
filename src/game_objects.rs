@@ -39,7 +39,7 @@ pub fn spawn_enemy(
 
     //let handle = Handle::<StandardMaterial> { }
 
-    let unit = commands.spawn_bundle(
+    let unit = commands.spawn(
         PbrBundle {
           mesh: cube_mesh, // does only the handle get cloned here ? so we reuse the mesh ?
           material: material,
@@ -82,7 +82,7 @@ pub fn spawn_tower(
 
     // tower:
     let tower_id = commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: cube_mesh.clone(), // does only the handle get cloned here ? so we reuse the mesh ?
             material: material.clone(),
             transform: Transform {

@@ -27,6 +27,7 @@ pub struct PlaygroundMarker {}
 
 // a resource that knows the selected an all available maps,
 // as well a status on loading to prevent loading of 2 maps at the same time.
+#[derive(Resource)]
 pub struct MapRegistry {
     pub registered_heighmaps: Vec<String>,
     pub current_loaded_index: usize,
@@ -272,7 +273,7 @@ fn start_loading(
     });
 
     let gen_task = MeshGenTask { mesh: mutex2, mutex_height: mutex_height };
-    commands.spawn().insert(gen_task);
+    commands.spawn(gen_task);
 }
 
 fn integrate_loaded_maps(
@@ -318,7 +319,7 @@ fn integrate_loaded_maps(
                 ..Default::default()
             });
 
-            commands.spawn_bundle(PbrBundle {
+            commands.spawn(PbrBundle {
                 mesh: mesh_handle,
                 material: mat2.clone(),
                 transform: Transform {

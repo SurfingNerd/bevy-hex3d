@@ -1,7 +1,9 @@
-use bevy::prelude::{Entity};
+use bevy::prelude::{Entity, Resource};
 
 use crate::lib::field_2D::Field2D;
 
+
+#[derive(Resource)]
 pub struct Game {
     pub current_tick: u32,
     pub width: i32,

@@ -1,13 +1,10 @@
 use std::default::{Default};
-use bevy_inspector_egui::{WorldInspectorPlugin};
+use bevy_inspector_egui::DefaultInspectorConfigPlugin;
 
 
 use bevy::{
     log,
     prelude::*,
-    render::{
-        texture::ImageSettings,
-    },
     window::{WindowDescriptor, Windows},
     DefaultPlugins, diagnostic::*, time::Time,
 };
@@ -61,7 +58,7 @@ fn setup(
     const HALF_SIZE: f32 = 1000.0;
     // let skyblue = Color::rgb(0.5294, 0.878, 0.9216);
      let skyblue_light = Color::rgb(0.96, 0.96, 0.99916);
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: skyblue_light,
             illuminance: 1000.0,
@@ -97,7 +94,7 @@ fn setup(
     // spawn_debug_light(&mut commands, &mut meshes, &mut materials, Color::rgb(0.1,0.99,0.1), Transform::from_xyz(-10.0, 13.0, -10.0));
     
     // directional sun light with 45 degree angle
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             color: color_sun,
             illuminance: 100000.0,
@@ -150,7 +147,7 @@ fn spawn_debug_light(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>,
     
     // spawn a new red pointlight at the origin of the world a little bit elevated
     // outside of game area so the wrong normals get illuminated
-    commands.spawn_bundle(PointLightBundle {
+    commands.spawn(PointLightBundle {
         point_light: PointLight {
             color,
             intensity: 4000000.0,
@@ -163,7 +160,7 @@ fn spawn_debug_light(commands: &mut Commands, meshes: &mut ResMut<Assets<Mesh>>,
     });
 
     // spawn red ball for location debug purpose.
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Icosphere { radius: 0.1, subdivisions: 4 })),
         material: materials.add(color.into()),
         transform,
@@ -316,20 +313,19 @@ pub fn run_hex2d_demo() {
 
 
     App::new()
-        .insert_resource(WindowDescriptor {
+        //.insert_resource(ImageSettings::default_nearest())
+        .insert_resource(game)
+        .add_plugins(DefaultPlugins.set(WindowPlugin { window: WindowDescriptor {
             width: 1270.0,
             height: 720.0,
             title: String::from("Hexagon hex2d demo"),
             ..Default::default()
-        })
-        .insert_resource(ImageSettings::default_nearest())
-        .insert_resource(game)
-        .add_plugins(DefaultPlugins)
+        }, ..Default::default()}))
         .add_plugin(PlayerPlugin)
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(PlaygroundPlugin::new())
         // .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_plugin(WorldInspectorPlugin::new())   
+        .add_plugin(DefaultInspectorConfigPlugin)   
         // .add_plugin(bevy_screen_diags::ScreenDiagsPlugin)
         //.add_startup_system(load_heighmap_startup_system)
         .add_startup_system(setup)
