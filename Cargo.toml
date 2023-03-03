@@ -6,6 +6,12 @@ edition = "2021"
 [workspace]
 resolver = "2" # Important! wgpu/Bevy needs this!
 
+#exclude = ["crates/ticka"]
+include = [   
+        "crates/ticka",
+        "crates/bevy-ticka"
+    ]
+
 [profile.dev]
 opt-level = 3
 
@@ -30,4 +36,6 @@ bevy-inspector-egui = "0.17.0"
 tiled = "0.10.2"
 anyhow = "1.0"
 hex2d = "1.1.0"
+ticka = { path = "crates/ticka" }
+bevy_ticka = { path = "crates/bevy_ticka" }
 # derive-getters = "0.2.0"

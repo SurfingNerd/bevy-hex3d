@@ -1,0 +1,6 @@
+
+
+
+pub struct Ticka {
+    
+}
