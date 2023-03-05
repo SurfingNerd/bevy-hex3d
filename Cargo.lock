@@ -3211,6 +3211,7 @@ dependencies = [
 name = "ticka"
 version = "0.1.0"
 dependencies = [
+ "hex2d",
  "rayon",
 ]
 

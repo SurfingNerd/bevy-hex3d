@@ -8,30 +8,33 @@ use std::future::Future;
 use crate::layer_2D::{Layer2D, OptionalLayer2D};
 // use layer_2D::
 
+use crate::unit::*;
 
 // Unit Planner must be copyable,
 // since each thread get's it's own UnitPlanner
 // 
-pub trait UnitPlanner<TUnit, TUnitPlan> {
+pub trait UnitPlanner {
 
-    fn make_plan(&self, unit: &TUnit) -> TUnitPlan; 
+    fn make_plan(&self, unit: &Unit) -> UnitPlan; 
 }
 
-pub struct Ticka<TUnit, TUnitPlan> {
+pub struct Ticka {
     tick_count: u64,
-    units: OptionalLayer2D<TUnit>,
+    units: OptionalLayer2D<Unit>,
     width: u64,
-    unit_plan_function: fn(&TUnit) -> TUnitPlan ,
+    unit_plan_function: fn(&Unit) -> UnitPlan ,
 }
 
-impl<TUnit, TUnitPlan> Ticka<TUnit, TUnitPlan> {
+impl Ticka {
 
-    async fn get_units_plans(units: &Vec<Option<TUnit>>) -> Vec<Option<TUnitPlan>> {
+    async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
 
-        let mut result : Vec<Option<TUnitPlan>> = Vec::with_capacity(units.len());
+        let mut result : Vec<Option<UnitPlan>> = Vec::with_capacity(units.len());
 
         for unit_option  in units {
             if let Some(unit) = unit_option {
+
+                
                 
             } else {
                 result.push(None);
@@ -51,7 +54,7 @@ impl<TUnit, TUnitPlan> Ticka<TUnit, TUnitPlan> {
         for units in self.units.data.iter() {
 
             //Tick::get_units_plans()
-            futures.push(Ticka::<TUnit, TUnitPlan>::get_units_plans(units));
+            futures.push(Ticka::get_units_plans(units));
             
             //let result = future.await;
         }

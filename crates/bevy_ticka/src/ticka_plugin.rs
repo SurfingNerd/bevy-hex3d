@@ -9,7 +9,7 @@ use ticka::ticka::Ticka;
 
 
 #[derive(Resource)]
-pub struct TickaPlugin<TUnit : Send, TUnitPlan: Send> {
+pub struct TickaPlugin {
 
     // phantomUnit: PhantomData<&TUnit>,
     // phantomPlan: PhantomData<&TUnitPlan>,
@@ -20,9 +20,9 @@ pub struct TickaPlugin<TUnit : Send, TUnitPlan: Send> {
 }
 
 #[derive(Resource)]
-pub struct TickaRes<TUnit: Send, TUnitPlan: Send> {
+pub struct TickaRes {
     
-    ticka: Ticka<TUnit, TUnitPlan>,
+    ticka: Ticka,
 
     // ticke length in seconds.
     tick_length: f64,

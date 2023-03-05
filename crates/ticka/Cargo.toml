@@ -21,3 +21,4 @@ codegen-units = 1
 
 [dependencies]
 rayon = "1.6.1"
+hex2d = "1.1.0"
