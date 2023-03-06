@@ -90,7 +90,7 @@ impl<TValue: Clone> IndexedField2D<TValue> {
     }
 
     pub fn get_i32(&self, x: i32, y: i32) -> &Option<TValue> {
-        self.get_i32(x, y)
+        self.field.get_i32(x, y)
     }
 
     pub fn get(&self, x: usize, y: usize) -> &Option<TValue> {
