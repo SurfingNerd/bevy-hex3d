@@ -1,0 +1,22 @@
+[package]
+name = "sn_rust"
+version = "0.1.0"
+authors = ["Thomas Haller <thomashaller@gmx.at>"]
+edition = "2021"
+
+
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
+debug = false
+debug-assertions = false
+overflow-checks = false
+lto = false
+panic = 'unwind'
+incremental = true
+codegen-units = 1
+
+[dependencies]
+# ndarray = "0.15.6"
