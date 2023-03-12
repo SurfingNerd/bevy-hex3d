@@ -21,3 +21,4 @@ codegen-units = 1
 [dependencies]
 ticka = { path = "../ticka" }
 bevy = { version = "0.9.1", features = ["dynamic"] }
+sn_rust = { path = "../sn_rust" }

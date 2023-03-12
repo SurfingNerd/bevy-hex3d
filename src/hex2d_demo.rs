@@ -23,8 +23,8 @@ fn setup(
     asset_server: Res<AssetServer>,
 ) {
 
-    let max_tower_x = 20;
-    let max_tower_y = 20;
+    let max_tower_x: u32 = 20;
+    let max_tower_y: u32 = 20;
 
     movement_settings.speed = 100.;
 

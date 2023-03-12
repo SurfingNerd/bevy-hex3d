@@ -5,6 +5,8 @@
 
 use std::future::Future;
 
+use sn_rust::indexed_field_2D::IndexedField2D;
+
 use crate::layer_2D::{Layer2D, OptionalLayer2D};
 // use layer_2D::
 
@@ -19,13 +21,16 @@ pub trait UnitPlanner {
 }
 
 pub struct Ticka {
-    tick_count: u64,
-    units: OptionalLayer2D<Unit>,
-    width: u64,
+    tick_counter: u64,
+    units: IndexedField2D<Unit>,
     unit_plan_function: fn(&Unit) -> UnitPlan ,
 }
 
 impl Ticka {
+
+    pub fn new(width: usize, height: usize, unit_plan_function: fn(&Unit) -> UnitPlan) -> Self {
+        Ticka { tick_counter: 0, units: IndexedField2D::new(width, height), unit_plan_function }
+    }
 
     async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
 
@@ -49,15 +54,36 @@ impl Ticka {
 
         //let futures: Vec<dyn Future<Output = TUnitPlan>>  = Vec::new();
 
-        let mut futures: Vec<_> = Vec::new();
+        // DOTO:
+        // here the big performance magic has to be done.
+        // for initial architecture setup, 
+        //     
+         
+        // let mut futures: Vec<_> = Vec::new();
 
-        for units in self.units.data.iter() {
+        // maybe it is better to have a Plan Array that is indexed by the Unit ID,
+        // instead of the order of the IndexedField2DLocation
+        let mut plans = Vec::<UnitPlan>::with_capacity( self.units.indeces().len());
 
-            //Tick::get_units_plans()
-            futures.push(Ticka::get_units_plans(units));
+
+        for index in self.units.indeces().iter() {
+
+            if let Some(unit) = self.units.get_u32(index.x(), index.y()) {
+                let plan = (self.unit_plan_function)(unit);
+                plans.push(plan);
+            } else {
+                panic!("Unexpected: every coordinate should match a unit!");
+            }
             
-            //let result = future.await;
         }
+
+        // for units in self.units.iter data.iter() {
+
+        //     //Tick::get_units_plans()
+        //     futures.push(Ticka::get_units_plans(units));
+            
+        //     //let result = future.await;
+        // }
         
 
 

@@ -38,4 +38,5 @@ anyhow = "1.0"
 hex2d = "1.1.0"
 ticka = { path = "crates/ticka" }
 bevy_ticka = { path = "crates/bevy_ticka" }
+sn_rust = { path = "crates/sn_rust" }
 # derive-getters = "0.2.0"

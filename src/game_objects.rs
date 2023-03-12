@@ -69,8 +69,8 @@ pub fn spawn_tower(
     materials: &mut ResMut<Assets<StandardMaterial>>,
     game: &mut Game,
     commands: &mut Commands,
-    x: i32,
-    y: i32,
+    x: u32,
+    y: u32,
 ) {
     let cube = Cube::new(0.1);
     let cube_mesh = meshes.add(cube.into());

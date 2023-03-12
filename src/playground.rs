@@ -3,9 +3,9 @@ use std::sync::{Arc, Mutex};
 
 use bevy::render::texture::ImageType;
 use bevy::{prelude::*, render::texture::CompressedImageFormats};
+use sn_rust::field2D::Field2D;
 
 use crate::components::PositionComponent;
-use crate::lib::field_2D::Field2D;
 use crate::{
     hexagon::{Hexagon3D, Hexagon3DTexturing},
     game::Game,
@@ -343,7 +343,7 @@ fn integrate_loaded_maps(
                 let heights = lock_guard_heights.take().unwrap();
 
                 for (pos, mut transform) in query_positions.iter_mut() {
-                    let height = heights.get_v(pos.x, pos.y).clone();
+                    let height = heights.get_u32(pos.x, pos.y).clone();
                     transform.translation.y = (height / 1000) as f32 + 0.4;
                 }
 

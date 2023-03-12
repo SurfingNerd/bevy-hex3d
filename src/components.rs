@@ -65,6 +65,6 @@ pub struct Tower {
 
 #[derive(Debug, Component)]
 pub struct PositionComponent {
-    pub x: i32,
-    pub y: i32,
+    pub x: u32,
+    pub y: u32,
 }

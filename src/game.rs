@@ -1,6 +1,6 @@
 use bevy::prelude::{Entity, Resource};
+use sn_rust::field2D::Field2D;
 
-use crate::lib::field_2D::Field2D;
 
 
 #[derive(Resource)]
@@ -34,7 +34,7 @@ impl Game {
       self.current_tick += 1;
     }
 
-    pub fn get_entity(&self, x: i32, y: i32) -> Option<Entity> {
+    pub fn get_entity(&self, x: u32, y: u32) -> Option<Entity> {
         if x < 0 || y < 0 || x >= self.width || y >= self.height {
             return Option::None;
         }
@@ -55,12 +55,12 @@ impl Game {
     }
 
     #[allow(dead_code)]
-    pub fn set_height(&mut self, x: i32, y: i32, height: i64) {
+    pub fn set_height(&mut self, x: u32, y: u32, height: i64) {
         //self.heights_z[x as usize][y as usize] = height;
         self.heights_z.set(x as usize, y as usize, height);
     }
 
-    pub fn get_height(&mut self, x: i32, y: i32) -> i64 {
+    pub fn get_height(&mut self, x: u32, y: u32) -> i64 {
         self.heights_z.get(x as usize,y as usize).clone()
     }
 

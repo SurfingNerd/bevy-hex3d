@@ -843,6 +843,7 @@ name = "bevy_ticka"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "sn_rust",
  "ticka",
 ]
 
@@ -2105,6 +2106,7 @@ dependencies = [
  "bevy_flycam",
  "bevy_ticka",
  "hex2d",
+ "sn_rust",
  "ticka",
  "tiled",
 ]
@@ -3063,6 +3065,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "sn_rust"
+version = "0.1.0"
+
+[[package]]
 name = "spirv"
 version = "0.2.0+1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3213,6 +3219,7 @@ version = "0.1.0"
 dependencies = [
  "hex2d",
  "rayon",
+ "sn_rust",
 ]
 
 [[package]]

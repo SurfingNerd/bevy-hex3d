@@ -25,7 +25,7 @@ impl<T: Default + Clone> Field2D<T> {
       self.data[x * self.height + y] = value;
   }
 
-  pub fn get_i32(&self, x: i32, y: i32) -> &T {
+  pub fn get_u32(&self, x: u32, y: u32) -> &T {
       &self.data[x as usize * self.height + y as usize]
   }
 
