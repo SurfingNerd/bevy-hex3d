@@ -6,8 +6,8 @@ use sn_rust::field2D::Field2D;
 #[derive(Resource)]
 pub struct Game {
     pub current_tick: u32,
-    pub width: i32,
-    pub height: i32,
+    pub width: u32,
+    pub height: u32,
     entities: Field2D<Option<Entity>>, //maybe refactor to sparse set - lets see if memory becomes a problem or not.,
     pub hex_spacing: hex2d::Spacing,
     // we divide the unit heigh throught 1000, to get the granularity we want.
@@ -15,7 +15,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(width: i32, height: i32) -> Self {
+    pub fn new(width: u32, height: u32) -> Self {
         
 
         Game {
@@ -43,7 +43,7 @@ impl Game {
 
     /// sets entity to new id.
     /// if position already used, returns Error with existing entity id
-    pub fn set_entity(&mut self, x: i32, y: i32, entity: Entity) {
+    pub fn set_entity(&mut self, x: u32, y: u32, entity: Entity) {
         let existing = self.entities.get(x as usize,y as usize);
         match existing {
             Some(_) => panic!("Entity already set!") ,
@@ -70,7 +70,7 @@ impl Game {
 
     /// sets entity to new id.
     /// if position already used, returns Error with existing entity id
-    pub fn delete_entity(&mut self, x: i32, y: i32) -> Entity {
+    pub fn delete_entity(&mut self, x: u32, y: u32) -> Entity {
         let result = self.entities.get(x as usize,y as usize).expect("no entity to delete.");
         self.entities.set(x as usize,y as usize,None);
         return result;

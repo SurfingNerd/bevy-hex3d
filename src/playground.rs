@@ -62,8 +62,8 @@ fn create_mesh_on_thread(
     mutex: ThreadsafeValue<Mesh>,
     mutex_heights: ThreadsafeValue<Field2D<i64>>,
     asset_to_load_plain: String,
-    game_width: i32,
-    game_height: i32,
+    game_width: u32,
+    game_height: u32,
     game_hex_spacing: hex2d::Spacing,
 ) {
     let hm: Image;
@@ -111,7 +111,7 @@ fn create_mesh_on_thread(
         let mut hexes_x: Vec<Hexagon3D> = vec![];
 
         for y in 0..game_height {
-            let c = hex2d::Coordinate::new(x, y);
+            let c = hex2d::Coordinate::new(x as i32, y as i32);
             let (x_pixel, y_pixel) = c.to_pixel(game_hex_spacing);
 
             let mut z_pixel = 0.;

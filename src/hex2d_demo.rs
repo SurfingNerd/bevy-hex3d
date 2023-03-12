@@ -229,7 +229,7 @@ fn move_entites(
             movement.ticks_passed = 0;
 
             // update the UI Pos.
-            let c = hex2d::Coordinate::new(position.x, position.y);
+            let c = hex2d::Coordinate::new(position.x as i32, position.y as i32);
             let (x_pixel, y_pixel) = c.to_pixel(game.hex_spacing);
             transform.translation.x = x_pixel;
             transform.translation.z = y_pixel;
@@ -261,11 +261,11 @@ fn tower_shoot(
       }
       
       // find posible targets.
-      let coord = hex2d::Coordinate::new(position.x, position.y);
+      let coord = hex2d::Coordinate::new(position.x as i32, position.y as i32);
       
       for neighbor in coord.neighbors() {
         
-        if let Some(entity) = game.get_entity(neighbor.x, neighbor.y) {
+        if let Some(entity) = game.get_entity(neighbor.x as u32, neighbor.y as u32) {
           // info!("trying to shoot at {:?}", neighbor);
           if let Ok((mut hp, transform_target)) = query_hp.get_mut(entity) {
             

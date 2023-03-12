@@ -1,4 +1,6 @@
-use crate::ticka::Ticka;
+use sn_rust::indexed_field_2D::IndexedField2D;
+
+use crate::{ticka::Ticka, unit::Unit};
 
 pub struct RealTimeTickaFascade {
     ticka: Ticka,
@@ -32,5 +34,12 @@ impl RealTimeTickaFascade {
             self.last_processed_tick = current_time;
             self.ticka.tick();
         }
+    }
+    pub fn units_mut(&mut self) -> &mut IndexedField2D<Unit> {
+        self.ticka.units_mut()
+    }
+
+    pub fn units(&self) -> &IndexedField2D<Unit> {
+        self.ticka.units()
     }
 }

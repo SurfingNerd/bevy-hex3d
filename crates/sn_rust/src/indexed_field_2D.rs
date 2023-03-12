@@ -59,25 +59,58 @@ impl<TValue: Clone> IndexedField2D<TValue> {
         }
     }
 
-    pub fn take(&mut self, x: usize, y: usize) -> Option<TValue> {
-        self.field.get_mut(x, y).take()
+    pub fn take(&mut self, x: u32, y: u32) -> Option<TValue> {
+
+        let search_location = IndexedField2DLocation::new(x, y);
+        if !self.indeces.contains(&search_location) {
+
+        }
+
+        if self.indeces.remove(&search_location) {
+            return self.field.get_mut(x as usize, y as usize).take();
+        }
+
+        return None;
+
     }
 
-    pub fn set(&mut self, x: usize, y: usize, value: Option<TValue>) {
+    pub fn move_entity(&mut self, x: u32, y: u32, to_x: u32, to_y: u32) {
+
+        let search_location = IndexedField2DLocation::new(x, y);
+        if !self.indeces.contains(&search_location) {
+            panic!("trying to move entity from x: {x} y: {y}, but there is no entity at this location");
+        }
+
+        let to_search_location = IndexedField2DLocation::new(to_x, to_y);
+        if self.indeces.contains(&to_search_location) {
+            panic!("trying to move entity to x: {to_x} y: {to_y}, but there is already an entity at this location");
+        }
+
+        let value = self.field.get_mut(x as usize, y as usize).take();
+        self.field.get_mut(to_x as usize, to_y as usize).replace(value.unwrap());
+
+        // indeces need to be removed and inserted, because within a BTreeSet,
+        // we cannot just change an existing index.
+
+        self.indeces.remove(&search_location);
+        self.indeces.insert(to_search_location);
+    }
+
+    pub fn set(&mut self, x: u32, y: u32, value: Option<TValue>) {
         // todo: only do this check in Debug or testing builds
 
-        if self.field.get(x, y).is_some() {
+        if self.field.get_u32(x, y).is_some() {
             panic!("trying to overwrite existing value at x: {x} y: {y}");
         }
 
         if value.is_some() {
             self.indeces
-                .insert(IndexedField2DLocation::new(x as u32, y as u32));
+                .insert(IndexedField2DLocation::new(x, y));
         }
 
         // if there is a value: panic.
 
-        self.field.set(x, y, value);
+        self.field.set(x as usize, y as usize, value);
     }
 
     pub fn get_u32(&self, x: u32, y: u32) -> &Option<TValue> {

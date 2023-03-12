@@ -163,4 +163,13 @@ impl Ticka {
         // - - Bee's Pollinution Cloud
         // - - 
     }
+
+    pub fn units_mut(&mut self) -> &mut IndexedField2D<Unit> {
+        &mut self.units
+    }
+
+    pub fn units(&self) -> &IndexedField2D<Unit> {
+        &self.units
+    }
+
 }
