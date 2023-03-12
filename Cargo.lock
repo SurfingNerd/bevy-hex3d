@@ -843,6 +843,7 @@ name = "bevy_ticka"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "hex2d",
  "sn_rust",
  "ticka",
 ]

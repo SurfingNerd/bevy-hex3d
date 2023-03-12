@@ -3,10 +3,13 @@
 
 // use rayon::prelude::*;
 
+use std::cell::RefCell;
+use std::collections::BTreeSet;
 use std::future::Future;
 
 use sn_rust::indexed_field_2D::IndexedField2D;
 
+use crate::conflict::{UnitPlanMoveConflict, UnitPlanMoveConflicts};
 use crate::layer_2D::{Layer2D, OptionalLayer2D};
 // use layer_2D::
 
@@ -25,6 +28,7 @@ pub struct Ticka {
     units: IndexedField2D<Unit>,
     unit_plan_function: fn(&Unit) -> UnitPlan ,
 }
+
 
 impl Ticka {
 
@@ -50,7 +54,7 @@ impl Ticka {
         return result;
     }
 
-    async fn get_unit_plans_2D(&self) {
+    fn get_unit_plans_2d(&self) ->  Vec::<UnitPlan>{
 
         //let futures: Vec<dyn Future<Output = TUnitPlan>>  = Vec::new();
 
@@ -65,6 +69,7 @@ impl Ticka {
         // instead of the order of the IndexedField2DLocation
         let mut plans = Vec::<UnitPlan>::with_capacity( self.units.indeces().len());
 
+        
 
         for index in self.units.indeces().iter() {
 
@@ -74,26 +79,28 @@ impl Ticka {
             } else {
                 panic!("Unexpected: every coordinate should match a unit!");
             }
-            
         }
 
-        // for units in self.units.iter data.iter() {
+        return plans;
+    }
 
-        //     //Tick::get_units_plans()
-        //     futures.push(Ticka::get_units_plans(units));
-            
-        //     //let result = future.await;
-        // }
+    fn get_unit_plan_conflicts(&self, plans: &Vec<UnitPlan>) -> Vec<UnitPlanMoveConflict> {
+        // for progressing further, we ignore movement conflicts right now.
+        return Vec::new();
+    }
+
+    fn replan_conflicts(&self, plan_conflicts: &Vec<UnitPlanMoveConflict>, plans: &Vec<UnitPlan>) {
+        // for progressing further, we do not do a replaning right now.
+
         
+    }
 
+    fn execute_plans(&self, plans: &Vec<UnitPlan>) {
+        
+        // excutes the plans, 
+        // and resolves the conflicts the hard way.
 
-        // for future in futures.iter() {
-
-        //     let res = future.await();
-            
-
-        // }
-        // join!(future_one, future_two);
+        let mut conflicts = UnitPlanMoveConflicts::from_plans(plans);
     }
 
     // executes one tick
@@ -108,30 +115,27 @@ impl Ticka {
 
         // #step 1: Planning
 
-        // for vec in self.units.data.par_iter() {
-
-        //     // pass every vec to a threadpool.
-            
-        // }
-
-        //  self.units.data
-
-        // self.units.data.par_iter().map( |units|  { 
-
-        // })
+        let mut plans = self.get_unit_plans_2d();
 
         // every units does it's planning
 
         // #Step 2: conflict detection
+
+        let plan_conflicts = self.get_unit_plan_conflicts(&plans);
+        
 
         // if a conflict occurs 
         // example: (2 units trying to access the same field)
 
         // # Step: conflict-replan-step
 
+        self.replan_conflicts(&plan_conflicts, &mut plans);
+
         // Units might replan their action, based on konflict knowledge.
 
         // # Conflict resolving step
+
+        self.execute_plans(&plans);
 
         // some conflicts are still their after, and must be resolved the hard way,
         // may the better win, or soever

@@ -22,3 +22,4 @@ codegen-units = 1
 ticka = { path = "../ticka" }
 bevy = { version = "0.9.1", features = ["dynamic"] }
 sn_rust = { path = "../sn_rust" }
+hex2d = "1.1.0"
