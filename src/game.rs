@@ -35,7 +35,7 @@ impl Game {
     }
 
     pub fn get_entity(&self, x: u32, y: u32) -> Option<Entity> {
-        if x < 0 || y < 0 || x >= self.width || y >= self.height {
+        if x >= self.width || y >= self.height {
             return Option::None;
         }
         self.entities.get(x as usize,y as usize).clone()
