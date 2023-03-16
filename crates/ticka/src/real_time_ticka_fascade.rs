@@ -1,4 +1,4 @@
-use sn_rust::indexed_field_2D::IndexedField2D;
+use sn_rust::indexed_field_2_d::IndexedField2D;
 
 use crate::{ticka::Ticka, unit::Unit};
 

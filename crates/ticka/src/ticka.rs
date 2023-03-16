@@ -1,18 +1,5 @@
-
-// use std::future::join;
-
-// use rayon::prelude::*;
-
-use std::cell::RefCell;
-use std::collections::BTreeSet;
-use std::future::Future;
-
-use sn_rust::indexed_field_2D::IndexedField2D;
-
+use sn_rust::indexed_field_2_d::IndexedField2D;
 use crate::conflict::{UnitPlanMoveConflict, UnitPlanMoveConflicts};
-use crate::layer_2D::{Layer2D, OptionalLayer2D};
-// use layer_2D::
-
 use crate::unit::*;
 
 // Unit Planner must be copyable,
