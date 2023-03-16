@@ -1,39 +1,36 @@
-use std::{collections::BTreeSet, ptr::null};
 use crate::indexed_field2d_location::IndexedField2DLocation;
-
-
+use std::collections::BTreeSet;
 
 /// An 2D Field with Objects of Type T or a Null Object
 /// This is a storage optimized version of IndexedField2D
 /// for types that support the Null-Object Design Pattern.
 /// Instead of Options, Null Objects are used.
 pub struct NullIndexedField2D<T: Clone + PartialEq> {
-
     data: Vec<T>,
     width: usize,
     height: usize,
     indeces: BTreeSet<IndexedField2DLocation>,
-    null_object: T
+    null_object: T,
 }
 
 impl<T: Clone + PartialEq> NullIndexedField2D<T> {
     pub fn new(width: usize, height: usize, null_object: &T) -> Self {
         Self {
-        data: vec![null_object.clone(); width * height],
-        width,
-        height,
-        indeces: BTreeSet::new(),
-        null_object: null_object.clone()
+            data: vec![null_object.clone(); width * height],
+            width,
+            height,
+            indeces: BTreeSet::new(),
+            null_object: null_object.clone(),
         }
     }
 
     #[inline(always)]
-    fn raw_get (&self, x: usize, y: usize) -> &T {
+    fn raw_get(&self, x: usize, y: usize) -> &T {
         &self.data[x * self.height + y]
     }
 
     #[inline(always)]
-    fn raw_mut (&mut self, x: usize, y: usize) -> &mut T {
+    fn raw_mut(&mut self, x: usize, y: usize) -> &mut T {
         &mut self.data[x * self.height + y]
     }
 
@@ -41,9 +38,9 @@ impl<T: Clone + PartialEq> NullIndexedField2D<T> {
     /// might be the null_object.
     pub fn take(&mut self, x: u32, y: u32) -> T {
         let search_location = IndexedField2DLocation::new(x, y);
-        
+
         if self.indeces.remove(&search_location) {
-            let null_object =  self.null_object.clone();
+            let null_object = self.null_object.clone();
             return std::mem::replace(self.raw_mut(x as usize, y as usize), null_object);
         }
 
@@ -67,20 +64,16 @@ impl<T: Clone + PartialEq> NullIndexedField2D<T> {
             panic!("trying to move entity to x: {to_x} y: {to_y}, but there is already an entity at this location");
         }
 
-
         *self.raw_mut(to_x as usize, to_y as usize) = self.take(x, y);
 
         // indeces need to be removed and inserted, because within a BTreeSet,
         // we cannot just change an existing index.
         self.indeces.remove(&search_location);
         self.indeces.insert(to_search_location);
-
-        
     }
 
     /// sets empty cell on x y to the given value.
     pub fn set(&mut self, x: u32, y: u32, value: T) {
-
         // we are not checking if we overwrite existing values in production builds.
         #[cfg(debug_assertions)]
         if self.get_u32(x, y).is_some() {
@@ -111,16 +104,10 @@ impl<T: Clone + PartialEq> NullIndexedField2D<T> {
         let res = self.data.get_mut(x * self.height + y);
         return res.expect("Index Out of Boounds");
     }
-
-
 }
-
-
-
 
 #[test]
 fn test_move_entity() {
-
     let mut field = NullIndexedField2D::<u64>::new(100, 100, &u64::MAX);
 
     field.set(50, 50, 50);
