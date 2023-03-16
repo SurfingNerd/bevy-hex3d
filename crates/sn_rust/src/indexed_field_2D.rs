@@ -125,3 +125,18 @@ impl<TValue: Clone> IndexedField2D<TValue> {
         &self.indeces
     } 
 }
+
+
+#[test]
+fn test_move_entity() {
+
+    let mut field = IndexedField2D::<u64>::new(100, 100);
+
+    field.set(50, 50, Some(50));
+    assert_eq!(field.get(50, 50), &Some(50 as u64));
+
+    field.move_entity(50, 50, 60, 60);
+
+    assert_eq!(field.get(50, 50), &None);
+    assert_eq!(field.get(60, 60), &Some(50 as u64));
+}
