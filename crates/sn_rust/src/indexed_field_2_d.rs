@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use crate::{field2D::Field2D, indexed_field2d_location::IndexedField2DLocation};
+use crate::{field_2_d::Field2D, indexed_field2d_location::IndexedField2DLocation};
 
 // type Indeces = BTreeSet<IndexedField2DLocation>;
 

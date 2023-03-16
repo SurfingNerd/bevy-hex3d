@@ -72,7 +72,6 @@ impl<T: Clone + PartialEq> NullIndexedField2D<T> {
 
         // indeces need to be removed and inserted, because within a BTreeSet,
         // we cannot just change an existing index.
-
         self.indeces.remove(&search_location);
         self.indeces.insert(to_search_location);
 
