@@ -24,16 +24,16 @@ use crate::{field2D::Field2D, indexed_field2d_location::IndexedField2DLocation};
 // }
 
 // supports indexed access for the underlying field 2D.
-// supports only optional, and allows to get the index information of available Some(TValue).
+// supports only optional, and allows to get the index information of available Some(T).
 // makes only sense, if only a portion of the existing field is used, and most of the field is Empty. 
-// for dense fields, like fields that have Some(TValue) in > 50% ? (to be tested) of the cases, 
+// for dense fields, like fields that have Some(T) in > 50% ? (to be tested) of the cases, 
 // using a Field2D offers better performance
 // fast in looking up what fields are used.
 // fast in looking up what is stored on a specific field.
 // No chunking support.
-// slow in finding out where a specific TValue is placed on the field.
-pub struct IndexedField2D<TValue: Clone> {
-    field: Field2D<Option<TValue>>,
+// slow in finding out where a specific T is placed on the field.
+pub struct IndexedField2D<T: Clone> {
+    field: Field2D<Option<T>>,
 
     // maybe a UniqueBTreeSet offers more performance ?
     // just a theory, needs to get confimed.
@@ -51,7 +51,7 @@ pub struct IndexedField2D<TValue: Clone> {
 //     }
 // }
 
-impl<TValue: Clone> IndexedField2D<TValue> {
+impl<T: Clone> IndexedField2D<T> {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
             field: Field2D::new(width, height),
@@ -59,7 +59,7 @@ impl<TValue: Clone> IndexedField2D<TValue> {
         }
     }
 
-    pub fn take(&mut self, x: u32, y: u32) -> Option<TValue> {
+    pub fn take(&mut self, x: u32, y: u32) -> Option<T> {
 
         let search_location = IndexedField2DLocation::new(x, y);
         if !self.indeces.contains(&search_location) {
@@ -96,7 +96,7 @@ impl<TValue: Clone> IndexedField2D<TValue> {
         self.indeces.insert(to_search_location);
     }
 
-    pub fn set(&mut self, x: u32, y: u32, value: Option<TValue>) {
+    pub fn set(&mut self, x: u32, y: u32, value: Option<T>) {
         // todo: only do this check in Debug or testing builds
 
         if self.field.get_u32(x, y).is_some() {
@@ -113,17 +113,17 @@ impl<TValue: Clone> IndexedField2D<TValue> {
         self.field.set(x as usize, y as usize, value);
     }
 
-    pub fn get_u32(&self, x: u32, y: u32) -> &Option<TValue> {
+    pub fn get_u32(&self, x: u32, y: u32) -> &Option<T> {
         self.field.get_u32(x, y)
     }
 
-    pub fn get(&self, x: usize, y: usize) -> &Option<TValue> {
+    pub fn get(&self, x: usize, y: usize) -> &Option<T> {
         self.field.get(x, y)
     }
 
     pub fn indeces(&self) -> &BTreeSet<IndexedField2DLocation> {
         &self.indeces
-    } 
+    }
 }
 
 
