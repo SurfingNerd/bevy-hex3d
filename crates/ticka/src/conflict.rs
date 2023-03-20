@@ -69,8 +69,8 @@ impl UnitPlanMoveConflicts {
     &self.target_locations
   }
 
-  pub fn non_conflicting_plans(&self) -> &Vec<UnitPlan> {
-    &self.non_conflicting_plans
+  pub fn non_conflicting_plans(&mut self) -> &mut Vec<UnitPlan> {
+    &mut self.non_conflicting_plans
   }
 
 }

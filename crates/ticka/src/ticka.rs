@@ -1,3 +1,4 @@
+use sn_rust::field_2_d::Field2D;
 use sn_rust::indexed_field_2_d::IndexedField2D;
 use crate::conflict::{UnitPlanMoveConflict, UnitPlanMoveConflicts};
 use crate::ticka_context::TickaContext;
@@ -13,7 +14,8 @@ pub trait UnitPlanner {
 
 pub struct Ticka {
     tick_counter: u64,
-    units: IndexedField2D<Unit>,
+    units_field: IndexedField2D<Unit>,
+    terrain_height: Field2D<f32>,
     unit_plan_function: fn(&Unit) -> UnitPlan ,
 }
 
@@ -24,7 +26,7 @@ pub struct Ticka {
 impl Ticka {
 
     pub fn new(width: usize, height: usize, unit_plan_function: fn(&Unit) -> UnitPlan) -> Self {
-        Ticka { tick_counter: 0, units: IndexedField2D::new(width, height), unit_plan_function }
+        Ticka { tick_counter: 0, units_field: IndexedField2D::new(width, height), unit_plan_function, terrain_height: Field2D::new(width, height) }
     }
 
     async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
@@ -58,13 +60,13 @@ impl Ticka {
 
         // maybe it is better to have a Plan Array that is indexed by the Unit ID,
         // instead of the order of the IndexedField2DLocation
-        let mut plans = Vec::<UnitPlan>::with_capacity( self.units.indeces().len());
+        let mut plans = Vec::<UnitPlan>::with_capacity( self.units_field.indeces().len());
 
         
 
-        for index in self.units.indeces().iter() {
+        for index in self.units_field.indeces().iter() {
 
-            if let Some(unit) = self.units.get_u32(index.x(), index.y()) {
+            if let Some(unit) = self.units_field.get_u32(index.x(), index.y()) {
                 let plan = (self.unit_plan_function)(unit);
                 plans.push(plan);
             } else {
@@ -117,7 +119,7 @@ impl Ticka {
 
         let mut context = TickaContext {};
 
-        for unit_plan in conflicts.non_conflicting_plans().iter() {
+        for unit_plan in conflicts.non_conflicting_plans().iter_mut() {
             unit_plan.execute(&mut context);
         }
 
@@ -190,11 +192,11 @@ impl Ticka {
     }
 
     pub fn units_mut(&mut self) -> &mut IndexedField2D<Unit> {
-        &mut self.units
+        &mut self.units_field
     }
 
     pub fn units(&self) -> &IndexedField2D<Unit> {
-        &self.units
+        &self.units_field
     }
 
 }

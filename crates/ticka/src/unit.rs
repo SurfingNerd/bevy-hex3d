@@ -55,18 +55,19 @@ impl UnitPlanEnum {
 pub struct UnitPlan {
     unit: Unit,
     plan: UnitPlanEnum,
+    is_executed: bool,
 }
 
 
 impl UnitPlan {
 
     pub fn new(unit: Unit, plan: UnitPlanEnum) -> Self {
-        UnitPlan { unit, plan }
+        UnitPlan { unit, plan, is_executed: false }
     }
 
-    pub fn execute(&self,  context: &mut TickaContext) {
+    pub fn execute(&mut self,  context: &mut TickaContext) {
 
-        let unit_moves = Vec::<MovePlanAction>::new();
+        // let unit_moves = Vec::<MovePlanAction>::new();
 
         match &self.plan {
             UnitPlanEnum::Idle => {
@@ -76,6 +77,8 @@ impl UnitPlan {
                 move_plan_action.execute(&self.unit, context);
             },
         }
+
+        self.is_executed = true;
     }
 
     // fn get_trait(&self) -> &dyn PlanAction{
