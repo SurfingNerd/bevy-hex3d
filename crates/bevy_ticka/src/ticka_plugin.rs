@@ -19,10 +19,7 @@ pub struct TickaPlugin {
 
 #[derive(Resource)]
 pub struct TickaRes {
-    
     real_time_ticka: RealTimeTickaFascade,
-
- 
 }
 
 impl Default for TickaPlugin {
@@ -57,10 +54,7 @@ impl Plugin for TickaPlugin {
 
     fn build(&self, app: &mut bevy::prelude::App) {
 
-        let tick_length = 1.0 / self.ticks_per_second;
-
-        //let units = Field2D::<Unit>::new();
-        let ticka = Ticka::new(1000, 1000, unit_plan);
+        let ticka = Ticka::new(1000, 1000, 1,  unit_plan);
 
         let real_time_ticka = RealTimeTickaFascade::from_ticka(ticka, 1.0);
 
@@ -68,5 +62,5 @@ impl Plugin for TickaPlugin {
             
         app.insert_resource(res);
         app.add_system(ticka_system);
-    }
+    } 
 }

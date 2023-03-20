@@ -15,7 +15,17 @@ pub trait UnitPlanner {
 pub struct Ticka {
     tick_counter: u64,
     units_field: IndexedField2D<Unit>,
-    terrain_height: Field2D<f32>,
+    
+    /// Maybe you want to write yourself a wrapper.
+    /// terrain_height: Field2D<f32>,
+    /// water_amount: Field2D<f32>,
+    /// lava_amount: Field2D<f32>,
+    /// fire_amount: Field2D<f32>,
+    /// flammability: Field2D<f32>,
+    /// moisture: Field2D<f32>,
+    /// greenery: Field2D<f32>,
+    fields: Vec<Field2D<f32>>,
+    
     unit_plan_function: fn(&Unit) -> UnitPlan ,
 }
 
@@ -25,8 +35,16 @@ pub struct Ticka {
 
 impl Ticka {
 
-    pub fn new(width: usize, height: usize, unit_plan_function: fn(&Unit) -> UnitPlan) -> Self {
-        Ticka { tick_counter: 0, units_field: IndexedField2D::new(width, height), unit_plan_function, terrain_height: Field2D::new(width, height) }
+    
+    pub fn new(width: usize, height: usize, num_of_fields: usize, unit_plan_function: fn(&Unit) -> UnitPlan) -> Self {
+        
+        let mut fields: Vec<Field2D<f32>> = Vec::new();
+
+        for _ in 0..num_of_fields {
+            fields.push(Field2D::new(width, height));
+        }
+        // let vec = vec!(Field2D::new(width, height));
+        Ticka { tick_counter: 0, units_field: IndexedField2D::new(width, height), unit_plan_function, fields }
     }
 
     async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
