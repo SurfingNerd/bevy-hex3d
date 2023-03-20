@@ -1,7 +1,8 @@
 use std::collections::BTreeMap;
 use sn_rust::indexed_field2d_location::IndexedField2DLocation;
 
-use crate::unit::{Unit, UnitPlan, MovePlanAction};
+use crate::unit::{Unit, UnitPlan};
+
 
 pub struct UnitPlanMoveConflicts {
 

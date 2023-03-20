@@ -2,7 +2,7 @@ use std::f32::consts::E;
 
 use sn_rust::indexed_field2d_location::IndexedField2DLocation;
 
-use crate::ticka_context::TickaContext;
+use crate::{ticka_context::TickaContext, unit_move_action::MovePlanAction, unit_plan_action::PlanAction};
 
 
 // Note: 
@@ -18,56 +18,15 @@ pub struct Unit {
   id: UnitsIntegerType
 }
 
+impl Unit {
+    pub fn id(&self) -> &UnitsIntegerType  {
+        self.id()
+    }
+}
+
 pub struct UnitPlanner{
 
 
-}
-
-
-pub enum UnitPlanAction {
-    Move(MovePlanAction)
-}
-
-pub trait PlanAction where Self: Clone + Sized {
-
-    /// executes the actions, changing values on the context
-    fn execute(&self, unit: &Unit,  context: &mut TickaContext);
-    
-    /// text description of planned Action
-    fn description(&self, unit: &Unit,  context: &TickaContext) -> String;
-
-    /// returns Some, if the action does a field movement.
-    fn move_to_field(&self, unit: &Unit) -> Option<IndexedField2DLocation> {
-        None
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct MovePlanAction {
-    direction: hex2d::Direction
-}
-
-
-impl MovePlanAction {
-    pub fn from_single_step(direction: hex2d::Direction) -> Self {
-        MovePlanAction { direction }
-    }
-
-    pub fn get_target_location(&self, unit: &Unit,context:  &TickaContext) -> IndexedField2DLocation {
-        IndexedField2DLocation::new(0,0)
-    }
-}
-
-impl PlanAction for MovePlanAction {
-    fn execute(&self, unit: &Unit, context:  &mut TickaContext) {
-        print!("moving: {:?} to {:?}", unit, self.direction)
-    }
-
-    fn description(&self, unit: &Unit, context: &TickaContext) -> String {
-
-        let l = self.get_target_location(unit, context);
-        format!("Moves unit {} to {}-{}",unit.id, l.x(), l.y() )
-    }
 }
 
 
@@ -106,6 +65,8 @@ impl UnitPlan {
     }
 
     pub fn execute(&self,  context: &mut TickaContext) {
+
+        let unit_moves = Vec::<MovePlanAction>::new();
 
         match &self.plan {
             UnitPlanEnum::Idle => {
