@@ -1,18 +1,18 @@
 use std::collections::BTreeMap;
 use sn_rust::indexed_field2d_location::IndexedField2DLocation;
 
-use crate::unit::{Unit, UnitPlan};
+use crate::unit::{Unit, UnitPlan, MovePlanAction};
 
 pub struct UnitPlanMoveConflicts {
 
-  
+  non_conflicting_plans: Vec<UnitPlan>,
   target_locations: BTreeMap<IndexedField2DLocation, UnitPlanMoveConflict>
 }
 
 impl UnitPlanMoveConflicts {
 
   fn new() -> Self {
-    UnitPlanMoveConflicts { target_locations: BTreeMap::new() }
+    UnitPlanMoveConflicts { target_locations: BTreeMap::new(), non_conflicting_plans: Vec::new() }
   }
 
   /// builds Planing conflicts from Plans.
@@ -40,16 +40,27 @@ impl UnitPlanMoveConflicts {
 
       // check if there is already a conflict registered for this location.
       if let Some(conflict) = self.target_locations.get_mut(&target_location) {
-        conflict.units.push(plan.unit().clone());
+        
+        //if planAction is UnitMoveAction
+
+        conflict.plans.push(plan.clone());
+
+        //conflict.units.push();
       } else {
-        self.target_locations.insert(target_location, UnitPlanMoveConflict { units: vec![plan.unit().clone()] });
+        self.target_locations.insert(target_location, UnitPlanMoveConflict { plans: vec![plan.clone()] });
       }
     }
   }
 
   fn clear_non_conflicting_plans(&mut self) {
 
-    self.target_locations.retain(|_l,c| c.units.len() > 1);
+    // store the nonconflicting plans.
+    let mut filtered = self.target_locations.iter().filter(|(l,c)| c.plans().len() == 1);
+
+    let mapped = filtered.map(|(l,c)| c.plans().first().expect("1").clone());
+    self.non_conflicting_plans = mapped.collect(); //drained.filter(|_l, c| c.units().len());
+    // self.non_conflicting_plans =
+    self.target_locations.retain(|_l,c| c.plans.len() > 1);
 
   }
 
@@ -57,10 +68,22 @@ impl UnitPlanMoveConflicts {
     &self.target_locations
   }
 
+  pub fn non_conflicting_plans(&self) -> &Vec<UnitPlan> {
+    &self.non_conflicting_plans
+  }
+
 }
 
 pub struct UnitPlanMoveConflict {
 
-  units: Vec<Unit>
+  plans: Vec<UnitPlan>
+}
+
+
+impl UnitPlanMoveConflict {
+
+  pub fn plans(&self ) -> &Vec<UnitPlan> {
+    &self.plans
+  }
 }
 

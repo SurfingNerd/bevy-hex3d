@@ -1,5 +1,5 @@
 use bevy::prelude::{Entity, Resource};
-use sn_rust::field2D::Field2D;
+use sn_rust::field_2_d::Field2D;
 
 
 

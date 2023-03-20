@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use bevy::{prelude::{Plugin, Res, Resource, ResMut}, time::Time};
-use ticka::{ticka::Ticka, real_time_ticka_fascade::RealTimeTickaFascade, layer_2D::Layer2D, unit::{Unit, UnitPlan, MovePlanAction}};
+use ticka::{ticka::Ticka, real_time_ticka_fascade::RealTimeTickaFascade, layer_2D::Layer2D, unit::{Unit, UnitPlan, MovePlanAction, UnitPlanEnum}};
 
 
 // Idea: create a RealTimeTicka in ticka ?
@@ -52,7 +52,7 @@ fn ticka_system(time: Res<Time>,mut ticka: ResMut<TickaRes>) {
 }
 
 fn unit_plan(unit: &Unit) -> UnitPlan {
-    return UnitPlan::new( unit.clone(), Box::new(MovePlanAction::from_single_step(hex2d::Direction::XZ)));
+    return UnitPlan::new( unit.clone(), UnitPlanEnum::Move(MovePlanAction::from_single_step(hex2d::Direction::XZ)));
 }
 
 impl Plugin for TickaPlugin {

@@ -1,5 +1,6 @@
 use sn_rust::indexed_field_2_d::IndexedField2D;
 use crate::conflict::{UnitPlanMoveConflict, UnitPlanMoveConflicts};
+use crate::ticka_context::TickaContext;
 use crate::unit::*;
 
 // Unit Planner must be copyable,
@@ -15,6 +16,9 @@ pub struct Ticka {
     units: IndexedField2D<Unit>,
     unit_plan_function: fn(&Unit) -> UnitPlan ,
 }
+
+// Threading concept:
+// Process 
 
 
 impl Ticka {
@@ -79,7 +83,11 @@ impl Ticka {
     fn replan_conflicts(&self, plan_conflicts: &Vec<UnitPlanMoveConflict>, plans: &Vec<UnitPlan>) {
         // for progressing further, we do not do a replaning right now.
 
-        
+        // let plan_option = plans.get_mut(1);
+
+        // if let Some(mut plan) = plan_option {
+            
+        // }
     }
 
     fn execute_plans(&self, plans: &Vec<UnitPlan>) {
@@ -87,7 +95,33 @@ impl Ticka {
         // excutes the plans, 
         // and resolves the conflicts the hard way.
 
+
         let mut conflicts = UnitPlanMoveConflicts::from_plans(plans);
+
+
+        // TODO: handle conflicts here
+        // let conflicting_plan_groups = conflicts.get_conflicting_plans();
+
+        // for conflicting_plan_group in conflicting_plan_groups  {
+        //     let location = conflicting_plan_group.0;
+        //     let conflict  = conflicting_plan_group.1;
+
+            
+        //     for plan in conflict.plans().iter() {
+                
+        //     }
+        // }
+
+
+        // all unhandled conflicts will just idle
+
+        let mut context = TickaContext {};
+
+        for unit_plan in conflicts.non_conflicting_plans().iter() {
+            unit_plan.execute(&mut context);
+        }
+
+
     }
 
     // executes one tick

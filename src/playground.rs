@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use bevy::render::texture::ImageType;
 use bevy::{prelude::*, render::texture::CompressedImageFormats};
-use sn_rust::field2D::Field2D;
+use sn_rust::field_2_d::Field2D;
 
 use crate::components::PositionComponent;
 use crate::{
