@@ -70,7 +70,7 @@ impl Plugin for TickaPlugin {
 
     fn build(&self, app: &mut bevy::prelude::App) {
         
-
+        info!("building Ticka base plugin");
         //let movement_reader = MovementReader::new();
         //let sender = movement_reader.create_sender();
         let ticka = Ticka::new(1000, 1000, 1,  unit_plan, None);
@@ -79,5 +79,7 @@ impl Plugin for TickaPlugin {
             
         app.insert_resource(res);
         app.add_system(ticka_system);
+
+        info!("building Ticka base plugin - done");
     } 
 }
