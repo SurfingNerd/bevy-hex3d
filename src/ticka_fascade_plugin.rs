@@ -13,9 +13,7 @@ pub struct TickaEntityComponent {
     bevy_entity_id: Entity
 }
 
-pub struct TickaFascadePlugin {
-
-}
+pub struct TickaFascadePlugin;
 
 
 pub fn spawn_enemy(
@@ -109,7 +107,7 @@ fn startup_ticka(commands: &mut Commands, game: &mut ResMut<Game>,  meshes: &mut
     //ticka.real_time_ticka().units().spawn_entity(x, y)
 }
 
-fn ticka_system(commands: &mut Commands, mut ticka: ResMut<TickaRes>, game: &mut ResMut<Game>, mut query: Query<(&mut TickaEntityComponent, &mut Transform)>, ) {
+fn ticka_system(mut commands: Commands, mut ticka: ResMut<TickaRes>, mut game: ResMut<Game>, mut query: Query<(&mut TickaEntityComponent, &mut Transform)>, ) {
 
     //ticka.real_time_ticka().units()
     //real_time_ticka_fascade.
@@ -150,7 +148,7 @@ impl Plugin for TickaFascadePlugin {
         plugin.build(app);
 
         // app.add_startup_system(startup_ticka);
-        //app.add_system(ticka_system);
+        app.add_system(ticka_system);
         
         // app.insert_resource(resource);
     }

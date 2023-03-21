@@ -9,7 +9,7 @@ use bevy::{
     DefaultPlugins, diagnostic::*, time::Time,
 };
 
-use crate::{components::*, game::Game, glow_line::{GlowLine, glow_line_system}, game_objects::{spawn_tower, spawn_enemy}, playground::PlaygroundPlugin, cam_movement::camera_movement_speed};
+use crate::{components::*, game::Game, glow_line::{GlowLine, glow_line_system}, game_objects::{spawn_tower, spawn_enemy}, playground::PlaygroundPlugin, cam_movement::camera_movement_speed, ticka_fascade_plugin::TickaFascadePlugin};
 use bevy_flycam::{MovementSettings, PlayerPlugin};
 
 
@@ -325,7 +325,8 @@ pub fn run_hex2d_demo() {
         .add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(PlaygroundPlugin::new())
         // .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        .add_plugin(DefaultInspectorConfigPlugin)   
+        .add_plugin(DefaultInspectorConfigPlugin)  
+        .add_plugin(TickaFascadePlugin) 
         // .add_plugin(bevy_screen_diags::ScreenDiagsPlugin)
         //.add_startup_system(load_heighmap_startup_system)
         .add_startup_system(setup)
