@@ -183,7 +183,7 @@ fn create_mesh_on_thread(
 }
 
 fn setup_playground(mut commands: Commands) {
-    info!("setting up playground");
+    info!("setting up playground map registy");
     // while!images.contains(&heightmap_cache.heightmap) {
     //   info!("waiting for heightmap");
     // }
@@ -207,6 +207,7 @@ fn setup_playground(mut commands: Commands) {
 
     commands.insert_resource(map_registry);
 
+    info!("setting up playground map registy - done");
     //let mesh_gen_task = MeshGenTask { mesh: Arc::new(Mutex::new(None)) };
 }
 
@@ -287,6 +288,7 @@ fn integrate_loaded_maps(
     mut map_registry: ResMut<MapRegistry>,
     mut query_positions: Query<(&PositionComponent, &mut Transform)>,
 ) {
+    info!("integrating loaded map");
     for (entity, mesh_gen_task) in mesh_gen_task.iter() {
         let mut lock_guard = mesh_gen_task.mesh.lock().unwrap();
         // info!("checking if mesh is ready");
@@ -356,6 +358,8 @@ fn integrate_loaded_maps(
         }
         //mesh_gen_task
     }
+
+    info!("integrating loaded map done");
 }
 
 

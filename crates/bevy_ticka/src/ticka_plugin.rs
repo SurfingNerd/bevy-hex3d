@@ -1,4 +1,4 @@
-use bevy::{prelude::{Plugin, Res, Resource, ResMut}, time::Time};
+use bevy::{prelude::{Plugin, Res, Resource, ResMut, info}, time::Time};
 use ticka::{ticka::Ticka, real_time_ticka_fascade::RealTimeTickaFascade, unit::{Unit, UnitPlan, UnitPlanEnum}, unit_move_action::MovePlanAction};
 use derive_getters::Getters;
 
@@ -44,8 +44,8 @@ impl Default for TickaPlugin {
 impl TickaPlugin {
 
     pub fn new() -> Self {
+        
         let result = TickaPlugin::default();
-
         return result;
     }
 
@@ -54,6 +54,7 @@ impl TickaPlugin {
 
 fn ticka_system(time: Res<Time>,mut ticka: ResMut<TickaRes>) {
 
+    info!("Ticka syncro tick");
     let time = time.elapsed_seconds_f64();
 
     ticka.real_time_ticka.tick_if_time_has_come(time);
@@ -70,9 +71,9 @@ impl Plugin for TickaPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         
 
-        let movement_reader = MovementReader::new();
-        let sender = movement_reader.create_sender();
-        let ticka = Ticka::new(1000, 1000, 1,  unit_plan, sender);
+        //let movement_reader = MovementReader::new();
+        //let sender = movement_reader.create_sender();
+        let ticka = Ticka::new(1000, 1000, 1,  unit_plan, None);
         let real_time_ticka = RealTimeTickaFascade::from_ticka(ticka, 1.0);
         let res = TickaRes{ real_time_ticka }; 
             

@@ -74,10 +74,11 @@ pub fn spawn_enemy(
 }
 
 
-fn startup_ticka(commands: &mut Commands, game: &mut ResMut<Game>,  meshes: &mut ResMut<Assets<Mesh>>,
-    materials: &mut ResMut<Assets<StandardMaterial>>,
+fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
  mut ticka_res: ResMut<TickaRes>) {
 
+    bevy::log::debug!("startup");
 
     // let cube = Cube::new(0.1);
     // let cube_mesh = meshes.add(cube.into());
@@ -85,7 +86,7 @@ fn startup_ticka(commands: &mut Commands, game: &mut ResMut<Game>,  meshes: &mut
     // let coord = hex2d::Coordinate::new(x, y);
     // let (x_pixel, z_pixel) = coord.to_pixel( hex2d::Spacing::FlatTop(0.50));
 
-    let color_material = get_color_material(materials, Color::BLUE);
+    let color_material = get_color_material(&mut materials, Color::BLUE);
 
     // let material = get_color_material(materials, Color::ALICE_BLUE); // get_blue_color(materials);
 
@@ -95,7 +96,7 @@ fn startup_ticka(commands: &mut Commands, game: &mut ResMut<Game>,  meshes: &mut
             let ticka = ticka_res.as_mut().real_time_ticka_mut().ticka_mut(); 
             // let spawned = ticka.units_mut().spawn_entity(x, y);
             
-            let spawned = spawn_enemy(game.as_mut(), ticka, &color_material, meshes, materials, commands, x, y);
+            let spawned = spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //commands.spawn(bundle)
             
             // game.set_entity(0, 0, unit);
@@ -104,11 +105,16 @@ fn startup_ticka(commands: &mut Commands, game: &mut ResMut<Game>,  meshes: &mut
 
         }
     }
+
+
+    bevy::log::debug!("startup (wpawning end)");
+
     //ticka.real_time_ticka().units().spawn_entity(x, y)
 }
 
 fn ticka_system(mut commands: Commands, mut ticka: ResMut<TickaRes>, mut game: ResMut<Game>, mut query: Query<(&mut TickaEntityComponent, &mut Transform)>, ) {
 
+    bevy::log::debug!("tick_system");
     //ticka.real_time_ticka().units()
     //real_time_ticka_fascade.
     // ticka.as_mut().real_time_ticka()
@@ -138,18 +144,17 @@ fn ticka_system(mut commands: Commands, mut ticka: ResMut<TickaRes>, mut game: R
 impl Plugin for TickaFascadePlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
 
-
+        bevy::log::info!("building TickaFascadePlugin...");
         //let movement_reader = MovementReader::create_with_sender();
-
-        
 
         let plugin = TickaPlugin::new();
         // registeres TickaRes
         plugin.build(app);
 
-        // app.add_startup_system(startup_ticka);
+        app.add_startup_system(startup_ticka);
         app.add_system(ticka_system);
-        
+
+        bevy::log::info!("did built TickaFascadePlugin...");
         // app.insert_resource(resource);
     }
 }

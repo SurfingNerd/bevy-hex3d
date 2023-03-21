@@ -33,7 +33,7 @@ pub struct Ticka {
     
     unit_plan_function: fn(&Unit) -> UnitPlan ,
 
-    unit_move_sender: Mutex<Sender<UnitMoveInstance>>
+    unit_move_sender: Option<Mutex<Sender<UnitMoveInstance>>>
 }
 
 // Threading concept:
@@ -43,15 +43,23 @@ pub struct Ticka {
 impl Ticka {
 
     
-    pub fn new(width: usize, height: usize, num_of_fields: usize, unit_plan_function: fn(&Unit) -> UnitPlan, unit_move_sender: Sender<UnitMoveInstance>) -> Self {
+    pub fn new(width: usize, height: usize, num_of_fields: usize, unit_plan_function: fn(&Unit) -> UnitPlan, unit_move_sender_o: Option<Sender<UnitMoveInstance>>) -> Self {
         
         let mut fields: Vec<Field2D<f32>> = Vec::new();
 
         for _ in 0..num_of_fields {
             fields.push(Field2D::new(width, height));
         }
+
+        let mutex_option: Option<Mutex<Sender<UnitMoveInstance>>> = None;
+        let mutex = if let Some(sender) =  unit_move_sender_o {
+            Some(Mutex::new(sender))
+        } else {
+            None
+        };
+
         // let vec = vec!(Field2D::new(width, height));
-        Ticka { tick_counter: 0, units_field: MobileEntityField2D::new(width, height, Unit::new(0)), unit_plan_function, fields, unit_move_sender: Mutex::new(unit_move_sender) }
+        Ticka { tick_counter: 0, units_field: MobileEntityField2D::new(width, height, Unit::new(0)), unit_plan_function, fields, unit_move_sender: mutex_option }
     }
 
     async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
@@ -142,7 +150,12 @@ impl Ticka {
 
         // all unhandled conflicts will just idle
 
-        let unit_move_sender = self.unit_move_sender.lock().expect("").clone();
+        let unit_move_sender : Option<Sender<UnitMoveInstance>> = if let Some(unit_move_sender) = &self.unit_move_sender {
+            Some(unit_move_sender.lock().expect("").clone())
+        } else {
+            None
+        };
+
         let mut context = TickaContext::new(&mut self.units_field, unit_move_sender);
 
         
