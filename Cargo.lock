@@ -843,6 +843,7 @@ name = "bevy_ticka"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "derive-getters",
  "hex2d",
  "sn_rust",
  "ticka",
@@ -2117,6 +2118,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_flycam",
  "bevy_ticka",
+ "derive-getters",
  "hex2d",
  "sn_rust",
  "ticka",
