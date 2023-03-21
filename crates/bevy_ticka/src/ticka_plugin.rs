@@ -22,6 +22,17 @@ pub struct TickaPlugin {
 #[derive(Resource, Getters)]
 pub struct TickaRes {
     real_time_ticka: RealTimeTickaFascade,
+    
+}
+
+impl TickaRes {
+    pub fn real_time_ticka_mut(&mut self) -> &mut RealTimeTickaFascade {
+        &mut self.real_time_ticka
+    }
+
+    // pub fn ticka_mut(&mut self) -> &mut Ticka {
+    //     &mut self.real_time_ticka.ticka_mut()
+    // }
 }
 
 impl Default for TickaPlugin {

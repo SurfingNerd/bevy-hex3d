@@ -43,4 +43,8 @@ impl RealTimeTickaFascade {
     pub fn units(&self) -> &MobileEntityField2D<Unit> {
         self.ticka.units()
     }
+
+    pub fn ticka_mut(&mut self) -> &mut Ticka {
+        &mut self.ticka
+    }
 }
