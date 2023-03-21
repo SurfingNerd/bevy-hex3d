@@ -1,6 +1,6 @@
 use std::f32::consts::E;
 
-use sn_rust::indexed_field2d_location::IndexedField2DLocation;
+use sn_rust::{indexed_field2d_location::IndexedField2DLocation, mobile_entity_field_2_d::StorageLocationProvider};
 
 use crate::{ticka_context::TickaContext, unit_move_action::MovePlanAction, unit_plan_action::PlanAction};
 
@@ -11,16 +11,30 @@ use crate::{ticka_context::TickaContext, unit_move_action::MovePlanAction, unit_
 // Todo: Add rust features that change the size of this type in an #if statement. ?!
 type UnitsIntegerType = u32;
 
-
+/// Unit 0 is NULL or can used as prototype creational pattern.
 #[derive(Debug, Clone)]
 pub struct Unit {
-  // id 0 does not exist an means 0.
+  // id 0 does not exist an means NULL.
   id: UnitsIntegerType
 }
 
 impl Unit {
     pub fn id(&self) -> &UnitsIntegerType  {
         self.id()
+    }
+
+    pub fn new(id: UnitsIntegerType) -> Self {
+        Unit { id: id }
+    }
+}
+
+impl StorageLocationProvider for Unit {
+    fn get_storage_id(&self) -> usize {
+        return *self.id() as usize;
+    }
+
+    fn create_from_prototype(&self, storage_id: usize) -> Self {
+        Unit{ id: storage_id as u32 }
     }
 }
 

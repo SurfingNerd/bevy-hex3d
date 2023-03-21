@@ -1,5 +1,5 @@
 use sn_rust::indexed_field2d_location::IndexedField2DLocation;
-
+use crate::unit_move_action::MovePlanAction;
 use crate::{unit::Unit, ticka_context::TickaContext};
 
 
@@ -22,7 +22,3 @@ pub trait PlanAction where Self: Clone + Sized {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct MovePlanAction {
-    direction: hex2d::Direction
-}

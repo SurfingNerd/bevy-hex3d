@@ -1,10 +1,12 @@
+use derive_getters::Getters;
+
 
 
 
 /** A 2 diamensional field of type T
 /  More convinient that a Vec<Vec<T>>
 */
-// #[derive(Getters)]
+#[derive(Getters, Debug)]
 pub struct Field2D<T: Default + Clone>{
     data: Vec<T>,
     width: usize,

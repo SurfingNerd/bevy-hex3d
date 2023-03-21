@@ -1,4 +1,5 @@
-use sn_rust::indexed_field_2_d::IndexedField2D;
+
+use sn_rust::mobile_entity_field_2_d::MobileEntityField2D;
 
 use crate::{ticka::Ticka, unit::Unit};
 
@@ -35,11 +36,11 @@ impl RealTimeTickaFascade {
             self.ticka.tick();
         }
     }
-    pub fn units_mut(&mut self) -> &mut IndexedField2D<Unit> {
+    pub fn units_mut(&mut self) -> &mut MobileEntityField2D<Unit> {
         self.ticka.units_mut()
     }
 
-    pub fn units(&self) -> &IndexedField2D<Unit> {
+    pub fn units(&self) -> &MobileEntityField2D<Unit> {
         self.ticka.units()
     }
 }

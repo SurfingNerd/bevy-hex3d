@@ -32,6 +32,7 @@ impl PlanAction for MovePlanAction {
 
         let target_location = self.get_target_location(unit, context);
 
+        // context.unit_locations()
         // let from_location = context.unit_locations().
     }
 

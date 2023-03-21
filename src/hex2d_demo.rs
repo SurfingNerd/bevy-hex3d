@@ -334,6 +334,8 @@ pub fn run_hex2d_demo() {
         .add_system(tower_shoot)
         .add_system(glow_line_system)
         .add_system(camera_movement_speed)
+        //.add_system(ticka_system)
+
         //.add_system(enemy_spawner)
          // .add_system(debug_resources_system)
         .run();

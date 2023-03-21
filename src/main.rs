@@ -12,6 +12,7 @@ mod textures;
 mod materials;
 mod playground;
 mod cam_movement;
+mod ticka_fascade_plugin;
 
 // use crate::map::TiledMapPlugin;
 

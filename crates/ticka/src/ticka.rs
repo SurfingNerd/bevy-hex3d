@@ -2,7 +2,8 @@ use std::sync::Mutex;
 use std::sync::mpsc::Sender;
 
 use sn_rust::field_2_d::Field2D;
-use sn_rust::indexed_field_2_d::IndexedField2D;
+use sn_rust::mobile_entity_field_2_d::MobileEntityField2D;
+
 use crate::conflict::{UnitPlanMoveConflict, UnitPlanMoveConflicts};
 use crate::ticka_context::TickaContext;
 use crate::unit::*;
@@ -18,7 +19,7 @@ pub trait UnitPlanner {
 
 pub struct Ticka {
     tick_counter: u64,
-    units_field: IndexedField2D<Unit>,
+    units_field: MobileEntityField2D<Unit>,
     
     /// Maybe you want to write yourself a wrapper.
     /// terrain_height: Field2D<f32>,
@@ -50,7 +51,7 @@ impl Ticka {
             fields.push(Field2D::new(width, height));
         }
         // let vec = vec!(Field2D::new(width, height));
-        Ticka { tick_counter: 0, units_field: IndexedField2D::new(width, height), unit_plan_function, fields, unit_move_sender: Mutex::new(unit_move_sender) }
+        Ticka { tick_counter: 0, units_field: MobileEntityField2D::new(width, height, Unit::new(0)), unit_plan_function, fields, unit_move_sender: Mutex::new(unit_move_sender) }
     }
 
     async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
@@ -83,14 +84,14 @@ impl Ticka {
         // let mut futures: Vec<_> = Vec::new();
 
         // maybe it is better to have a Plan Array that is indexed by the Unit ID,
-        // instead of the order of the IndexedField2DLocation
-        let mut plans = Vec::<UnitPlan>::with_capacity( self.units_field.indeces().len());
+        // instead of the order of the MobileEntityField2DLocation
+        let mut plans = Vec::<UnitPlan>::with_capacity( self.units_field.field().indeces().len());
 
         
 
-        for index in self.units_field.indeces().iter() {
+        for index in self.units_field.field().indeces().iter() {
 
-            if let Some(unit) = self.units_field.get_u32(index.x(), index.y()) {
+            if let Some(unit) = self.units_field.field().get_u32(index.x(), index.y()) {
                 let plan = (self.unit_plan_function)(unit);
                 plans.push(plan);
             } else {
@@ -217,11 +218,11 @@ impl Ticka {
         // - - 
     }
 
-    pub fn units_mut(&mut self) -> &mut IndexedField2D<Unit> {
+    pub fn units_mut(&mut self) -> &mut MobileEntityField2D<Unit> {
         &mut self.units_field
     }
 
-    pub fn units(&self) -> &IndexedField2D<Unit> {
+    pub fn units(&self) -> &MobileEntityField2D<Unit> {
         &self.units_field
     }
 

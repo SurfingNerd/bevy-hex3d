@@ -1,22 +1,45 @@
 use crate::{indexed_field2d_location::IndexedField2DLocation, indexed_field_2_d::IndexedField2D};
 
 use derive_getters::Getters;
+use std::fmt::Debug;
 
 pub trait StorageLocationProvider {
     fn get_storage_id(&self) -> usize;
+    fn create_from_prototype(&self, storage_id: usize) -> Self;
 }
 
 /// Stores mobile (moveable) Units and other stuff that can change it's location on the field.
 /// holds also the location data 
 /// 
-pub struct MobileEntityField2D<T: Clone + StorageLocationProvider> {
+#[derive(Getters, Debug)]
+pub struct MobileEntityField2D<T: Clone + StorageLocationProvider + Debug> {
 
     field: IndexedField2D<T>,
-    unit_locations: Vec<IndexedField2DLocation>    
+    unit_locations: Vec<IndexedField2DLocation>,
+    entity_prototype: T
 }
 
+// impl<T: Clone + StorageLocationProvider> MobileEntityField2D<T> {
 
-#[derive(Getters, Clone)]
+//     pub fn new(x: usize, y: usize, entity_prototype: T) -> Self {
+
+//         MobileEntityField2D {
+//             field: IndexedField2D::new(x,y),
+//             unit_locations: Vec::new(),
+//             entity_prototype
+//         }
+//     }
+
+//     pub fn spawn_entity(&mut self, x: u32, y: u32) -> T {
+
+//         self.unit_locations.push(IndexedField2DLocation::new(x, y));
+
+//         self.entity_prototype.create_from_prototype(self.unit_locations.len())
+//     }
+// }
+
+
+#[derive(Getters, Debug, Clone)]
 pub struct EntityMoveEvent {
     from_x: u32,
     from_y: u32,
@@ -29,7 +52,31 @@ pub struct EntityMoveEvent {
 //     field: IndexedField2D<T>
 // }
 
-impl<T: Clone + StorageLocationProvider > MobileEntityField2D<T> {
+impl<T: Clone + StorageLocationProvider + Debug> MobileEntityField2D<T> {
+
+
+    pub fn new(x: usize, y: usize, entity_prototype: T) -> Self {
+
+        MobileEntityField2D {
+            field: IndexedField2D::new(x,y),
+            unit_locations: Vec::new(),
+            entity_prototype
+        }
+    }
+
+    pub fn spawn_entity(&mut self, x: u32, y: u32) -> T {
+
+        self.unit_locations.push(IndexedField2DLocation::new(x, y));
+
+        self.entity_prototype.create_from_prototype(self.unit_locations.len())
+    }
+
+    pub fn move_entity_u(&mut self, entity: &T, to_x: u32, to_y: u32) {
+        let storage_id = entity.get_storage_id();
+        let current_pos = &self.unit_locations[storage_id];
+
+        self.move_entity(current_pos.x(), current_pos.y(), to_x, to_y);
+    }
 
     pub fn move_entity(&mut self, x: u32, y: u32, to_x: u32, to_y: u32) -> Option<T> {
 

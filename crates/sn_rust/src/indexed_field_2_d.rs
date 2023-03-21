@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, fmt::Debug};
 
 use crate::{field_2_d::Field2D, indexed_field2d_location::IndexedField2DLocation};
 
@@ -32,7 +32,8 @@ use crate::{field_2_d::Field2D, indexed_field2d_location::IndexedField2DLocation
 // fast in looking up what is stored on a specific field.
 // No chunking support.
 // slow in finding out where a specific T is placed on the field.
-pub struct IndexedField2D<T: Clone> {
+#[derive(Debug)]
+pub struct IndexedField2D<T: Clone + Debug> {
     field: Field2D<Option<T>>,
 
     // maybe a UniqueBTreeSet offers more performance ?
@@ -51,7 +52,7 @@ pub struct IndexedField2D<T: Clone> {
 //     }
 // }
 
-impl<T: Clone> IndexedField2D<T> {
+impl<T: Clone + Debug> IndexedField2D<T> {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
             field: Field2D::new(width, height),
