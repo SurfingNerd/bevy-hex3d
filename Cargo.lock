@@ -3081,6 +3081,9 @@ dependencies = [
 [[package]]
 name = "sn_rust"
 version = "0.1.0"
+dependencies = [
+ "derive-getters",
+]
 
 [[package]]
 name = "spirv"
