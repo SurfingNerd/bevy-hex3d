@@ -15,14 +15,14 @@ pub struct MovementReader {
 impl MovementReader {
 
 
-    pub fn create_with_sender() -> Self {
+    pub fn new() -> Self {
         
         let channel = std::sync::mpsc::channel::<ticka::unit_move_action::UnitMoveInstance>();
 
         MovementReader { sender_prototype: Mutex::new(channel.0), receiver: Mutex::new(channel.1) }
     }
 
-    pub fn create_sender(&mut self) -> Sender<UnitMoveInstance> {
+    pub fn create_sender(&self) -> Sender<UnitMoveInstance> {
         
         let lock = self.sender_prototype.lock().expect("lock");
         lock.clone()

@@ -28,7 +28,11 @@ impl MovePlanAction {
 
 impl PlanAction for MovePlanAction {
     fn execute(&self, unit: &Unit, context:  &mut TickaContext) {
-        print!("moving: {:?} to {:?}", unit, self.direction)
+        print!("moving: {:?} to {:?}", unit, self.direction);
+
+        let target_location = self.get_target_location(unit, context);
+
+        // let from_location = context.unit_locations().
     }
 
     fn description(&self, unit: &Unit, context: &TickaContext) -> String {

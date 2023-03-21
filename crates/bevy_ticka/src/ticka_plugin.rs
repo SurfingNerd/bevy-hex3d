@@ -1,6 +1,8 @@
 use bevy::{prelude::{Plugin, Res, Resource, ResMut}, time::Time};
 use ticka::{ticka::Ticka, real_time_ticka_fascade::RealTimeTickaFascade, unit::{Unit, UnitPlan, UnitPlanEnum}, unit_move_action::MovePlanAction};
+use derive_getters::Getters;
 
+use crate::movement_reader::MovementReader;
 
 // Idea: create a RealTimeTicka in ticka ?
 // so we can generalize real time ticka systems without bevy dependencies.
@@ -17,7 +19,7 @@ pub struct TickaPlugin {
     ticks_per_second: f64,
 }
 
-#[derive(Resource)]
+#[derive(Resource, Getters)]
 pub struct TickaRes {
     real_time_ticka: RealTimeTickaFascade,
 }
@@ -31,7 +33,9 @@ impl Default for TickaPlugin {
 impl TickaPlugin {
 
     pub fn new() -> Self {
-        TickaPlugin::default()
+        let result = TickaPlugin::default();
+
+        return result;
     }
 
 }
@@ -53,11 +57,12 @@ fn unit_plan(unit: &Unit) -> UnitPlan {
 impl Plugin for TickaPlugin {
 
     fn build(&self, app: &mut bevy::prelude::App) {
+        
 
-        let ticka = Ticka::new(1000, 1000, 1,  unit_plan);
-
+        let movement_reader = MovementReader::new();
+        let sender = movement_reader.create_sender();
+        let ticka = Ticka::new(1000, 1000, 1,  unit_plan, sender);
         let real_time_ticka = RealTimeTickaFascade::from_ticka(ticka, 1.0);
-
         let res = TickaRes{ real_time_ticka }; 
             
         app.insert_resource(res);

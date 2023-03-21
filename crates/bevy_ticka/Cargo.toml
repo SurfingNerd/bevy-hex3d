@@ -23,3 +23,4 @@ ticka = { path = "../ticka" }
 bevy = { version = "0.9.1", features = ["dynamic"] }
 sn_rust = { path = "../sn_rust" }
 hex2d = "1.1.0"
+derive-getters = "0.2.0"

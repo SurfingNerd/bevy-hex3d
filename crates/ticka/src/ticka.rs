@@ -1,8 +1,12 @@
+use std::sync::Mutex;
+use std::sync::mpsc::Sender;
+
 use sn_rust::field_2_d::Field2D;
 use sn_rust::indexed_field_2_d::IndexedField2D;
 use crate::conflict::{UnitPlanMoveConflict, UnitPlanMoveConflicts};
 use crate::ticka_context::TickaContext;
 use crate::unit::*;
+use crate::unit_move_action::UnitMoveInstance;
 
 // Unit Planner must be copyable,
 // since each thread get's it's own UnitPlanner
@@ -27,6 +31,8 @@ pub struct Ticka {
     fields: Vec<Field2D<f32>>,
     
     unit_plan_function: fn(&Unit) -> UnitPlan ,
+
+    unit_move_sender: Mutex<Sender<UnitMoveInstance>>
 }
 
 // Threading concept:
@@ -36,7 +42,7 @@ pub struct Ticka {
 impl Ticka {
 
     
-    pub fn new(width: usize, height: usize, num_of_fields: usize, unit_plan_function: fn(&Unit) -> UnitPlan) -> Self {
+    pub fn new(width: usize, height: usize, num_of_fields: usize, unit_plan_function: fn(&Unit) -> UnitPlan, unit_move_sender: Sender<UnitMoveInstance>) -> Self {
         
         let mut fields: Vec<Field2D<f32>> = Vec::new();
 
@@ -44,7 +50,7 @@ impl Ticka {
             fields.push(Field2D::new(width, height));
         }
         // let vec = vec!(Field2D::new(width, height));
-        Ticka { tick_counter: 0, units_field: IndexedField2D::new(width, height), unit_plan_function, fields }
+        Ticka { tick_counter: 0, units_field: IndexedField2D::new(width, height), unit_plan_function, fields, unit_move_sender: Mutex::new(unit_move_sender) }
     }
 
     async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
@@ -110,7 +116,7 @@ impl Ticka {
         // }
     }
 
-    fn execute_plans(&self, plans: &Vec<UnitPlan>) {
+    fn execute_plans(&mut self, plans: &Vec<UnitPlan>) {
         
         // excutes the plans, 
         // and resolves the conflicts the hard way.
@@ -135,8 +141,10 @@ impl Ticka {
 
         // all unhandled conflicts will just idle
 
-        let mut context = TickaContext {};
+        let unit_move_sender = self.unit_move_sender.lock().expect("").clone();
+        let mut context = TickaContext::new(&mut self.units_field, unit_move_sender);
 
+        
         for unit_plan in conflicts.non_conflicting_plans().iter_mut() {
             unit_plan.execute(&mut context);
         }
@@ -145,7 +153,7 @@ impl Ticka {
     }
 
     // executes one tick
-    pub fn tick(&self) {
+    pub fn tick(&mut self) {
 
 
         
