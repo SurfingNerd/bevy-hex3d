@@ -170,7 +170,7 @@ impl Ticka {
     pub fn tick(&mut self) {
 
 
-        
+        print!("Ticka tick!");
 
         // on every tick, 
         // we seperate the work in different threads,

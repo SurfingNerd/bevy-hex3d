@@ -20,7 +20,7 @@ pub struct Unit {
 
 impl Unit {
     pub fn id(&self) -> &UnitsIntegerType  {
-        self.id()
+        &self.id
     }
 
     pub fn new(id: UnitsIntegerType) -> Self {

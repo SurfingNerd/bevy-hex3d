@@ -1,4 +1,4 @@
-use bevy::{prelude::{Plugin, ResMut, Commands, Component, Query, Transform, Entity, Assets, StandardMaterial, shape::Cube, Color, PbrBundle, Vec3, Handle, Mesh}, sprite::ColorMaterial, reflect::Reflect};
+use bevy::{prelude::{Plugin, ResMut, Commands, Component, Query, Transform, Entity, Assets, StandardMaterial, shape::Cube, Color, PbrBundle, Vec3, Handle, Mesh, info}, sprite::ColorMaterial, reflect::Reflect};
 use bevy_ticka::{ticka_plugin::{TickaPlugin, TickaRes}, movement_reader::MovementReader};
 use derive_getters::Getters;
 use ticka::{real_time_ticka_fascade::RealTimeTickaFascade, ticka::Ticka};
@@ -26,9 +26,9 @@ pub fn spawn_enemy(
     commands: &mut Commands,
     x: i32,
     y: i32,
-) -> TickaEntityComponent {
+) /*-> TickaEntityComponent */ {
 
-
+    info!("spawn enemy {x} {x}");
 
     let cube = Cube::new(0.1);
     let cube_mesh = meshes.add(cube.into());
@@ -37,11 +37,11 @@ pub fn spawn_enemy(
     let (x_pixel, z_pixel) = coord.to_pixel(game.hex_spacing);
 
     // let material = get_color_material(materials, Color::RED);
-
+    info!("spawn ticka unit  {x} {x}");
     let ticka_unit = ticka.units_mut().spawn_entity(x as u32, y as u32);
   
     //let handle = Handle::<StandardMaterial> { }
-   
+    info!("spawning uis");
     let entity = commands.spawn(
         PbrBundle {
           mesh: cube_mesh, // does only the handle get cloned here ? so we reuse the mesh ?
@@ -54,9 +54,15 @@ pub fn spawn_enemy(
       })
       .id();
 
+    info!("spawning uis.entity: {:?}",  entity);
+
+    let ticka_storage_id = *ticka_unit.id();
+
+    info!("spawning uis.ticka_storage_id: {:?}",  ticka_storage_id);
+
     let mut entity_component = TickaEntityComponent {
-        bevy_entity_id: entity.clone(),
-        ticka_storage_id: *ticka_unit.id()
+        bevy_entity_id: entity,
+        ticka_storage_id
     };
     
 
@@ -64,8 +70,8 @@ pub fn spawn_enemy(
     commands.entity(entity).insert(entity_component.clone());
       
 
-    
-    return entity_component;
+    info!("spawning uis - done");
+    //return entity_component;
          
     // game.set_entity(0, 0, unit);
 
@@ -78,7 +84,7 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
     mut materials: ResMut<Assets<StandardMaterial>>,
  mut ticka_res: ResMut<TickaRes>) {
 
-    bevy::log::debug!("startup");
+    bevy::log::info!("startup");
 
     // let cube = Cube::new(0.1);
     // let cube_mesh = meshes.add(cube.into());
@@ -90,15 +96,15 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
 
     // let material = get_color_material(materials, Color::ALICE_BLUE); // get_blue_color(materials);
 
-
-    for x in 0..10 {
-        for y in 0..10 {
-            let ticka = ticka_res.as_mut().real_time_ticka_mut().ticka_mut(); 
+    let ticka = ticka_res.as_mut().real_time_ticka_mut().ticka_mut(); 
+            
+    for x in 10..20 {
+        for y in 10..20 {
             // let spawned = ticka.units_mut().spawn_entity(x, y);
             
             let spawned = spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //commands.spawn(bundle)
-            
+            info!("spawn compete");
             // game.set_entity(0, 0, unit);
             //let ticka_entity = TickaEntityComponent { ticka_storage_id: *spawned.id() };
 
@@ -107,7 +113,7 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
     }
 
 
-    bevy::log::debug!("startup (wpawning end)");
+    bevy::log::info!("startup (wpawning end)");
 
     //ticka.real_time_ticka().units().spawn_entity(x, y)
 }
@@ -125,8 +131,9 @@ fn ticka_system(mut commands: Commands, mut ticka: ResMut<TickaRes>, mut game: R
 
     for (mut ticka_entity_component,mut transform) in query.iter_mut() {
 
-        
-        let location = &units.unit_locations()[ticka_entity_component.ticka_storage_id as usize];
+        let data = units.unit_locations();
+        // info!("data: {}", data.len());
+        let location = &data[ticka_entity_component.ticka_storage_id as usize];
 
         let x = location.x();
         let y = location.y();

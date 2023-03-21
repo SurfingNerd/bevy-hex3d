@@ -68,7 +68,7 @@ impl<T: Clone + StorageLocationProvider + Debug> MobileEntityField2D<T> {
 
         self.unit_locations.push(IndexedField2DLocation::new(x, y));
 
-        self.entity_prototype.create_from_prototype(self.unit_locations.len())
+        self.entity_prototype.create_from_prototype(self.unit_locations.len()-1)
     }
 
     pub fn move_entity_u(&mut self, entity: &T, to_x: u32, to_y: u32) {

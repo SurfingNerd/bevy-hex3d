@@ -288,7 +288,7 @@ fn integrate_loaded_maps(
     mut map_registry: ResMut<MapRegistry>,
     mut query_positions: Query<(&PositionComponent, &mut Transform)>,
 ) {
-    info!("integrating loaded map");
+    // info!("integrating loaded map");
     for (entity, mesh_gen_task) in mesh_gen_task.iter() {
         let mut lock_guard = mesh_gen_task.mesh.lock().unwrap();
         // info!("checking if mesh is ready");
@@ -359,7 +359,7 @@ fn integrate_loaded_maps(
         //mesh_gen_task
     }
 
-    info!("integrating loaded map done");
+    // info!("integrating loaded map done");
 }
 
 

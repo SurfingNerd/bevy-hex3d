@@ -54,7 +54,6 @@ impl TickaPlugin {
 
 fn ticka_system(time: Res<Time>,mut ticka: ResMut<TickaRes>) {
 
-    info!("Ticka syncro tick");
     let time = time.elapsed_seconds_f64();
 
     ticka.real_time_ticka.tick_if_time_has_come(time);
@@ -73,7 +72,7 @@ impl Plugin for TickaPlugin {
         info!("building Ticka base plugin");
         //let movement_reader = MovementReader::new();
         //let sender = movement_reader.create_sender();
-        let ticka = Ticka::new(1000, 1000, 1,  unit_plan, None);
+        let ticka = Ticka::new(100, 100, 1,  unit_plan, None);
         let real_time_ticka = RealTimeTickaFascade::from_ticka(ticka, 1.0);
         let res = TickaRes{ real_time_ticka }; 
             
