@@ -95,13 +95,15 @@ impl Ticka {
         // instead of the order of the MobileEntityField2DLocation
         let mut plans = Vec::<UnitPlan>::with_capacity( self.units_field.field().indeces().len());
 
+        
         println!("expecting {} plans", self.units_field.field().indeces().len());
 
         for index in self.units_field.field().indeces().iter() {
-            println!("creating plan for x {} y {}", index.x(), index.y());
+            
             
             if let Some(unit) = self.units_field.field().get_u32(index.x(), index.y()) {
                 let plan = (self.unit_plan_function)(unit);
+                // println!("creating plan for x {} y {}: {:?}", index.x(), index.y(), plan);
                 plans.push(plan);
             } else {
                 panic!("Unexpected: every coordinate should match a unit!");
@@ -133,7 +135,7 @@ impl Ticka {
         // excutes the plans, 
         // and resolves the conflicts the hard way.
 
-        let context = TickaContext::new(&mut self.units_field, None);
+        let context = TickaContext::new(&mut self.units_field, None, None);
 
 
         let mut conflicts = UnitPlanMoveConflicts::from_plans(plans, &context);
@@ -164,12 +166,19 @@ impl Ticka {
             None
         };
 
-        let mut context = TickaContext::new(&mut self.units_field, unit_move_sender);
+        let height = self.units_field.height();
+        let width = self.units_field.width();
+        let mut new_field = MobileEntityField2D::<Unit>::new(width as usize,height as usize, Unit::new(0));
+
+        let mut context = TickaContext::new(&mut self.units_field, Some(new_field), unit_move_sender);
 
         
         for unit_plan in conflicts.non_conflicting_plans_mut().iter_mut() {
             unit_plan.execute(&mut context);
         }
+
+        // now point to the new field.
+        self.units_field = context.unit_locations_new_mut().take().expect("must be");
 
 
     }
@@ -204,7 +213,7 @@ impl Ticka {
 
         // Units might replan their action, based on konflict knowledge.
 
-        // # Conflict resolving step
+        // # Conflict resolving stepget_unit_plans_2d
 
         self.execute_plans(&plans);
 

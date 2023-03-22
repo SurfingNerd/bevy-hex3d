@@ -23,6 +23,8 @@ impl UnitPlanMoveConflicts {
       
       conflicts.register_plan(plan, context);
     }
+
+    println!("moves: {}", conflicts.target_locations.len());
     conflicts.clear_non_conflicting_plans();
     return conflicts;
   }

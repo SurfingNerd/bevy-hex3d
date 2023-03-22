@@ -125,6 +125,14 @@ impl<T: Clone + Debug> IndexedField2D<T> {
     pub fn indeces(&self) -> &BTreeSet<IndexedField2DLocation> {
         &self.indeces
     }
+
+    pub fn width(&self) -> u32 {
+        *self.field.width() as u32
+    }
+
+    pub fn height(&self) -> u32 {
+        *self.field.height() as u32
+    }
 }
 
 
