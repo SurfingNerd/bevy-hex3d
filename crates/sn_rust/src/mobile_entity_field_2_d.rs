@@ -67,8 +67,9 @@ impl<T: Clone + StorageLocationProvider + Debug> MobileEntityField2D<T> {
     pub fn spawn_entity(&mut self, x: u32, y: u32) -> T {
 
         self.unit_locations.push(IndexedField2DLocation::new(x, y));
-
-        self.entity_prototype.create_from_prototype(self.unit_locations.len()-1)
+        let result = self.entity_prototype.create_from_prototype(self.unit_locations.len()-1);
+        self.field.set(x, y, Some(result.clone()));
+        return result;
     }
 
     pub fn move_entity_u(&mut self, entity: &T, to_x: u32, to_y: u32) {
@@ -114,5 +115,17 @@ impl<T: Clone + StorageLocationProvider + Debug> MobileEntityField2D<T> {
         }
 
         return result;
-    }   
+    }
+
+    pub fn get(&self, x: u32, y: u32) -> &Option<T> {
+        &self.field.get_u32(x, y)
+    }
+
+    // get's the location of an entity.
+    // panics, if entity is not on this field!!
+    pub fn get_entity_location(&self, entity: &T) -> &IndexedField2DLocation{
+        let storage_location = entity.get_storage_id();
+        return &self.unit_locations[storage_location];
+    }
+  
 }

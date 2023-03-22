@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use sn_rust::indexed_field2d_location::IndexedField2DLocation;
 
-use crate::unit::{Unit, UnitPlan};
+use crate::{unit::{Unit, UnitPlan}, ticka_context::TickaContext};
 
 
 pub struct UnitPlanMoveConflicts {
@@ -17,19 +17,19 @@ impl UnitPlanMoveConflicts {
   }
 
   /// builds Planing conflicts from Plans.
-  pub fn from_plans(plans: &Vec<UnitPlan>) -> Self {
+  pub fn from_plans(plans: &Vec<UnitPlan>, context: &TickaContext) -> Self {
     let mut conflicts = UnitPlanMoveConflicts::new();
     for plan in plans.iter() {
       
-      conflicts.register_plan(plan);
+      conflicts.register_plan(plan, context);
     }
     conflicts.clear_non_conflicting_plans();
     return conflicts;
   }
 
 
-  fn register_plan(&mut self, plan: &UnitPlan) {
-    if let Some(target_location) = plan.move_to_field() {
+  fn register_plan(&mut self, plan: &UnitPlan, context: &TickaContext) {
+    if let Some(target_location) = plan.move_to_field(context) {
 
       // Note:
       // it is expensive but simple to create a Vec for each Unit movement plan.
@@ -69,8 +69,12 @@ impl UnitPlanMoveConflicts {
     &self.target_locations
   }
 
-  pub fn non_conflicting_plans(&mut self) -> &mut Vec<UnitPlan> {
+  pub fn non_conflicting_plans_mut(&mut self) -> &mut Vec<UnitPlan> {
     &mut self.non_conflicting_plans
+  }
+
+  pub fn non_conflicting_plans(&self) -> &Vec<UnitPlan> {
+    &self.non_conflicting_plans
   }
 
 }

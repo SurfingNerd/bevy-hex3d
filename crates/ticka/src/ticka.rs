@@ -95,10 +95,11 @@ impl Ticka {
         // instead of the order of the MobileEntityField2DLocation
         let mut plans = Vec::<UnitPlan>::with_capacity( self.units_field.field().indeces().len());
 
-        
+        println!("expecting {} plans", self.units_field.field().indeces().len());
 
         for index in self.units_field.field().indeces().iter() {
-
+            println!("creating plan for x {} y {}", index.x(), index.y());
+            
             if let Some(unit) = self.units_field.field().get_u32(index.x(), index.y()) {
                 let plan = (self.unit_plan_function)(unit);
                 plans.push(plan);
@@ -106,6 +107,8 @@ impl Ticka {
                 panic!("Unexpected: every coordinate should match a unit!");
             }
         }
+
+        
 
         return plans;
     }
@@ -130,10 +133,15 @@ impl Ticka {
         // excutes the plans, 
         // and resolves the conflicts the hard way.
 
+        let context = TickaContext::new(&mut self.units_field, None);
 
-        let mut conflicts = UnitPlanMoveConflicts::from_plans(plans);
 
+        let mut conflicts = UnitPlanMoveConflicts::from_plans(plans, &context);
 
+        let conflicting_plans = conflicts.get_conflicting_plans();
+        let non_conflicting_plans = conflicts.non_conflicting_plans();
+
+        println!("pans: {} conflicts {} conflict free plans: {}", plans.len(), conflicting_plans.len(), non_conflicting_plans.len());
         // TODO: handle conflicts here
         // let conflicting_plan_groups = conflicts.get_conflicting_plans();
 
@@ -159,7 +167,7 @@ impl Ticka {
         let mut context = TickaContext::new(&mut self.units_field, unit_move_sender);
 
         
-        for unit_plan in conflicts.non_conflicting_plans().iter_mut() {
+        for unit_plan in conflicts.non_conflicting_plans_mut().iter_mut() {
             unit_plan.execute(&mut context);
         }
 

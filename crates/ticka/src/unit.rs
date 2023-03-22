@@ -118,14 +118,14 @@ impl UnitPlan {
         }
     }
 
-    pub fn move_to_field(&self) -> Option<IndexedField2DLocation> {
+    pub fn move_to_field(&self, context: &TickaContext) -> Option<IndexedField2DLocation> {
 
         match &self.plan {
             UnitPlanEnum::Idle => {
                 None
             },
             UnitPlanEnum::Move(move_action) => {
-                return move_action.move_to_field(&self.unit);
+                return move_action.move_to_field(&self.unit, context);
             },
         }
     }

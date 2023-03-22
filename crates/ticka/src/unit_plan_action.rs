@@ -17,7 +17,7 @@ pub trait PlanAction where Self: Clone + Sized {
     fn description(&self, unit: &Unit,  context: &TickaContext) -> String;
 
     /// returns Some, if the action does a field movement.
-    fn move_to_field(&self, unit: &Unit) -> Option<IndexedField2DLocation> {
+    fn move_to_field(&self, unit: &Unit, context: &TickaContext) -> Option<IndexedField2DLocation> {
         None
     }
 }

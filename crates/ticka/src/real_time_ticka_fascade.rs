@@ -31,6 +31,7 @@ impl RealTimeTickaFascade {
     }
 
     pub fn tick_if_time_has_come(&mut self, current_time: f64) {
+        //println!("Tick if time has come");
         if self.last_processed_tick + self.tick_length < current_time {
             self.last_processed_tick = current_time;
             self.ticka.tick();
