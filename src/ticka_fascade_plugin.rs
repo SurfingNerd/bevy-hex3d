@@ -15,8 +15,38 @@ pub struct TickaEntityComponent {
 
 pub struct TickaFascadePlugin;
 
+pub fn spawn_obstacle(
+    game: &mut Game,
+    ticka: &mut Ticka,
+    color_material: &Handle<bevy::prelude::StandardMaterial>,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+ //   game: &mut Game,
+    commands: &mut Commands,
+    x: i32,
+    y: i32,
+) /*-> TickaEntityComponent */ {
+    spawn_enity_with_plan(game, ticka, color_material, meshes, materials, commands, x, y );
+
+}
 
 pub fn spawn_enemy(
+    game: &mut Game,
+    ticka: &mut Ticka,
+    color_material: &Handle<bevy::prelude::StandardMaterial>,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+ //   game: &mut Game,
+    commands: &mut Commands,
+    x: i32,
+    y: i32,
+) {
+    spawn_enity_with_plan(game, ticka, color_material, meshes, materials, commands, x, y );
+
+}
+
+pub fn spawn_enity_with_plan(
+    
     game: &mut Game,
     ticka: &mut Ticka,
     color_material: &Handle<bevy::prelude::StandardMaterial>,
@@ -103,6 +133,25 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
             // let spawned = ticka.units_mut().spawn_entity(x, y);
             
             let spawned = spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
+            //commands.spawn(bundle)
+            info!("spawn compete");
+            // game.set_entity(0, 0, unit);
+            //let ticka_entity = TickaEntityComponent { ticka_storage_id: *spawned.id() };
+
+
+        }
+    }
+
+
+    for x in 10..50 {
+        for y in 10..40 {
+
+            if x < 23 && y < 23 {
+                continue;
+            }
+            // let spawned = ticka.units_mut().spawn_entity(x, y);
+            spawn_obstacle(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
+            //let spawned = spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //commands.spawn(bundle)
             info!("spawn compete");
             // game.set_entity(0, 0, unit);

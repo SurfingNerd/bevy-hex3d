@@ -43,7 +43,7 @@ impl PlanAction for MovePlanAction {
 
         
         let target_location = self.get_target_location(unit, context);
-        let unit_locations = context.unit_locations_mut();
+        // let unit_locations = context.unit_locations_mut();
         // let current_location = unit_locations.get_entity_location(&unit);
         
         if let Some(mobile_entity_field) = context.unit_locations_new_mut() {

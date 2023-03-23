@@ -142,7 +142,7 @@ impl<T: Clone + StorageLocationProvider + Debug> MobileEntityField2D<T> {
         
         let storage_id = entity.get_storage_id();
 
-        println!("storage_id {} ", storage_id);
+        // println!("storage_id {} ", storage_id);
         
         // on first call of set entity, we enlarge the positions array.
         if storage_id == 0 || storage_id >= self.unit_locations.len() {
@@ -150,10 +150,10 @@ impl<T: Clone + StorageLocationProvider + Debug> MobileEntityField2D<T> {
             for i in start..storage_id + 1 {
 
                 if i == storage_id {
-                    println!("storing on unit_location {} len {}   x {x} y {y}", i, self.unit_locations.len());
+                    //println!("storing on unit_location {} len {}   x {x} y {y}", i, self.unit_locations.len());
                     self.unit_locations.push(IndexedField2DLocation::new(x, y));
                 }  else {
-                    println!("storing on unit_location as placeholder {} len {}", i, self.unit_locations.len());
+                    //println!("storing on unit_location as placeholder {} len {}", i, self.unit_locations.len());
                     self.unit_locations.push(IndexedField2DLocation::new(0, 0));
                 }
             }

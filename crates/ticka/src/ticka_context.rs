@@ -1,6 +1,6 @@
 use std::sync::mpsc::Sender;
 use derive_getters::Getters;
-use sn_rust::{mobile_entity_field_2_d::MobileEntityField2D};
+use sn_rust::{mobile_entity_field_2_d::MobileEntityField2D, indexed_field2d_location::IndexedField2DLocation};
 
 use crate::{unit_move_action::UnitMoveInstance, unit::Unit};
 
@@ -37,6 +37,10 @@ impl<'a> TickaContext<'a> {
 
     pub fn unit_locations_new_mut(&mut self) -> &mut Option<MobileEntityField2D<Unit>> {
         &mut self.unit_locations_new
+    }
+
+    pub fn get_entity_location(&self, unit: &Unit) -> &IndexedField2DLocation {
+        self.unit_locations.get_entity_location(unit)
     }
 
 }

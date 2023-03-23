@@ -1,5 +1,5 @@
 use bevy::{prelude::{Plugin, Res, Resource, ResMut, info}, time::Time};
-use ticka::{ticka::Ticka, real_time_ticka_fascade::RealTimeTickaFascade, unit::{Unit, UnitPlan, UnitPlanEnum}, unit_move_action::MovePlanAction};
+use ticka::{ticka::Ticka, real_time_ticka_fascade::RealTimeTickaFascade, unit::{Unit, UnitPlan, UnitPlanEnum}, unit_move_action::MovePlanAction, unit_idle_plan_action::IdlePlanAction};
 use derive_getters::Getters;
 
 use crate::movement_reader::MovementReader;
@@ -61,8 +61,14 @@ fn ticka_system(time: Res<Time>,mut ticka: ResMut<TickaRes>) {
     //bevy::time::Time::delta_seconds_f64(&self)
 }
 
-fn unit_plan(unit: &Unit) -> UnitPlan {
-    return UnitPlan::new( unit.clone(), UnitPlanEnum::Move(MovePlanAction::from_single_step(hex2d::Direction::XZ)));
+fn unit_plan(unit: &Unit, ticka_context: &ticka::ticka_context::TickaContext) -> UnitPlan {
+
+    if unit.id() < &100 {
+        return UnitPlan::new( unit.clone(), UnitPlanEnum::Move(MovePlanAction::from_single_step(hex2d::Direction::XZ)));
+    }
+
+    return UnitPlan::new(unit.clone(), UnitPlanEnum::Idle(IdlePlanAction::new()));
+    
 }
 
 impl Plugin for TickaPlugin {

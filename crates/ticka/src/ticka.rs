@@ -31,7 +31,7 @@ pub struct Ticka {
     /// greenery: Field2D<f32>,
     fields: Vec<Field2D<f32>>,
     
-    unit_plan_function: fn(&Unit) -> UnitPlan ,
+    unit_plan_function: fn(&Unit, &TickaContext) -> UnitPlan,
 
     unit_move_sender: Option<Mutex<Sender<UnitMoveInstance>>>
 }
@@ -43,7 +43,7 @@ pub struct Ticka {
 impl Ticka {
 
     
-    pub fn new(width: usize, height: usize, num_of_fields: usize, unit_plan_function: fn(&Unit) -> UnitPlan, unit_move_sender_o: Option<Sender<UnitMoveInstance>>) -> Self {
+    pub fn new(width: usize, height: usize, num_of_fields: usize, unit_plan_function: fn(&Unit, &TickaContext) -> UnitPlan, unit_move_sender_o: Option<Sender<UnitMoveInstance>>) -> Self {
         
         let mut fields: Vec<Field2D<f32>> = Vec::new();
 
@@ -80,7 +80,7 @@ impl Ticka {
         return result;
     }
 
-    fn get_unit_plans_2d(&self) ->  Vec::<UnitPlan>{
+    fn get_unit_plans_2d(&mut self) ->  Vec::<UnitPlan>{
 
         //let futures: Vec<dyn Future<Output = TUnitPlan>>  = Vec::new();
 
@@ -91,18 +91,23 @@ impl Ticka {
          
         // let mut futures: Vec<_> = Vec::new();
 
+        
+
         // maybe it is better to have a Plan Array that is indexed by the Unit ID,
         // instead of the order of the MobileEntityField2DLocation
-        let mut plans = Vec::<UnitPlan>::with_capacity( self.units_field.field().indeces().len());
+        let mut plans = Vec::<UnitPlan>::new(); // .with_capacity( self.units_field.field().indeces().len());
 
-        
-        println!("expecting {} plans", self.units_field.field().indeces().len());
+        //println!("expecting {} plans", self.units_field.field().indeces().len());
 
-        for index in self.units_field.field().indeces().iter() {
+        let context = TickaContext::new(&mut self.units_field, None, None);
+
+        let field = context.unit_locations().field();
+      
+        for index in field.indeces().iter() {
             
             
-            if let Some(unit) = self.units_field.field().get_u32(index.x(), index.y()) {
-                let plan = (self.unit_plan_function)(unit);
+            if let Some(unit) = field.get_u32(index.x(), index.y()) {
+                let plan = (self.unit_plan_function)(unit, &context);
                 // println!("creating plan for x {} y {}: {:?}", index.x(), index.y(), plan);
                 plans.push(plan);
             } else {
@@ -179,7 +184,7 @@ impl Ticka {
 
         // now point to the new field.
         self.units_field = context.unit_locations_new_mut().take().expect("must be");
-
+        
 
     }
 
@@ -254,6 +259,10 @@ impl Ticka {
 
     pub fn units(&self) -> &MobileEntityField2D<Unit> {
         &self.units_field
+    }
+
+    fn create_ticka_context(&mut self) -> TickaContext {
+        return TickaContext::new(&mut self.units_field, None, None);
     }
 
 }

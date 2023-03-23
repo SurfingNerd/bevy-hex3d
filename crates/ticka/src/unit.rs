@@ -2,7 +2,7 @@ use std::f32::consts::E;
 
 use sn_rust::{indexed_field2d_location::IndexedField2DLocation, mobile_entity_field_2_d::StorageLocationProvider};
 
-use crate::{ticka_context::TickaContext, unit_move_action::MovePlanAction, unit_plan_action::PlanAction};
+use crate::{ticka_context::TickaContext, unit_move_action::MovePlanAction, unit_plan_action::PlanAction, unit_idle_plan_action::{IdlePlanAction, self}};
 
 
 // Note: 
@@ -47,7 +47,7 @@ pub struct UnitPlanner{
 
 #[derive(Debug, Clone)]
 pub enum UnitPlanEnum {
-    Idle,
+    Idle(IdlePlanAction),
     Move(MovePlanAction),
 }
 
@@ -84,8 +84,8 @@ impl UnitPlan {
         // let unit_moves = Vec::<MovePlanAction>::new();
 
         match &self.plan {
-            UnitPlanEnum::Idle => {
-
+            UnitPlanEnum::Idle(idle_plan_action) => {
+                idle_plan_action.execute(&self.unit, context);
             },
             UnitPlanEnum::Move(move_plan_action) => {
                 move_plan_action.execute(&self.unit, context);
@@ -109,7 +109,7 @@ impl UnitPlan {
         //self.plan.description(&self.unit)
 
         match &self.plan {
-            UnitPlanEnum::Idle => {
+            UnitPlanEnum::Idle(_) => {
                 return "Idle".to_string();
             },
             UnitPlanEnum::Move(move_action) => {
@@ -121,8 +121,8 @@ impl UnitPlan {
     pub fn move_to_field(&self, context: &TickaContext) -> Option<IndexedField2DLocation> {
 
         match &self.plan {
-            UnitPlanEnum::Idle => {
-                None
+            UnitPlanEnum::Idle(unit_idle_plan_action) => {
+                return unit_idle_plan_action.move_to_field(&self.unit, context);
             },
             UnitPlanEnum::Move(move_action) => {
                 return move_action.move_to_field(&self.unit, context);

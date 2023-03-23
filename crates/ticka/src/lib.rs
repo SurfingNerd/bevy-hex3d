@@ -7,6 +7,7 @@ pub mod real_time_ticka_fascade;
 
 pub mod unit;
 pub mod unit_plan_action;
+pub mod unit_idle_plan_action;
 pub mod unit_move_action;
 // conflicts
 

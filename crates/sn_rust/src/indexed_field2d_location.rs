@@ -1,7 +1,7 @@
 
 
 
-#[derive(Ord, Eq, PartialOrd, PartialEq, Debug)]
+#[derive(Ord, Eq, PartialOrd, PartialEq, Debug, Clone, Copy)]
 pub struct IndexedField2DLocation {
     x: u32,
     y: u32,
