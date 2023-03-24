@@ -12,7 +12,7 @@ use crate::{ticka_context::TickaContext, unit_move_action::MovePlanAction, unit_
 type UnitsIntegerType = u32;
 
 /// Unit 0 is NULL or can used as prototype creational pattern.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Unit {
   // id 0 does not exist an means NULL.
   id: UnitsIntegerType
@@ -128,6 +128,23 @@ impl UnitPlan {
                 return move_action.move_to_field(&self.unit, context);
             },
         }
+    }
+
+    /// Returns the current location of the unit this plan is for.
+    pub fn current_entities_location(&self, context: &TickaContext) -> IndexedField2DLocation {
+
+        return context.get_entity_location(&self.unit).clone();
+    }
+
+    pub fn is_staying(&self, context: &TickaContext) -> bool{
+        // we are staying, once we plan to go the the same field we are currently on.
+        
+        if let Some(move_pos) = self.move_to_field(context) {
+            let cmp_result = context.get_entity_location(&self.unit).cmp(&move_pos);
+            return cmp_result == std::cmp::Ordering::Equal;
+        }
+        
+        return true;
     }
 
     pub fn unit(&self) -> &Unit {

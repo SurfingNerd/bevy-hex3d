@@ -173,17 +173,31 @@ impl Ticka {
 
         let height = self.units_field.height();
         let width = self.units_field.width();
-        let mut new_field = MobileEntityField2D::<Unit>::new(width as usize,height as usize, Unit::new(0));
+        let new_field = MobileEntityField2D::<Unit>::new(width as usize,height as usize, Unit::new(0));
 
         let mut context = TickaContext::new(&mut self.units_field, Some(new_field), unit_move_sender);
 
         
         for unit_plan in conflicts.non_conflicting_plans_mut().iter_mut() {
+            println!("executing non conflicting unit plan for unit: {:?}", unit_plan);
             unit_plan.execute(&mut context);
         }
 
+        // resolve conflicts here.
+        let mut resolved_conflict_plans = conflicts.resolve_conflicts(&mut context);
+
+        for unit_plan in resolved_conflict_plans.iter_mut() {
+            println!("executing resolved conflicti unit plan for unit: {:?}", unit_plan);
+            
+            unit_plan.execute(&mut context);
+        }
+
+        // this hit's that units might despawn during the conflict resolve.
+        // debug_assert!(context.unit_locations().field().indeces().len() == context.unit_locations_new_mut().as_ref().expect("").field().indeces().len());  
+        
+
         // now point to the new field.
-        self.units_field = context.unit_locations_new_mut().take().expect("must be");
+        self.units_field = context.unit_locations_new_mut().take().unwrap();
         
 
     }
