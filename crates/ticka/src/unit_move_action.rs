@@ -31,6 +31,14 @@ impl MovePlanAction {
 
         let target = coord + self.direction;
 
+        // if there is a unit on this location, then we cannot move there.
+        if let Some(target_unit) = context.unit_locations().field().get_u32(target.x as u32, target.y as u32) {
+            // if there is already a unit on the target location, then we cannot move there,
+            // so the other unit has at least a chance to idle.
+            //return ;
+            return IndexedField2DLocation::new(loc.x() as u32, loc.y() as u32);
+        }
+
         return IndexedField2DLocation::new(target.x as u32, target.y as u32);
 
         //
