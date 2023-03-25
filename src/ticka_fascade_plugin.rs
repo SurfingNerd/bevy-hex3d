@@ -1,4 +1,4 @@
-use bevy::{prelude::{Plugin, ResMut, Commands, Component, Query, Transform, Entity, Assets, StandardMaterial, shape::Cube, Color, PbrBundle, Vec3, Handle, Mesh, info}, sprite::ColorMaterial, reflect::Reflect};
+use bevy::{prelude::{Plugin, ResMut, Commands, Component, Query, Transform, Entity, Assets, StandardMaterial, shape::Cube, Color, PbrBundle, Vec3, Handle, Mesh, info, Resource}, sprite::ColorMaterial, reflect::Reflect};
 use bevy_ticka::{ticka_plugin::{TickaPlugin, TickaRes}, movement_reader::MovementReader};
 use derive_getters::Getters;
 use ticka::{real_time_ticka_fascade::RealTimeTickaFascade, ticka::Ticka};
@@ -12,6 +12,12 @@ pub struct TickaEntityComponent {
     ticka_storage_id: u32,
     bevy_entity_id: Entity
 }
+
+
+#[derive(Resource, Getters, Clone)]
+pub struct TickaFieldIndeces {
+    pheromone: usize,
+} 
 
 pub struct TickaFascadePlugin;
 
@@ -110,6 +116,7 @@ pub fn spawn_enity_with_plan(
 }
 
 
+
 fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
  mut ticka_res: ResMut<TickaRes>) {
@@ -125,8 +132,17 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
     
     // let material = get_color_material(materials, Color::ALICE_BLUE); // get_blue_color(materials);
 
-    let ticka = ticka_res.as_mut().real_time_ticka_mut().ticka_mut(); 
-            
+    let mut ticka = ticka_res.as_mut().real_time_ticka_mut().ticka_mut(); 
+    
+    let pheromones_field_index = ticka.register_field_f32();
+    
+
+    //let mut ticka2 = ticka_res.as_mut();
+
+    //let mut ticka_res = ticka_res.as_ref();
+
+    //let unit_type_index: usize = ticka.register_unit_component_type<UnitType>()
+
     for x in 10..20 {
         for y in 10..20 {
             // let spawned = ticka.units_mut().spawn_entity(x, y);
