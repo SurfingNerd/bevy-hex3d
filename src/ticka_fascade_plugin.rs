@@ -122,8 +122,7 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
     // let coord = hex2d::Coordinate::new(x, y);
     // let (x_pixel, z_pixel) = coord.to_pixel( hex2d::Spacing::FlatTop(0.50));
 
-    let color_material = get_color_material(&mut materials, Color::BLUE);
-
+    
     // let material = get_color_material(materials, Color::ALICE_BLUE); // get_blue_color(materials);
 
     let ticka = ticka_res.as_mut().real_time_ticka_mut().ticka_mut(); 
@@ -132,7 +131,13 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
         for y in 10..20 {
             // let spawned = ticka.units_mut().spawn_entity(x, y);
             
-            let spawned = spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
+            let r = (x as f32 / 20.0);
+            let g = (y as f32 / 20.0);
+            let b = 1.0;
+            // let hasher = std::hash::SipHasher 
+            let color_material = get_color_material(&mut materials, Color::rgb(r, g, b));
+
+            spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //commands.spawn(bundle)
             info!("spawn compete");
             // game.set_entity(0, 0, unit);
@@ -143,6 +148,8 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
     }
 
 
+    let black_color_material = get_color_material(&mut materials, Color::BLACK);
+
     for x in 10..50 {
         for y in 10..40 {
 
@@ -150,7 +157,7 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
                 continue;
             }
             // let spawned = ticka.units_mut().spawn_entity(x, y);
-            spawn_obstacle(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
+            spawn_obstacle(game.as_mut(), ticka, &black_color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //let spawned = spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //commands.spawn(bundle)
             info!("spawn compete");

@@ -133,6 +133,10 @@ impl<T: Clone + Debug> IndexedField2D<T> {
     pub fn height(&self) -> u32 {
         *self.field.height() as u32
     }
+
+    pub fn get_loc(&self, target_location: &IndexedField2DLocation) -> &Option<T> {
+        self.get_u32(target_location.x(), target_location.y())
+    }
 }
 
 

@@ -61,10 +61,28 @@ fn ticka_system(time: Res<Time>,mut ticka: ResMut<TickaRes>) {
     //bevy::time::Time::delta_seconds_f64(&self)
 }
 
-fn unit_plan(unit: &Unit, ticka_context: &ticka::ticka_context::TickaContext) -> UnitPlan {
+fn unit_plan(unit: &Unit, context: &ticka::ticka_context::TickaContext) -> UnitPlan {
 
     if unit.id() < &100 {
-        return UnitPlan::new( unit.clone(), UnitPlanEnum::Move(MovePlanAction::from_single_step(hex2d::Direction::XZ)));
+        // move towwards XZ.
+
+        // let original_plan = UnitPlanEnum::Move();
+        let current_location = context.unit_locations().get_entity_location(unit);
+
+        // using all directions here, could easily result into a loop where a unit tacks 1 step forward, and then 1 step backwards.
+        let directions = [hex2d::Direction::XZ, hex2d::Direction::XY, hex2d::Direction::YZ, hex2d::Direction::YX, hex2d::Direction::ZY, hex2d::Direction::ZX];
+
+        for direction in directions.iter() {
+            let current_location_coord = hex2d::Coordinate::new(current_location.x() as i32, current_location.y() as i32);
+            let target_location = current_location_coord + *direction;
+            let target_field = context.unit_locations().field().get(target_location.x as usize, target_location.y as usize);
+            if target_field.is_none() {
+                return UnitPlan::new( unit.clone(), UnitPlanEnum::Move(MovePlanAction::from_single_step(*direction)));
+            }
+        }
+        
+
+        return UnitPlan::new( unit.clone(), UnitPlanEnum::Idle(IdlePlanAction::new()));
     }
 
     return UnitPlan::new(unit.clone(), UnitPlanEnum::Idle(IdlePlanAction::new()));
