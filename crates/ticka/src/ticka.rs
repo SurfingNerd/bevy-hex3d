@@ -187,7 +187,7 @@ impl Ticka {
         let mut resolved_conflict_plans = conflicts.resolve_conflicts(&mut context);
 
         for unit_plan in resolved_conflict_plans.iter_mut() {
-            println!("executing resolved conflicti unit plan for unit: {:?}", unit_plan);
+            println!("executing resolved conflict unit plan for unit: {:?}", unit_plan);
             
             unit_plan.execute(&mut context);
         }

@@ -143,7 +143,13 @@ impl UnitPlanMoveConflicts {
         continue;
       }
     }
-    
+
+    if conflict_has_executed_plan == usize::MAX {
+      // if we got still noone that acted, we take the first chance.
+      result.push(plan.clone());
+      conflict_has_executed_plan = i;
+      continue;
+    }
     
     result.push(UnitPlan::new(plan.unit().clone(), crate::unit::UnitPlanEnum::Idle(IdlePlanAction::new())));    
    }
