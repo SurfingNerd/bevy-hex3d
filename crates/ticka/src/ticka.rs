@@ -115,7 +115,7 @@ impl Ticka {
 
         //println!("expecting {} plans", self.units_field.field().indeces().len());
 
-        let context = TickaContext::new(&mut self.units_field, None, None);
+        let context = TickaContext::new(&mut self.units_field, None, None, &mut self.fields);
 
         let field = context.unit_locations().field();
 
@@ -151,7 +151,7 @@ impl Ticka {
         // excutes the plans,
         // and resolves the conflicts the hard way.
 
-        let context = TickaContext::new(&mut self.units_field, None, None);
+        let context = TickaContext::new(&mut self.units_field, None, None, &mut self.fields);
 
         let mut conflicts = UnitPlanMoveConflicts::from_plans(plans, &context);
 
@@ -191,7 +191,7 @@ impl Ticka {
             MobileEntityField2D::<Unit>::new(width as usize, height as usize, Unit::new(0));
 
         let mut context =
-            TickaContext::new(&mut self.units_field, Some(new_field), unit_move_sender);
+            TickaContext::new(&mut self.units_field, Some(new_field), unit_move_sender, &mut self.fields);
 
         for unit_plan in conflicts.non_conflicting_plans_mut().iter_mut() {
             println!(
@@ -291,6 +291,6 @@ impl Ticka {
     }
 
     fn create_ticka_context(&mut self) -> TickaContext {
-        return TickaContext::new(&mut self.units_field, None, None);
+        return TickaContext::new(&mut self.units_field, None, None, &mut self.fields);
     }
 }
