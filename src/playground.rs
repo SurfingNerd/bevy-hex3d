@@ -343,13 +343,14 @@ fn integrate_loaded_maps(
             let mut lock_guard_heights = mesh_gen_task.mutex_height.lock().unwrap();
 
             if lock_guard_heights.is_some() {
-                let heights = lock_guard_heights.take().unwrap();
+                let mut heights = lock_guard_heights.take().unwrap();
 
+                // update the standing position of the uis.
                 for (pos, mut transform) in query_positions.iter_mut() {
                     let height = heights.get_u32(pos.x, pos.y).clone();
                     transform.translation.y = (height / 1000) as f32 + 0.4;
                 }
-
+                heights.finalize_mip_map();
                 game.set_height_field(heights);
             } else {
                 error!("Unexpected behavior: heights are not loaded");
