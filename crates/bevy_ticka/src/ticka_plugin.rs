@@ -97,7 +97,7 @@ impl Plugin for TickaPlugin {
         //let movement_reader = MovementReader::new();
         //let sender = movement_reader.create_sender();
         let ticka = Ticka::new(100, 100, 1,  unit_plan, None);
-        let real_time_ticka = RealTimeTickaFascade::from_ticka(ticka, 1.0);
+        let real_time_ticka = RealTimeTickaFascade::from_ticka(ticka, 0.05);
         let res = TickaRes{ real_time_ticka }; 
             
         app.insert_resource(res);
