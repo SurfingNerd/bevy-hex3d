@@ -9,10 +9,9 @@ use sn_rust::mip_map_field_2_d::MipMapField2D;
 
 use crate::components::PositionComponent;
 use crate::{
-    hexagon::{Hexagon3D, Hexagon3DTexturing},
     game::Game,
+    hexagon::{Hexagon3D, Hexagon3DTexturing},
 };
-
 
 type ThreadsafeValue<T> = Arc<Mutex<Option<T>>>;
 
@@ -64,7 +63,7 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 fn create_mesh_on_thread(
     mutex: ThreadsafeValue<Mesh>,
     mutex_heights: ThreadsafeValue<MipMapField2D<i64>>,
-    mutex_mesh_large:  ThreadsafeValue<Mesh>,
+    mutex_mesh_large: ThreadsafeValue<Mesh>,
     asset_to_load_plain: String,
     game_width: u32,
     game_height: u32,
@@ -102,17 +101,17 @@ fn create_mesh_on_thread(
 
     // 2 dimensional array of hexagons
     let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
-    
 
     let mut highest_pixel_x: f32 = 0.;
     let mut highest_pixel_y: f32 = 0.;
     let mut lowest_pixel_x: usize = usize::MAX;
     let mut lowest_pixel_y: usize = usize::MAX;
 
-
-
     let mut height_field = create_height_field(game_width, game_height);
     // for (i, shape) in shapes.into_iter().enumerate() {
+
+    let max_x_render_mesh = (game_width as f32 * 0.2) as u32;
+    let max_y_render_mesh = (game_height as f32 * 0.2) as u32;
     for x in 0..game_width {
         let mut hexes_x: Vec<Hexagon3D> = vec![];
 
@@ -148,65 +147,84 @@ fn create_mesh_on_thread(
                 let pixel_value = get_grayscale(&hm.data, img_x, img_y, img_width);
 
                 // we get a value between 0 and 255.
-                // 
-                 
+                //
+
                 //info!("pixel_value: x {} y {} -> {}",img_x, img_y, pixel_value);
                 z_pixel = 100. - (1. - (pixel_value / 255.0)) * 100.;
                 // info!("z_pixel", z_pixel);
-                height_field.set(x as usize, y as usize, (z_pixel * 1000.0)  as i64);
-            }
-            else {
+                height_field.set(x as usize, y as usize, (z_pixel * 1000.0) as i64);
+            } else {
                 continue;
             }
 
-            // info!("pixel x {} y {} ", x_pixel, y_pixel);
-            let hex = Hexagon3D {
-                diameter: 1.,
-                height: 0.,
-                x: x_pixel,
-                y: z_pixel,
-                z: y_pixel,
-            };
-
-            hexes_x.push(hex);
-
+            if x < max_x_render_mesh && y < max_y_render_mesh {
+                let hex = Hexagon3D {
+                    diameter: 1.,
+                    height: 0.,
+                    x: x_pixel,
+                    y: z_pixel,
+                    z: y_pixel,
+                };
+                hexes_x.push(hex);
+            }
             //hexes.push(hex);
         }
         if hexes_x.len() > 0 {
             hexes_2d.push(hexes_x);
         }
     }
-    info!("start creating mesh highest x - y {} {} {} {}", highest_pixel_x, highest_pixel_y, lowest_pixel_x, lowest_pixel_y);
-    
+    info!(
+        "start creating mesh highest x - y {} {} {} {}",
+        highest_pixel_x, highest_pixel_y, lowest_pixel_x, lowest_pixel_y
+    );
+
     let texturing = Hexagon3DTexturing::new_height_based_texturing();
     let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
     info!("mesh created");
 
-    info!("start creating mip map mesh");
-    let large_scale_mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
-    
+    info!("start creating mip_map mesh");
+
+    let hexes_lod_1 = create_height_field_and_hexes_lod_1(
+        game_width,
+        game_height,
+        game_hex_spacing,
+        &height_field,
+    );
+
+    info!("hexes lod 1: {}", hexes_lod_1.len());
+    let large_scale_mesh = Hexagon3D::create_mesh_for_hexes(&hexes_lod_1, &texturing);
+
+    let lod_0_vertices = mesh.count_vertices();
+
+    let lod_1_vertices = large_scale_mesh.count_vertices();
+
+    info!("lod 0 vertices: {}", lod_0_vertices);
+    info!("lod 1 vertices: {}", lod_1_vertices);
 
     mutex.lock().unwrap().replace(mesh);
     mutex_heights.lock().unwrap().replace(height_field);
     mutex_mesh_large.lock().unwrap().replace(large_scale_mesh);
 }
 
-fn create_height_field_and_hexes_lod_1(width: u32, height: u32, spacing: Spacing<f32>, mip_map: &MipMapField2D<i64>) -> Box<Vec<Vec<Hexagon3D>>> {
-    
-    let mip_map = mip_map.get_mip_map();
+fn create_height_field_and_hexes_lod_1(
+    width: u32,
+    height: u32,
+    spacing: Spacing<f32>,
+    field: &MipMapField2D<i64>,
+) -> Box<Vec<Vec<Hexagon3D>>> {
+    let mip_map = field.get_mip_map();
 
     let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
+    let mut total_hexes = 0;
 
+    let lod_1_width = mip_map.width().clone();
+    let lod_1_height = mip_map.height().clone();
 
+    info!("lod 1 width: {}", lod_1_width);
+    info!("lod 1 height: {}", lod_1_height);
 
     for x in 0..mip_map.width().clone() {
-        for y in 0..mip_map.height().clone() {
-                // 2 dimensional array of hexagons
-            
-            // let c = hex2d::Coordinate::new(x as i32, y as i32);
-            // let (x_pixel, y_pixel) = c.to_pixel(game_hex_spacing);
-
-            let mut hexes_x: Vec<Hexagon3D> = vec![];
+        let mut hexes_x: Vec<Hexagon3D> = vec![];
 
         for y in 0..mip_map.height().clone() {
             let c = hex2d::Coordinate::new(x as i32, y as i32);
@@ -222,7 +240,7 @@ fn create_height_field_and_hexes_lod_1(width: u32, height: u32, spacing: Spacing
                 y: z_pixel as f32,
                 z: y_pixel,
             };
-
+            total_hexes += 1;
             hexes_x.push(hex);
 
             //hexes.push(hex);
@@ -230,18 +248,18 @@ fn create_height_field_and_hexes_lod_1(width: u32, height: u32, spacing: Spacing
         if hexes_x.len() > 0 {
             hexes_2d.push(hexes_x);
         }
-
-        }
     }
 
-    return hexes_2d;
+    info!("total hexes {}", total_hexes);
 
-    
+    return hexes_2d;
 }
 
-fn create_height_field(width: u32, height: u32) -> MipMapField2D::<i64> {
-    let mut height_field = MipMapField2D::<i64>::new(width as usize, height as usize, |sum, count| sum / (count as i64));
-
+fn create_height_field(width: u32, height: u32) -> MipMapField2D<i64> {
+    let mut height_field =
+        MipMapField2D::<i64>::new(width as usize, height as usize, |sum, count| {
+            sum / (count as i64)
+        });
 
     return height_field;
 }
@@ -279,7 +297,7 @@ fn start_loading(
     mut commands: Commands,
     game: Res<Game>,
     mut map_registry: ResMut<MapRegistry>,
-    input: Res<Input<KeyCode>>
+    input: Res<Input<KeyCode>>,
 ) {
     // if we are already loading, don't do anything!
     if map_registry.is_loading {
@@ -297,9 +315,9 @@ fn start_loading(
                 map_registry.current_loaded_index = 0;
             }
             load = true;
-        } else if input.just_pressed(KeyCode::PageDown) { 
+        } else if input.just_pressed(KeyCode::PageDown) {
             // if key page down is pressed, load previous map
-            
+
             if map_registry.current_loaded_index == 0 {
                 map_registry.current_loaded_index = map_registry.registered_heighmaps.len() - 1;
             } else {
@@ -341,7 +359,11 @@ fn start_loading(
         );
     });
 
-    let gen_task = MeshGenTask { mesh: mutex2, mutex_height: mutex_height, mesh_large: mutex_mesh_large };
+    let gen_task = MeshGenTask {
+        mesh: mutex2,
+        mutex_height: mutex_height,
+        mesh_large: mutex_mesh_large,
+    };
     commands.spawn(gen_task);
 }
 
@@ -356,40 +378,45 @@ fn integrate_loaded_maps(
     mut map_registry: ResMut<MapRegistry>,
     mut query_positions: Query<(&PositionComponent, &mut Transform)>,
 ) {
-    // info!("integrating loaded map");
     for (entity, mesh_gen_task) in mesh_gen_task.iter() {
-        let mut lock_guard = mesh_gen_task.mesh.lock().unwrap();
+        let mesh = if let Ok(mut lock_guard) = mesh_gen_task.mesh.try_lock() {
+            lock_guard.take()
+        } else {
+            return;
+        };
+
+        if mesh.is_none() {
+            return;
+        }
+
+        info!("integrating loaded map");
         // info!("checking if mesh is ready");
-        if lock_guard.is_some() {
 
-            // despawn old entities.
-            for old_playground in old_playgrounds.iter() {
-                info!("despawning old playground");
-                commands.entity(old_playground).despawn();
-            }
+        // despawn old entities.
+        for old_playground in old_playgrounds.iter() {
+            info!("despawning old playground");
+            commands.entity(old_playground).despawn();
+        }
 
-            
-            // consumes lock_guard and returns the mesh
-            let mesh = lock_guard.take().unwrap();
+        let texture: Handle<Image> = asset_server.load("mountain_texture_less_sat.png");
 
-            let texture: Handle<Image> = asset_server.load("mountain_texture_less_sat.png");
+        let mesh_handle = meshes.add(mesh.unwrap());
 
-            let mesh_handle = meshes.add(mesh);
+        // green: 6d9862
+        // yellow? // base_color: Color::rgb(123.0 / 255., 130. / 255., 78. / 255.),
+        // green: base_color: Color::rgb(0.43, 0.596, 0.384),
+        // stonegrey: base_color: Color::rgb(0.647, 0.627, 0.616),
+        let mat2 = materials.add(StandardMaterial {
+            base_color_texture: Some(texture),
+            // base_color: Color::rgb(0.647, 0.627, 0.616),
+            metallic: 0.12,
+            reflectance: 0.01,
+            perceptual_roughness: 0.9,
+            ..Default::default()
+        });
 
-            // green: 6d9862
-            // yellow? // base_color: Color::rgb(123.0 / 255., 130. / 255., 78. / 255.),
-            // green: base_color: Color::rgb(0.43, 0.596, 0.384),
-            // stonegrey: base_color: Color::rgb(0.647, 0.627, 0.616),
-            let mat2 = materials.add(StandardMaterial {
-                base_color_texture: Some(texture),
-                // base_color: Color::rgb(0.647, 0.627, 0.616),
-                metallic: 0.12,
-                reflectance: 0.01,
-                perceptual_roughness: 0.9,
-                ..Default::default()
-            });
-
-            commands.spawn(PbrBundle {
+        commands
+            .spawn(PbrBundle {
                 mesh: mesh_handle,
                 material: mat2.clone(),
                 transform: Transform {
@@ -398,55 +425,75 @@ fn integrate_loaded_maps(
                     ..Default::default()
                 },
                 ..Default::default()
-            }).insert(PlaygroundMarker {});
+            })
+            .insert(PlaygroundMarker {});
 
-            info!("mesh spawned");
+        info!("mesh spawned");
 
-            map_registry.is_loading = false;
-            map_registry.is_loaded = true;
+        map_registry.is_loading = false;
+        map_registry.is_loaded = true;
 
+        let mut lock_guard_heights = mesh_gen_task.mutex_height.lock().unwrap();
 
+        if lock_guard_heights.is_some() {
+            let mut heights = lock_guard_heights.take().unwrap();
 
-            let mut lock_guard_heights = mesh_gen_task.mutex_height.lock().unwrap();
-
-            if lock_guard_heights.is_some() {
-                let mut heights = lock_guard_heights.take().unwrap();
-
-                // update the standing position of the uis.
-                for (pos, mut transform) in query_positions.iter_mut() {
-                    let height = heights.get_u32(pos.x, pos.y).clone();
-                    transform.translation.y = (height / 1000) as f32 + 0.4;
-                }
-                heights.finalize_mip_map();
-                game.set_height_field(heights);
-            } else {
-                error!("Unexpected behavior: heights are not loaded");
+            // update the standing position of the uis.
+            for (pos, mut transform) in query_positions.iter_mut() {
+                let height = heights.get_u32(pos.x, pos.y).clone();
+                transform.translation.y = (height / 1000) as f32 + 0.4;
             }
-
-            commands.entity(entity).despawn_recursive();
+            heights.finalize_mip_map();
+            game.set_height_field(heights);
+        } else {
+            error!("Unexpected behavior: heights are not loaded");
         }
-        //mesh_gen_task
-    }
 
-    // info!("integrating loaded map done");
+        if let mut lock_guard_heights = mesh_gen_task.mesh_large.lock().unwrap() {
+            if lock_guard_heights.is_some() {
+                let mesh_large = lock_guard_heights.take().unwrap();
+                // game.set_mesh_large(mesh_large);
+
+                let mesh_handle_large = meshes.add(mesh_large);
+
+                commands
+                    .spawn(PbrBundle {
+                        mesh: mesh_handle_large,
+                        material: mat2.clone(),
+                        transform: Transform {
+                            translation: Vec3::new(0., -100., 0.),
+                            // rotation: quat.clone(),
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    })
+                    .insert(PlaygroundMarker {});
+            } else {
+                error!("Unexpected behavior: mesh large is not loaded");
+            }
+        }
+
+        commands.entity(entity).despawn_recursive();
+    }
+    //mesh_gen_task
 }
 
+// info!("integrating loaded map done");
 
 pub struct PlaygroundPlugin {}
 
-
 impl PlaygroundPlugin {
-  pub fn new() -> Self {
-      Self {}
-  }
+    pub fn new() -> Self {
+        Self {}
+    }
 }
 
 impl Plugin for PlaygroundPlugin {
-  fn build(&self, app: &mut App) {
-      app
-          //.add_startup_system(load_playground_resources)
-          .add_startup_system(setup_playground)
-          .add_system(start_loading)
-          .add_system(integrate_loaded_maps);
-  }
+    fn build(&self, app: &mut App) {
+        app
+            //.add_startup_system(load_playground_resources)
+            .add_startup_system(setup_playground)
+            .add_system(start_loading)
+            .add_system(integrate_loaded_maps);
+    }
 }
