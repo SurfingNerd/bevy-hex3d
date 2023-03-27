@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 
 use bevy::render::texture::ImageType;
 use bevy::{prelude::*, render::texture::CompressedImageFormats};
+use hex2d::Spacing;
 use sn_rust::field_2_d::Field2D;
 use sn_rust::mip_map_field_2_d::MipMapField2D;
 
@@ -18,6 +19,7 @@ type ThreadsafeValue<T> = Arc<Mutex<Option<T>>>;
 #[derive(Component)]
 pub struct MeshGenTask {
     pub mesh: ThreadsafeValue<Mesh>,
+    pub mesh_large: ThreadsafeValue<Mesh>,
     pub mutex_height: ThreadsafeValue<MipMapField2D<i64>>,
     // pub tiles_heigh_info: Vec<Vec<f32>>
 }
@@ -62,6 +64,7 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 fn create_mesh_on_thread(
     mutex: ThreadsafeValue<Mesh>,
     mutex_heights: ThreadsafeValue<MipMapField2D<i64>>,
+    mutex_mesh_large:  ThreadsafeValue<Mesh>,
     asset_to_load_plain: String,
     game_width: u32,
     game_height: u32,
@@ -99,14 +102,16 @@ fn create_mesh_on_thread(
 
     // 2 dimensional array of hexagons
     let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
+    
 
     let mut highest_pixel_x: f32 = 0.;
     let mut highest_pixel_y: f32 = 0.;
     let mut lowest_pixel_x: usize = usize::MAX;
     let mut lowest_pixel_y: usize = usize::MAX;
 
-    let mut height_field = MipMapField2D::new(game_width as usize, game_height as usize, |sum, count| sum / (count as i64));
 
+
+    let mut height_field = create_height_field(game_width, game_height);
     // for (i, shape) in shapes.into_iter().enumerate() {
     for x in 0..game_width {
         let mut hexes_x: Vec<Hexagon3D> = vec![];
@@ -176,11 +181,69 @@ fn create_mesh_on_thread(
     let texturing = Hexagon3DTexturing::new_height_based_texturing();
     let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
     info!("mesh created");
-    let mut lock = mutex.lock().unwrap();
-    let mut lock2 = mutex_heights.lock().unwrap();
 
-    lock2.replace(height_field);
-    lock.replace(mesh);
+    info!("start creating mip map mesh");
+    let large_scale_mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
+    
+
+    mutex.lock().unwrap().replace(mesh);
+    mutex_heights.lock().unwrap().replace(height_field);
+    mutex_mesh_large.lock().unwrap().replace(large_scale_mesh);
+}
+
+fn create_height_field_and_hexes_lod_1(width: u32, height: u32, spacing: Spacing<f32>, mip_map: &MipMapField2D<i64>) -> Box<Vec<Vec<Hexagon3D>>> {
+    
+    let mip_map = mip_map.get_mip_map();
+
+    let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
+
+
+
+    for x in 0..mip_map.width().clone() {
+        for y in 0..mip_map.height().clone() {
+                // 2 dimensional array of hexagons
+            
+            // let c = hex2d::Coordinate::new(x as i32, y as i32);
+            // let (x_pixel, y_pixel) = c.to_pixel(game_hex_spacing);
+
+            let mut hexes_x: Vec<Hexagon3D> = vec![];
+
+        for y in 0..mip_map.height().clone() {
+            let c = hex2d::Coordinate::new(x as i32, y as i32);
+            let (x_pixel, y_pixel) = c.to_pixel(spacing);
+
+            let mut z_pixel = mip_map.get(x, y) / 1000;
+
+            // info!("pixel x {} y {} ", x_pixel, y_pixel);
+            let hex = Hexagon3D {
+                diameter: 1.,
+                height: 0.,
+                x: x_pixel,
+                y: z_pixel as f32,
+                z: y_pixel,
+            };
+
+            hexes_x.push(hex);
+
+            //hexes.push(hex);
+        }
+        if hexes_x.len() > 0 {
+            hexes_2d.push(hexes_x);
+        }
+
+        }
+    }
+
+    return hexes_2d;
+
+    
+}
+
+fn create_height_field(width: u32, height: u32) -> MipMapField2D::<i64> {
+    let mut height_field = MipMapField2D::<i64>::new(width as usize, height as usize, |sum, count| sum / (count as i64));
+
+
+    return height_field;
 }
 
 fn setup_playground(mut commands: Commands) {
@@ -256,17 +319,21 @@ fn start_loading(
     let game_hex_spacing = game.hex_spacing;
 
     let mutex: ThreadsafeValue<Mesh> = Arc::new(Mutex::new(None));
+    let mutex_mesh_large: ThreadsafeValue<Mesh> = Arc::new(Mutex::new(None));
     let mutex2 = mutex.clone();
     let map_to_load = map_registry.registered_heighmaps[map_registry.current_loaded_index].clone();
 
     let mutex_height: ThreadsafeValue<MipMapField2D<i64>> = Arc::new(Mutex::new(None));
     let mutex_height_clone = mutex_height.clone();
+
+    let mutex_mesh_large_clone = mutex_mesh_large.clone();
     info!("start mesh generation in own thread");
     map_registry.is_loading = true;
     std::thread::spawn(move || {
         create_mesh_on_thread(
             mutex,
             mutex_height_clone,
+            mutex_mesh_large_clone,
             map_to_load,
             game_width,
             game_height,
@@ -274,7 +341,7 @@ fn start_loading(
         );
     });
 
-    let gen_task = MeshGenTask { mesh: mutex2, mutex_height: mutex_height };
+    let gen_task = MeshGenTask { mesh: mutex2, mutex_height: mutex_height, mesh_large: mutex_mesh_large };
     commands.spawn(gen_task);
 }
 

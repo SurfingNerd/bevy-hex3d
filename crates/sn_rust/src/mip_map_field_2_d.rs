@@ -63,4 +63,8 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
 
         // let t : T = div_result.into();
     }
+
+    pub fn get_mip_map(&self) -> &Field2D<T> {
+        &self.mip_map_field
+    }
 }
