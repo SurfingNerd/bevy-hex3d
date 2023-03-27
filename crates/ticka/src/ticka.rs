@@ -13,7 +13,7 @@ use crate::unit_move_action::UnitMoveInstance;
 // Unit Planner must be copyable,
 // since each thread get's it's own UnitPlanner
 //
-pub trait UnitPlanner {
+pub trait UnitPlanner : Sync + Send {
     fn make_plan(&self, unit: &Unit) -> UnitPlan;
 }
 
@@ -30,6 +30,11 @@ pub struct Ticka {
     /// moisture: Field2D<f32>,
     /// greenery: Field2D<f32>,
     fields: Vec<Field2D<f32>>,
+
+    // unit type array matches the unit planer indexs
+    unit_type: Vec<usize>,
+
+    unit_planners: Vec<Vec<Box<dyn UnitPlanner>>>,
 
     unit_plan_function: fn(&Unit, &TickaContext) -> UnitPlan,
 
@@ -67,7 +72,14 @@ impl Ticka {
             unit_plan_function,
             fields,
             unit_move_sender: mutex_option,
+            unit_type: Vec::new(),
+            unit_planners: Vec::new(),
         }
+    }
+
+    pub fn register_unit_type(&mut self, unit_planners: Vec<Box<dyn UnitPlanner>>) -> usize {
+        self.unit_planners.push(unit_planners);
+        return self.unit_planners.len() - 1;
     }
 
     async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
@@ -121,7 +133,10 @@ impl Ticka {
 
         for index in field.indeces().iter() {
             if let Some(unit) = field.get_u32(index.x(), index.y()) {
+
                 let plan = (self.unit_plan_function)(unit, &context);
+                // let plan = self.create_unit_plan(unit, &context);
+                
                 // println!("creating plan for x {} y {}: {:?}", index.x(), index.y(), plan);
                 plans.push(plan);
             } else {
@@ -228,8 +243,9 @@ impl Ticka {
         // we seperate the work in different threads,
         // that do the Planning Step
 
-        // #step 1: Planning
-
+        // #step 1: Planning, this step can be done in parallel,
+        // since UnitPlaner don't care about each other.
+        // and the conflict resolution is a seperate step.
         let mut plans = self.get_unit_plans_2d();
 
         // every units does it's planning
@@ -292,5 +308,21 @@ impl Ticka {
 
     fn create_ticka_context(&mut self) -> TickaContext {
         return TickaContext::new(&mut self.units_field, None, None, &mut self.fields);
+    }
+
+    // fn create_unit_plan(&self, unit: &Unit, context: &TickaContext) -> UnitPlan {
+    //     // each unit belongs to a type that has it's own planer.
+    // }
+
+    pub fn spawn_unit(&mut self, x: u32, y: u32, unit_type: usize) -> Unit {
+        let result = self.units_mut().spawn_entity(x, y);
+
+        debug_assert!(unit_type >= self.unit_planners.len(), "unit_type {unit_type} not registered yet. make sure to register it first.");
+        
+        self.unit_type.push(unit_type);
+
+        // todo: handle other unit properties here as well.
+
+        return result;
     }
 }

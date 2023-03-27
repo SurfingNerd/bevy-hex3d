@@ -38,7 +38,7 @@ impl StorageLocationProvider for Unit {
     }
 }
 
-pub struct UnitPlanner{
+pub struct UnitPlanner {
 
 
 }

@@ -32,7 +32,7 @@ pub fn spawn_obstacle(
     x: i32,
     y: i32,
 ) /*-> TickaEntityComponent */ {
-    spawn_enity_with_plan(game, ticka, color_material, meshes, materials, commands, x, y );
+    spawn_enity_with_plan(game, ticka, color_material, meshes, materials, commands, x, y, 2 );
 
 }
 
@@ -47,7 +47,7 @@ pub fn spawn_enemy(
     x: i32,
     y: i32,
 ) {
-    spawn_enity_with_plan(game, ticka, color_material, meshes, materials, commands, x, y );
+    spawn_enity_with_plan(game, ticka, color_material, meshes, materials, commands, x, y, 1 );
 
 }
 
@@ -62,6 +62,7 @@ pub fn spawn_enity_with_plan(
     commands: &mut Commands,
     x: i32,
     y: i32,
+    unit_type: usize
 ) /*-> TickaEntityComponent */ {
 
     info!("spawn enemy {x} {x}");
@@ -74,7 +75,7 @@ pub fn spawn_enity_with_plan(
 
     // let material = get_color_material(materials, Color::RED);
     info!("spawn ticka unit  {x} {x}");
-    let ticka_unit = ticka.units_mut().spawn_entity(x as u32, y as u32);
+    let ticka_unit = ticka.spawn_unit(x as u32, y as u32, unit_type);
   
     //let handle = Handle::<StandardMaterial> { }
     info!("spawning uis");
@@ -162,7 +163,6 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
 
         }
     }
-
 
     let black_color_material = get_color_material(&mut materials, Color::BLACK);
 
