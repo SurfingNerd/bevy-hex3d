@@ -110,8 +110,8 @@ fn create_mesh_on_thread(
     let mut height_field = create_height_field(game_width, game_height);
     // for (i, shape) in shapes.into_iter().enumerate() {
 
-    let max_x_render_mesh = (game_width as f32 * 0.2) as u32;
-    let max_y_render_mesh = (game_height as f32 * 0.2) as u32;
+    let max_x_render_mesh = 100 as u32; //(game_width as f32 * 0.8) as u32;
+    let max_y_render_mesh = 100 as u32; //(game_height as f32 * 0.8) as u32;
     for x in 0..game_width {
         let mut hexes_x: Vec<Hexagon3D> = vec![];
 
@@ -178,17 +178,18 @@ fn create_mesh_on_thread(
         highest_pixel_x, highest_pixel_y, lowest_pixel_x, lowest_pixel_y
     );
 
+    height_field.finalize_mip_map();
     let texturing = Hexagon3DTexturing::new_height_based_texturing();
     let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
     info!("mesh created");
 
     info!("start creating mip_map mesh");
 
-    let hexes_lod_1 = create_height_field_and_hexes_lod_1(
-        game_width,
-        game_height,
+    let hexes_lod_1 = create_hexes_lod_1(
+        33,
+        33,
         game_hex_spacing,
-        &height_field,
+        &height_field.get_mip_map(),
     );
 
     info!("hexes lod 1: {}", hexes_lod_1.len());
@@ -206,14 +207,13 @@ fn create_mesh_on_thread(
     mutex_mesh_large.lock().unwrap().replace(large_scale_mesh);
 }
 
-fn create_height_field_and_hexes_lod_1(
-    width: u32,
-    height: u32,
+fn create_hexes_lod_1(
+    min_x: usize,
+    min_y: usize,
     spacing: Spacing<f32>,
-    field: &MipMapField2D<i64>,
+    mip_map: &Field2D<i64>,
 ) -> Box<Vec<Vec<Hexagon3D>>> {
-    let mip_map = field.get_mip_map();
-
+    
     let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
     let mut total_hexes = 0;
 
@@ -223,14 +223,21 @@ fn create_height_field_and_hexes_lod_1(
     info!("lod 1 width: {}", lod_1_width);
     info!("lod 1 height: {}", lod_1_height);
 
-    for x in 0..mip_map.width().clone() {
+    // let smallest_lod_1_dimension = std::cmp::min(lod_1_width, lod_1_height);
+
+    for x in min_x..mip_map.width().clone() {
         let mut hexes_x: Vec<Hexagon3D> = vec![];
 
-        for y in 0..mip_map.height().clone() {
+        for y in min_y..mip_map.height().clone() {
+
+            if x < min_x && y < min_y {
+                continue;
+            }
+
             let c = hex2d::Coordinate::new(x as i32, y as i32);
             let (x_pixel, y_pixel) = c.to_pixel(spacing);
 
-            let mut z_pixel = mip_map.get(x, y) / 1000;
+            let z_pixel = mip_map.get(x, y) / 1000;
 
             // info!("pixel x {} y {} ", x_pixel, y_pixel);
             let hex = Hexagon3D {
@@ -443,7 +450,7 @@ fn integrate_loaded_maps(
                 let height = heights.get_u32(pos.x, pos.y).clone();
                 transform.translation.y = (height / 1000) as f32 + 0.4;
             }
-            heights.finalize_mip_map();
+            
             game.set_height_field(heights);
         } else {
             error!("Unexpected behavior: heights are not loaded");
@@ -461,7 +468,8 @@ fn integrate_loaded_maps(
                         mesh: mesh_handle_large,
                         material: mat2.clone(),
                         transform: Transform {
-                            translation: Vec3::new(0., -100., 0.),
+                            translation: Vec3::new(0., 0., 0.),
+                            scale: Vec3::new(3., 1., 3.),
                             // rotation: quat.clone(),
                             ..Default::default()
                         },
