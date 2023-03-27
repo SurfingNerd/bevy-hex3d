@@ -148,8 +148,8 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
         for y in 10..20 {
             // let spawned = ticka.units_mut().spawn_entity(x, y);
             
-            let r = (x as f32 / 20.0);
-            let g = (y as f32 / 20.0);
+            let r = x as f32 / 20.0;
+            let g = y as f32 / 20.0;
             let b = 1.0;
             // let hasher = std::hash::SipHasher 
             let color_material = get_color_material(&mut materials, Color::rgb(r, g, b));

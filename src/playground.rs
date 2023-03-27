@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use bevy::render::texture::ImageType;
 use bevy::{prelude::*, render::texture::CompressedImageFormats};
 use sn_rust::field_2_d::Field2D;
+use sn_rust::mip_map_field_2_d::MipMapField2D;
 
 use crate::components::PositionComponent;
 use crate::{
@@ -17,7 +18,7 @@ type ThreadsafeValue<T> = Arc<Mutex<Option<T>>>;
 #[derive(Component)]
 pub struct MeshGenTask {
     pub mesh: ThreadsafeValue<Mesh>,
-    pub mutex_height: ThreadsafeValue<Field2D<i64>>,
+    pub mutex_height: ThreadsafeValue<MipMapField2D<i64>>,
     // pub tiles_heigh_info: Vec<Vec<f32>>
 }
 
@@ -60,7 +61,7 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 //function that creates the mesh on a separate thread and stores it in the ThreadsafeValue box.
 fn create_mesh_on_thread(
     mutex: ThreadsafeValue<Mesh>,
-    mutex_heights: ThreadsafeValue<Field2D<i64>>,
+    mutex_heights: ThreadsafeValue<MipMapField2D<i64>>,
     asset_to_load_plain: String,
     game_width: u32,
     game_height: u32,
@@ -104,7 +105,7 @@ fn create_mesh_on_thread(
     let mut lowest_pixel_x: usize = usize::MAX;
     let mut lowest_pixel_y: usize = usize::MAX;
 
-    let mut height_field = Field2D::new(game_width as usize, game_height as usize);
+    let mut height_field = MipMapField2D::new(game_width as usize, game_height as usize, |sum, count| sum / (count as i64));
 
     // for (i, shape) in shapes.into_iter().enumerate() {
     for x in 0..game_width {
@@ -258,7 +259,7 @@ fn start_loading(
     let mutex2 = mutex.clone();
     let map_to_load = map_registry.registered_heighmaps[map_registry.current_loaded_index].clone();
 
-    let mutex_height: ThreadsafeValue<Field2D<i64>> = Arc::new(Mutex::new(None));
+    let mutex_height: ThreadsafeValue<MipMapField2D<i64>> = Arc::new(Mutex::new(None));
     let mutex_height_clone = mutex_height.clone();
     info!("start mesh generation in own thread");
     map_registry.is_loading = true;

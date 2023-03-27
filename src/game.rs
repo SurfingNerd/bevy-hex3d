@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 use bevy::prelude::{Entity, Resource};
-use sn_rust::field_2_d::Field2D;
+use sn_rust::{field_2_d::Field2D, mip_map_field_2_d::MipMapField2D};
 
 
 
@@ -11,7 +13,14 @@ pub struct Game {
     entities: Field2D<Option<Entity>>, //maybe refactor to sparse set - lets see if memory becomes a problem or not.,
     pub hex_spacing: hex2d::Spacing,
     // we divide the unit heigh throught 1000, to get the granularity we want.
-    pub heights_z: Field2D<i64>,
+    pub heights_z: MipMapField2D<i64>,
+}
+
+// mark the function not for inline
+#[inline(never)]
+fn div_i64_i32(a: i64, b: i32) -> i64 {
+    let result = (a / b as i64).clone();
+    return result;
 }
 
 impl Game {
@@ -24,7 +33,7 @@ impl Game {
             entities: Field2D::new(width as usize, height as usize),
             current_tick: 0,
             hex_spacing: hex2d::Spacing::FlatTop(0.50),
-            heights_z: Field2D::new(width as usize, height as usize),
+            heights_z: MipMapField2D::new(width as usize, height as usize, div_i64_i32 ),
         }
         
     }
@@ -64,7 +73,9 @@ impl Game {
         self.heights_z.get(x as usize,y as usize).clone()
     }
 
-    pub fn set_height_field(&mut self, field: Field2D<i64>) {
+    pub fn set_height_field(&mut self, field: MipMapField2D<i64>) {
+
+        // self.heights_z = Arc::new(MipMapField2D::new_from_field(field, div_i64_i32));
         self.heights_z = field;
     }
 
