@@ -180,8 +180,10 @@ fn create_mesh_on_thread(
     
     info!("start creating hexes including mip_maps LODS");
 
-    let hexes_lod_0 =  create_hexes_lod_x(0,100, 0, game_hex_spacing, height_field.field());
-    let hexes_lod_1 = create_hexes_lod_x(100, 300, 1, game_hex_spacing, height_field.get_mip_map());
+    
+    let hexes_lod_0 =  create_hexes_lod_x(0,20, 0, game_hex_spacing, height_field.field());
+    // let lod_1_spacing = flip_spacing(game_hex_spacing);
+    let hexes_lod_1 = create_hexes_lod_x(20, 300, 1, game_hex_spacing, height_field.get_mip_map());
     // let hexes_lod_1 = create_hexes_lod_1(
     //     33,
     //     33,
@@ -207,6 +209,14 @@ fn create_mesh_on_thread(
 
 }
 
+fn flip_spacing(game_hex_spacing: Spacing) -> Spacing {
+    
+    match game_hex_spacing {
+        Spacing::FlatTop(f) => Spacing::PointyTop(f),
+        Spacing::PointyTop(f) => Spacing::FlatTop(f),
+    }
+}
+
 fn create_hexes_lod_x(
     min_distance: usize,
     max_distance: usize,
@@ -215,27 +225,28 @@ fn create_hexes_lod_x(
     mip_map: &Field2D<i64>,
 ) -> Box<IndexedField2D<Hexagon3D>> {
 
+    let pos_x = 30;
+    let pos_y = 30;
 
-    let current_pos = hex2d::Coordinate::new(0 as i32, 0 as i32);
+    let current_pos = if lod_level == 0 { hex2d::Coordinate::new(pos_x as i32, pos_y as i32 ) } else { hex2d::Coordinate::new((pos_x / 3 * lod_level) as i32, (pos_y / 3 * lod_level) as i32) };
 
     let mut result = Box::new(IndexedField2D::<Hexagon3D>::new(mip_map.width().clone(), mip_map.height().clone()));
 
-    
     let min_distance_lod_correction = if lod_level == 0 {min_distance} else {min_distance / 3 * lod_level};
     let max_distance_lod_correction = if lod_level == 0 {max_distance} else {max_distance / 3 * lod_level};
 
     for ring_distance in min_distance_lod_correction..=max_distance_lod_correction {
-        info!("ring_distance: {}", ring_distance);
+        // info!("ring_distance: {}", ring_distance);
         let ring = current_pos.ring_iter(ring_distance as i32, hex2d::Spin::CW(hex2d::Direction::XZ));
 
         for c in ring {
             
             if c.x < 0 || c.y < 0 || c.x >= (mip_map.width().clone() as i32) || c.y >= (mip_map.height().clone() as i32) {
-                info!("c: {:?} not on playground - skipping", c);
+                // info!("c: {:?} not on playground - skipping", c);
                 continue;
             }
 
-            info!("c: {:?}", c);
+            // info!("c: {:?}", c);
             //let c = hex2d::Coordinate::new(x as i32, y as i32);
             let (x_pixel, y_pixel) = c.to_pixel(spacing);
 
@@ -519,7 +530,7 @@ fn integrate_loaded_maps(
                         mesh: mesh_handle_large,
                         material: mat2.clone(),
                         transform: Transform {
-                            translation: Vec3::new(0., 0., 0.),
+                            translation: Vec3::new(0., -0.1, 0.),
                             scale: Vec3::new(3., 1., 3.),
                             // rotation: quat.clone(),
                             ..Default::default()
