@@ -295,8 +295,6 @@ fn create_hexes_lod_x(
     // lod 1: 3
     // lod 2: 4.5
 
-    //let spacing_multiplier_options = [1.0, 3.0, 4.5, 6.0, 7.5, 9.0 ];
-    //let spacing_multiplier_options = [1.0, 3.0, 4.5, 4.7, 7.5, 9.0 ];
     let spacing_multiplier_options = [1.0, 3.0, 9.0, 27.0, 81.0, 243.0 ];
     let spacing_multi = spacing_multiplier_options[lod_level];
     let mut spacing = match spacing_orig {
