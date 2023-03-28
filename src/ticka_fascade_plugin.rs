@@ -65,7 +65,7 @@ pub fn spawn_enity_with_plan(
     unit_type: usize
 ) /*-> TickaEntityComponent */ {
 
-    info!("spawn enemy {x} {x}");
+    // info!("spawn enemy {x} {x}");
 
     let cube = Cube::new(0.1);
     let cube_mesh = meshes.add(cube.into());
@@ -74,11 +74,11 @@ pub fn spawn_enity_with_plan(
     let (x_pixel, z_pixel) = coord.to_pixel(game.hex_spacing);
 
     // let material = get_color_material(materials, Color::RED);
-    info!("spawn ticka unit  {x} {x}");
+    // info!("spawn ticka unit  {x} {x}");
     let ticka_unit = ticka.spawn_unit(x as u32, y as u32, unit_type);
   
     //let handle = Handle::<StandardMaterial> { }
-    info!("spawning uis");
+    // info!("spawning uis");
     let entity = commands.spawn(
         PbrBundle {
           mesh: cube_mesh, // does only the handle get cloned here ? so we reuse the mesh ?
@@ -91,11 +91,11 @@ pub fn spawn_enity_with_plan(
       })
       .id();
 
-    info!("spawning uis.entity: {:?}",  entity);
+    // info!("spawning uis.entity: {:?}",  entity);
 
     let ticka_storage_id = *ticka_unit.id();
 
-    info!("spawning uis.ticka_storage_id: {:?}",  ticka_storage_id);
+    // info!("spawning uis.ticka_storage_id: {:?}",  ticka_storage_id);
 
     let mut entity_component = TickaEntityComponent {
         bevy_entity_id: entity,
@@ -107,7 +107,7 @@ pub fn spawn_enity_with_plan(
     commands.entity(entity).insert(entity_component.clone());
       
 
-    info!("spawning uis - done");
+    // info!("spawning uis - done");
     //return entity_component;
          
     // game.set_entity(0, 0, unit);
@@ -156,7 +156,7 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
 
             spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //commands.spawn(bundle)
-            info!("spawn compete");
+            // info!("spawn compete");
             // game.set_entity(0, 0, unit);
             //let ticka_entity = TickaEntityComponent { ticka_storage_id: *spawned.id() };
 
@@ -176,7 +176,7 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
             spawn_obstacle(game.as_mut(), ticka, &black_color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //let spawned = spawn_enemy(game.as_mut(), ticka, &color_material, &mut meshes, &mut materials, &mut commands, x, y);
             //commands.spawn(bundle)
-            info!("spawn compete");
+            // info!("spawn compete");
             // game.set_entity(0, 0, unit);
             //let ticka_entity = TickaEntityComponent { ticka_storage_id: *spawned.id() };
 

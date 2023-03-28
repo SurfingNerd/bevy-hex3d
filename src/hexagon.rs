@@ -4,6 +4,7 @@ use bevy::{
         mesh::{Indices, PrimitiveTopology},
     },
 };
+use sn_rust::indexed_field_2_d::IndexedField2D;
 use std::{f32::consts::PI};
 
 /// An axis-aligned Hexagon3D defined by its minimum and maximum point.
@@ -79,7 +80,7 @@ impl Hexagon3D {
     }
 
     pub fn create_mesh_for_hexes(
-        hexes: &Vec<Vec<Hexagon3D>>,
+        hexes: &IndexedField2D<Hexagon3D>,
         texturing: &Hexagon3DTexturing,
     ) -> Mesh {
         // while hexes
@@ -88,14 +89,17 @@ impl Hexagon3D {
 
         // positions: &mut Vec<[f32;3]>, normals: &mut Vec<[f32;3]>, uvs: &mut Vec<[f32;2]>
         //let iter = hexes.iter();
-        let count_of_hexes = hexes.len() * hexes[0].len();
+        let count_of_hexes = hexes.indeces().len();
         let mut positions: Vec<[f32; 3]> = Vec::with_capacity(6 * count_of_hexes);
         
         let mut uvs: Vec<[f32; 2]> = Vec::with_capacity(6 * count_of_hexes);
 
         let mut indices = Indices::U32(vec![]);
 
-        for hex_x in hexes.into_iter() {
+
+        for loc in hexes.indeces().into_iter() {
+            let hex_x = hexes.get_loc(loc); 
+            
             for hex in hex_x.into_iter() {
                 hex.get_mesh_artifacts(&texturing, &mut positions, &mut uvs, &mut indices);
             }
@@ -104,10 +108,17 @@ impl Hexagon3D {
         // build mesh that connects every hex to it's neighbours.
 
         // iterate over all indexes of the 2D hex array, and connect them to their neighbours, if it is not already done
-        for x in 0..hexes.len() {
-            for y in 0..hexes[x].len() {
-                let hex = &hexes[x][y];
-                let index = x * hexes[x].len() + y;
+        for x in 0..hexes.width().clone()  {
+            for y in 0..hexes.height().clone() {
+                let hex = if let Some(hex_s) = hexes.get_u32(x, y) {
+                    hex_s
+                } else {
+                    continue;
+                };
+
+
+
+                //let index = x * hexes[x].len() + y;
 
                 // we connect to the rigth, top, and top reight neighbour
                 // we do not have to connecto to left, bottomleft, and bottom neighbours, because they will connect to us
@@ -286,7 +297,7 @@ impl Hexagon3D {
         spike_2: f32,
         n_spike_1: f32,
         n_spike_2: f32,
-        hexes: &Vec<Vec<Hexagon3D>>,
+        hexes: &IndexedField2D<Hexagon3D>,
         positions: &mut Vec<[f32; 3]>,
         uvs: &mut Vec<[f32; 2]>,
         indices: &mut Indices,
@@ -294,14 +305,21 @@ impl Hexagon3D {
         //check if neighbour is in bounds
         if neighbour.x < 0
             || neighbour.y < 0
-            || neighbour.x >= hexes.len() as i32
-            || neighbour.y >= hexes[neighbour.x as usize].len() as i32
+            || neighbour.x >= hexes.width() as i32
+            || neighbour.y >= hexes.height() as i32
         {
             return;
         }
 
-        let n_hex = &hexes[neighbour.x as usize][neighbour.y as usize];
+        let n_hex_o = hexes.get(neighbour.x as usize,neighbour.y as usize);;
 
+        let n_hex = match n_hex_o {
+            Some(hex) => hex,
+            None => {
+                info!("No neighbour found on {} {}", neighbour.x,neighbour.y);
+                return;
+            } ,
+        };
         // figure out if what edges we have to connect.
         // we have to connect the edges that are between our hexagon and the neighbour hexagon.
 

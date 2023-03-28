@@ -5,6 +5,7 @@ use bevy::render::texture::ImageType;
 use bevy::{prelude::*, render::texture::CompressedImageFormats};
 use hex2d::Spacing;
 use sn_rust::field_2_d::Field2D;
+use sn_rust::indexed_field_2_d::IndexedField2D;
 use sn_rust::mip_map_field_2_d::MipMapField2D;
 
 use crate::components::PositionComponent;
@@ -100,7 +101,7 @@ fn create_mesh_on_thread(
     }
 
     // 2 dimensional array of hexagons
-    let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
+    // let mut hexes_2d = IndexedField2D::<Hexagon3D>::new(game_width as usize, game_height as usize);
 
     let mut highest_pixel_x: f32 = 0.;
     let mut highest_pixel_y: f32 = 0.;
@@ -110,11 +111,10 @@ fn create_mesh_on_thread(
     let mut height_field = create_height_field(game_width, game_height);
     // for (i, shape) in shapes.into_iter().enumerate() {
 
-    let max_x_render_mesh = 100 as u32; //(game_width as f32 * 0.8) as u32;
-    let max_y_render_mesh = 100 as u32; //(game_height as f32 * 0.8) as u32;
+    // let max_x_render_mesh = 100 as u32; //(game_width as f32 * 0.8) as u32;
+    // let max_y_render_mesh = 100 as u32; //(game_height as f32 * 0.8) as u32;
     for x in 0..game_width {
-        let mut hexes_x: Vec<Hexagon3D> = vec![];
-
+        
         for y in 0..game_height {
             let c = hex2d::Coordinate::new(x as i32, y as i32);
             let (x_pixel, y_pixel) = c.to_pixel(game_hex_spacing);
@@ -157,20 +157,17 @@ fn create_mesh_on_thread(
                 continue;
             }
 
-            if x < max_x_render_mesh && y < max_y_render_mesh {
-                let hex = Hexagon3D {
-                    diameter: 1.,
-                    height: 0.,
-                    x: x_pixel,
-                    y: z_pixel,
-                    z: y_pixel,
-                };
-                hexes_x.push(hex);
-            }
+            // if x < max_x_render_mesh && y < max_y_render_mesh {
+            //     let hex = Hexagon3D {
+            //         diameter: 1.,
+            //         height: 0.,
+            //         x: x_pixel,
+            //         y: z_pixel,
+            //         z: y_pixel,
+            //     };
+            //     hexes_2d.set(x, y, Some(hex));
+            // }
             //hexes.push(hex);
-        }
-        if hexes_x.len() > 0 {
-            hexes_2d.push(hexes_x);
         }
     }
     info!(
@@ -180,64 +177,69 @@ fn create_mesh_on_thread(
 
     height_field.finalize_mip_map();
     let texturing = Hexagon3DTexturing::new_height_based_texturing();
-    let mesh = Hexagon3D::create_mesh_for_hexes(&hexes_2d, &texturing);
-    info!("mesh created");
+    
+    info!("start creating hexes including mip_maps LODS");
 
-    info!("start creating mip_map mesh");
+    let hexes_lod_0 =  create_hexes_lod_x(0,100, 0, game_hex_spacing, height_field.field());
+    let hexes_lod_1 = create_hexes_lod_x(100, 300, 1, game_hex_spacing, height_field.get_mip_map());
+    // let hexes_lod_1 = create_hexes_lod_1(
+    //     33,
+    //     33,
+    //     game_hex_spacing,
+    //     &height_field.get_mip_map(),
+    // );
 
-    let hexes_lod_1 = create_hexes_lod_1(
-        33,
-        33,
-        game_hex_spacing,
-        &height_field.get_mip_map(),
-    );
+    info!("hexes lod 0: {}", hexes_lod_0.indeces().len());
+    info!("hexes lod 1: {}", hexes_lod_1.indeces().len());
+        
+    let mesh_lod_0 = Hexagon3D::create_mesh_for_hexes(hexes_lod_0.as_ref(), &texturing);
+    let mesh_lod_1 = Hexagon3D::create_mesh_for_hexes(hexes_lod_1.as_ref(), &texturing);
 
-    info!("hexes lod 1: {}", hexes_lod_1.len());
-    let large_scale_mesh = Hexagon3D::create_mesh_for_hexes(&hexes_lod_1, &texturing);
+    let lod_0_vertices = mesh_lod_0.count_vertices();
+    let lod_1_vertices = mesh_lod_1.count_vertices();
 
-    let lod_0_vertices = mesh.count_vertices();
-
-    let lod_1_vertices = large_scale_mesh.count_vertices();
-
-    info!("lod 0 vertices: {}", lod_0_vertices);
-    info!("lod 1 vertices: {}", lod_1_vertices);
-
-    mutex.lock().unwrap().replace(mesh);
+    info!("lod 0 vertices: {} - hexes: {}", lod_0_vertices, hexes_lod_0.indeces().len());
+    info!("lod 1 vertices: {} - hexes: {}", lod_1_vertices, hexes_lod_1.indeces().len());
+    
+    mutex.lock().unwrap().replace(mesh_lod_0);
     mutex_heights.lock().unwrap().replace(height_field);
-    mutex_mesh_large.lock().unwrap().replace(large_scale_mesh);
+    mutex_mesh_large.lock().unwrap().replace(mesh_lod_1);
+
 }
 
-fn create_hexes_lod_1(
-    min_x: usize,
-    min_y: usize,
+fn create_hexes_lod_x(
+    min_distance: usize,
+    max_distance: usize,
+    lod_level: usize,
     spacing: Spacing<f32>,
     mip_map: &Field2D<i64>,
-) -> Box<Vec<Vec<Hexagon3D>>> {
+) -> Box<IndexedField2D<Hexagon3D>> {
+
+
+    let current_pos = hex2d::Coordinate::new(0 as i32, 0 as i32);
+
+    let mut result = Box::new(IndexedField2D::<Hexagon3D>::new(mip_map.width().clone(), mip_map.height().clone()));
+
     
-    let mut hexes_2d: Box<Vec<Vec<Hexagon3D>>> = Box::new(vec![]);
-    let mut total_hexes = 0;
+    let min_distance_lod_correction = if lod_level == 0 {min_distance} else {min_distance / 3 * lod_level};
+    let max_distance_lod_correction = if lod_level == 0 {max_distance} else {max_distance / 3 * lod_level};
 
-    let lod_1_width = mip_map.width().clone();
-    let lod_1_height = mip_map.height().clone();
+    for ring_distance in min_distance_lod_correction..=max_distance_lod_correction {
+        info!("ring_distance: {}", ring_distance);
+        let ring = current_pos.ring_iter(ring_distance as i32, hex2d::Spin::CW(hex2d::Direction::XZ));
 
-    info!("lod 1 width: {}", lod_1_width);
-    info!("lod 1 height: {}", lod_1_height);
-
-    // let smallest_lod_1_dimension = std::cmp::min(lod_1_width, lod_1_height);
-
-    for x in min_x..mip_map.width().clone() {
-        let mut hexes_x: Vec<Hexagon3D> = vec![];
-
-        for y in min_y..mip_map.height().clone() {
-
-            if x < min_x && y < min_y {
+        for c in ring {
+            
+            if c.x < 0 || c.y < 0 || c.x >= (mip_map.width().clone() as i32) || c.y >= (mip_map.height().clone() as i32) {
+                info!("c: {:?} not on playground - skipping", c);
                 continue;
             }
 
-            let c = hex2d::Coordinate::new(x as i32, y as i32);
+            info!("c: {:?}", c);
+            //let c = hex2d::Coordinate::new(x as i32, y as i32);
             let (x_pixel, y_pixel) = c.to_pixel(spacing);
 
-            let z_pixel = mip_map.get(x, y) / 1000;
+            let z_pixel = mip_map.get(c.x as usize, c.y as usize) / 1000;
 
             // info!("pixel x {} y {} ", x_pixel, y_pixel);
             let hex = Hexagon3D {
@@ -247,20 +249,69 @@ fn create_hexes_lod_1(
                 y: z_pixel as f32,
                 z: y_pixel,
             };
-            total_hexes += 1;
-            hexes_x.push(hex);
 
-            //hexes.push(hex);
+            
+            result.set(c.x as u32, c.y as u32, Some(hex));
         }
-        if hexes_x.len() > 0 {
-            hexes_2d.push(hexes_x);
-        }
-    }
+    } 
 
-    info!("total hexes {}", total_hexes);
-
-    return hexes_2d;
+    return result;
 }
+
+// fn create_hexes_lod_1(
+//     min_x: usize,
+//     min_y: usize,
+//     spacing: Spacing<f32>,
+//     mip_map: &Field2D<i64>,
+// ) -> IndexedField2D<Hexagon3D> {
+    
+//     //let mut hexes_2d: IndexedField2D::<Hexagon3D>::new(mip_ 
+//     let mut total_hexes = 0;
+
+//     let lod_1_width = mip_map.width().clone();
+//     let lod_1_height = mip_map.height().clone();
+
+//     info!("lod 1 width: {}", lod_1_width);
+//     info!("lod 1 height: {}", lod_1_height);
+
+//     // let smallest_lod_1_dimension = std::cmp::min(lod_1_width, lod_1_height);
+
+//     for x in min_x..mip_map.width().clone() {
+//         let mut hexes_x: Vec<Hexagon3D> = vec![];
+
+//         for y in min_y..mip_map.height().clone() {
+
+//             if x < min_x && y < min_y {
+//                 continue;
+//             }
+
+//             let c = hex2d::Coordinate::new(x as i32, y as i32);
+//             let (x_pixel, y_pixel) = c.to_pixel(spacing);
+
+//             let z_pixel = mip_map.get(x, y) / 1000;
+
+//             // info!("pixel x {} y {} ", x_pixel, y_pixel);
+//             let hex = Hexagon3D {
+//                 diameter: 1.,
+//                 height: 0.,
+//                 x: x_pixel,
+//                 y: z_pixel as f32,
+//                 z: y_pixel,
+//             };
+//             total_hexes += 1;
+//             hexes_x.push(hex);
+
+//             //hexes.push(hex);
+//         }
+//         if hexes_x.len() > 0 {
+//             hexes_2d.push(hexes_x);
+//         }
+//     }
+
+//     info!("total hexes {}", total_hexes);
+
+//     return hexes_2d;
+// }
 
 fn create_height_field(width: u32, height: u32) -> MipMapField2D<i64> {
     let mut height_field =
