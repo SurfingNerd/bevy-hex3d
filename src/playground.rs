@@ -296,7 +296,8 @@ fn create_hexes_lod_x(
     // lod 2: 4.5
 
     let spacing_multiplier_options = [1.0, 3.0, 9.0, 27.0, 81.0, 243.0 ];
-    let spacing_multi = spacing_multiplier_options[lod_level];
+    //let spacing_multi = spacing_multiplier_options[lod_level];
+    let spacing_multi = 1.0;
     let mut spacing = match spacing_orig {
         Spacing::FlatTop(f) => {
             Spacing::FlatTop(f * spacing_multi)
@@ -306,9 +307,6 @@ fn create_hexes_lod_x(
         }
     };
 
-    if lod_level == 0 {
-        spacing = spacing_orig;
-    }
 
     info!("lod {} min_distance {} max_distance {} ", lod_level, min_distance, max_distance);
     let pos_x = 0;
@@ -598,13 +596,14 @@ fn integrate_loaded_maps(
                     let mesh_handle_large = meshes.add(mesh);
 
                     // let scaling = 3.0 * lod_level as f32; //f32::powi(3.0, lod_level);
+                    let scaling = f32::powi(3.0, lod_level);
                     commands
                         .spawn(PbrBundle {
                             mesh: mesh_handle_large,
                             material: mat2.clone(),
                             transform: Transform {
                                 translation: Vec3::new(0., -1.0000 * (lod_level as f32), 0.),
-                                // scale: Vec3::new(scaling, 1., scaling),
+                                scale: Vec3::new(scaling, 1., scaling),
                                 // rotation: quat.clone(),
                                 ..Default::default()
                             },
