@@ -82,5 +82,13 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
     pub fn field(&self) -> &Field2D<T> {
         &self.field
     }
+
+    pub fn width(&self) -> usize {
+        return self.field.width().clone();
+    }
+
+    pub fn height(&self) -> usize {
+        return self.field.height().clone();
+    }
     
 }
