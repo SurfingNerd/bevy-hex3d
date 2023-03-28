@@ -195,16 +195,22 @@ fn create_mesh_on_thread(
     // let lod_steps = [0, 3, 9, 27, pow_4, pow_5];
 
     // let lod_steps = [0, 9, 18, 27, 36, 45];
-    let mut current_distance = 0;
+    // let mut current_distance = 0;
 
-    let mut increment = 243;
+    //let mut increment = 243;
+    let increment = pow_5;
+    
+    //let double_draw_distance = 27;
+    let double_draw_distance = 0;
 
-    let lod_steps = [0, increment, increment * 2,increment * 3,increment * 4, increment * 5, increment * 6, increment * 7 ];
+    //let lod_steps = [0, increment, increment * 2 ,increment * 3,increment * 4, increment * 5, increment * 6, increment * 7 ];
+
+    let lod_steps = [ 0, 9, 11 ];
 
 
     let hexes_lod_0 = create_hexes_lod_x(
         lod_steps[0],
-        lod_steps[1],
+         200, //lod_steps[1] + double_draw_distance,
         0,
         game_hex_spacing,
         height_field.field(),
@@ -228,13 +234,17 @@ fn create_mesh_on_thread(
         
         let lod = i + 1;
 
+        if lod > lod_steps.len() - 2 {
+            break;
+        }
+
         let lod_step_min = lod_steps[lod];
-        let lod_step_max = lod_steps[lod + 1];
+        let lod_step_max = lod_steps[lod + 1] + double_draw_distance;
         
         let field = height_field.get_mip_maps().get(i).unwrap();
         let hexes = create_hexes_lod_x(
             lod_step_min,
-            lod_step_max,
+            lod_step_max + double_draw_distance,
             lod,
             game_hex_spacing,
             field,
@@ -275,6 +285,8 @@ fn create_hexes_lod_x(
     spacing: Spacing<f32>,
     mip_map: &Field2D<i64>,
 ) -> Box<IndexedField2D<Hexagon3D>> {
+
+    info!("lod {} min_distance {} max_distance {} ", lod_level, min_distance, max_distance);
     let pos_x = 0;
     let pos_y = 0;
 

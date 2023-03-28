@@ -58,7 +58,7 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
 
         for x in 0..mip_map_field.width().clone() {
             for y in 0..mip_map_field.height().clone() {
-                mip_map_field.set(x, y, self.calc_mip_mapped_value(x, y));
+                mip_map_field.set(x, y, self.calc_mip_mapped_value(field, x, y));
             }
         }
 
@@ -66,7 +66,7 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
 
     }
 
-    pub fn calc_mip_mapped_value(&self, x: usize, y: usize) -> T {
+    pub fn calc_mip_mapped_value(&self, field: &Field2D<T>, x: usize, y: usize) -> T {
         let mut sum = T::default();
         let mut count = 0;
 
@@ -75,8 +75,8 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
                 let x = x * 3 + i;
                 let y = y * 3 + j;
 
-                if x < *self.field.width() && y < *self.field.height() {
-                    sum = sum + self.field.get(x, y).clone();
+                if x < *field.width() && y < *field.height() {
+                    sum = sum + field.get(x, y).clone();
                     count += 1;
                 }
             }
