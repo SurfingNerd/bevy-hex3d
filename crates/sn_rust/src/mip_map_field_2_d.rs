@@ -5,15 +5,15 @@ use crate::field_2_d::Field2D;
 pub struct MipMapField2D<T: Default + Clone + std::ops::Add<Output = T>> {
     field: Field2D<T>,
     mip_map_fields: Vec<Field2D<T>>,
-    div_function: fn(T, i32) -> T,
+    interpolation: fn(usize,usize,usize, &Field2D<T>, &Field2D<T>) -> T,
 }
 
 impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
-    pub fn new(width: usize, height: usize, div_function: fn(T, i32) -> T) -> Self {
+    pub fn new(width: usize, height: usize, interpolation: fn(usize,usize,usize,&Field2D<T>, &Field2D<T>) -> T) -> Self {
         Self {
             field: Field2D::new(width, height),
             mip_map_fields: Vec::new(),
-            div_function
+            interpolation
         }
     }
 
@@ -40,25 +40,27 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
         //     }
         // }
 
-        let mut mip_mapped = self.create_mip_map(&self.field);
+        let mut mip_mapped = self.create_mip_map(&self.field, self.mip_map_fields.len() + 1);
         let mut current_width = mip_mapped.width().clone(); 
         self.mip_map_fields.push(mip_mapped);
 
         
         while current_width > 3 {
-            let new_mip_map = self.create_mip_map(self.mip_map_fields.last().unwrap());
+            let new_mip_map = self.create_mip_map(self.mip_map_fields.last().unwrap(), self.mip_map_fields.len() + 1);
             current_width = new_mip_map.width().clone();
             println!("created mip map with width: {}", current_width);
             self.mip_map_fields.push(new_mip_map);    
         }
     }
 
-    pub fn create_mip_map(&self, field: &Field2D<T> ) -> Field2D<T> {
+    pub fn create_mip_map(&self, field: &Field2D<T>, lod: usize ) -> Field2D<T> {
         let mut mip_map_field = Field2D::new(field.width() / 3, field.height() / 3);
 
         for x in 0..mip_map_field.width().clone() {
             for y in 0..mip_map_field.height().clone() {
-                mip_map_field.set(x, y, self.calc_mip_mapped_value(field, x, y));
+                let x_pos_read = if x == 0 {1} else {x * 3 - 1};
+                let y_pos_read = if y == 0 {1} else {y * 3 - 1};
+                mip_map_field.set(x, y, self.calc_mip_mapped_value(field, x_pos_read , y_pos_read, lod ));
             }
         }
 
@@ -66,25 +68,10 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
 
     }
 
-    pub fn calc_mip_mapped_value(&self, field: &Field2D<T>, x: usize, y: usize) -> T {
-        let mut sum = T::default();
-        let mut count = 0;
+    pub fn calc_mip_mapped_value(&self, field: &Field2D<T>,  x: usize, y: usize, lod: usize) -> T {
 
-        for i in 0..3 {
-            for j in 0..3 {
-                let x = x * 3 + i;
-                let y = y * 3 + j;
-
-                if x < *field.width() && y < *field.height() {
-                    sum = sum + field.get(x, y).clone();
-                    count += 1;
-                }
-            }
-        }
-        // let divisor = count as usize;
-        //sum / 9
-        return (self.div_function)(sum, count);
-
+        return (self.interpolation)(x,y,lod,field, &self.field);
+        
         // let t : T = div_result.into();
     }
 

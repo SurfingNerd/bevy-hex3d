@@ -13,7 +13,7 @@ mod materials;
 mod playground;
 mod cam_movement;
 mod ticka_fascade_plugin;
-
+mod interpolation;
 // use crate::map::TiledMapPlugin;
 
 use hex2d_demo::run_hex2d_demo;

@@ -3,6 +3,10 @@ use std::sync::Arc;
 use bevy::prelude::{Entity, Resource};
 use sn_rust::{field_2_d::Field2D, mip_map_field_2_d::MipMapField2D};
 
+use crate::interpolation::interpolation_hex2d;
+
+// use crate::interpolation::create_hex2d_interpolation;
+
 
 
 #[derive(Resource)]
@@ -23,17 +27,32 @@ fn div_i64_i32(a: i64, b: i32) -> i64 {
     return result;
 }
 
+
+
 impl Game {
     pub fn new(width: u32, height: u32) -> Self {
         
+        let hex_spacing = hex2d::Spacing::FlatTop(0.50);
+
+        let hex_spacing_orig = hex_spacing.clone();
+
+        // let interpolation : fn(usize,usize, usize, &Field2D<i64>) -> i64 = |x,y,lod,f|  {
+            
+        //     // we get the info of the x and y cooordinate in the old field field.
+        //     // we should deliver surrounding nodes.
+        //     return 0;
+
+            
+        // };
+
 
         Game {
             width,
             height,
             entities: Field2D::new(width as usize, height as usize),
             current_tick: 0,
-            hex_spacing: hex2d::Spacing::FlatTop(0.50),
-            heights_z: MipMapField2D::new(width as usize, height as usize, div_i64_i32 ),
+            hex_spacing,
+            heights_z: MipMapField2D::new(width as usize, height as usize, interpolation_hex2d ),
         }
         
     }
