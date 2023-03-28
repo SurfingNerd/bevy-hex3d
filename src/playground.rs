@@ -9,6 +9,7 @@ use sn_rust::indexed_field_2_d::IndexedField2D;
 use sn_rust::mip_map_field_2_d::MipMapField2D;
 
 use crate::components::PositionComponent;
+use crate::interpolation::create_hex2d_interpolation;
 use crate::{
     game::Game,
     hexagon::{Hexagon3D, Hexagon3DTexturing},
@@ -199,7 +200,7 @@ fn create_mesh_on_thread(
 
     let mut increment = 243;
 
-    let lod_steps = [0, increment, increment * 2,increment * 3,increment * 4, increment * 5, increment * 6, increment * 7 ];
+    let lod_steps = [0, increment, increment * 2,increment * 3,increment * 4, increment * 5, increment * 6, increment * 7,increment * 8, increment * 9, increment * 10 ];
 
 
     let hexes_lod_0 = create_hexes_lod_x(
@@ -401,9 +402,7 @@ fn create_hexes_lod_x(
 
 fn create_height_field(width: u32, height: u32) -> MipMapField2D<i64> {
     let mut height_field =
-        MipMapField2D::<i64>::new(width as usize, height as usize, |sum, count| {
-            sum / (count as i64)
-        });
+        MipMapField2D::<i64>::new(width as usize, height as usize, create_hex2d_interpolation);
 
     return height_field;
 }

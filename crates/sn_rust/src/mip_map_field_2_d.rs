@@ -5,15 +5,15 @@ use crate::field_2_d::Field2D;
 pub struct MipMapField2D<T: Default + Clone + std::ops::Add<Output = T>> {
     field: Field2D<T>,
     mip_map_fields: Vec<Field2D<T>>,
-    div_function: fn(T, i32) -> T,
+    interpolation: fn(usize,usize, &Field2D<T>) -> T,
 }
 
 impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
-    pub fn new(width: usize, height: usize, div_function: fn(T, i32) -> T) -> Self {
+    pub fn new(width: usize, height: usize, interpolation: fn(usize,usize, &Field2D<T>) -> T) -> Self {
         Self {
             field: Field2D::new(width, height),
             mip_map_fields: Vec::new(),
-            div_function
+            interpolation
         }
     }
 
@@ -58,7 +58,9 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
 
         for x in 0..mip_map_field.width().clone() {
             for y in 0..mip_map_field.height().clone() {
-                mip_map_field.set(x, y, self.calc_mip_mapped_value(x, y));
+                let x_pos_read = if x == 0 {1} else {x * 3 - 1};
+                let y_pos_read = if y == 0 {1} else {y * 3 - 1};
+                mip_map_field.set(x, y, self.calc_mip_mapped_value(field, x_pos_read , y_pos_read ));
             }
         }
 
@@ -66,25 +68,10 @@ impl<T: Default + Clone + std::ops::Add<Output = T>> MipMapField2D<T> {
 
     }
 
-    pub fn calc_mip_mapped_value(&self, x: usize, y: usize) -> T {
-        let mut sum = T::default();
-        let mut count = 0;
+    pub fn calc_mip_mapped_value(&self, field: &Field2D<T>,  x: usize, y: usize) -> T {
 
-        for i in 0..3 {
-            for j in 0..3 {
-                let x = x * 3 + i;
-                let y = y * 3 + j;
-
-                if x < *self.field.width() && y < *self.field.height() {
-                    sum = sum + self.field.get(x, y).clone();
-                    count += 1;
-                }
-            }
-        }
-        // let divisor = count as usize;
-        //sum / 9
-        return (self.div_function)(sum, count);
-
+        return (self.interpolation)(x,y, field);
+        
         // let t : T = div_result.into();
     }
 

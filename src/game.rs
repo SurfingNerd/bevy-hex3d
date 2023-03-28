@@ -3,6 +3,8 @@ use std::sync::Arc;
 use bevy::prelude::{Entity, Resource};
 use sn_rust::{field_2_d::Field2D, mip_map_field_2_d::MipMapField2D};
 
+use crate::interpolation::create_hex2d_interpolation;
+
 
 
 #[derive(Resource)]
@@ -23,6 +25,8 @@ fn div_i64_i32(a: i64, b: i32) -> i64 {
     return result;
 }
 
+
+
 impl Game {
     pub fn new(width: u32, height: u32) -> Self {
         
@@ -33,7 +37,7 @@ impl Game {
             entities: Field2D::new(width as usize, height as usize),
             current_tick: 0,
             hex_spacing: hex2d::Spacing::FlatTop(0.50),
-            heights_z: MipMapField2D::new(width as usize, height as usize, div_i64_i32 ),
+            heights_z: MipMapField2D::new(width as usize, height as usize, create_hex2d_interpolation ),
         }
         
     }
