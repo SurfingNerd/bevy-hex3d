@@ -19,7 +19,7 @@ type ThreadsafeValue<T> = Arc<Mutex<Option<T>>>;
 #[derive(Component)]
 pub struct MeshGenTask {
     pub mesh: ThreadsafeValue<Mesh>,
-    pub mesh_large: ThreadsafeValue<Mesh>,
+    pub mutex_lod_meshes: ThreadsafeValue<Vec<Mesh>>,
     pub mutex_height: ThreadsafeValue<MipMapField2D<i64>>,
     // pub tiles_heigh_info: Vec<Vec<f32>>
 }
@@ -64,7 +64,7 @@ fn get_grayscale(rgba: &Vec<u8>, x: usize, y: usize, width: usize) -> f32 {
 fn create_mesh_on_thread(
     mutex: ThreadsafeValue<Mesh>,
     mutex_heights: ThreadsafeValue<MipMapField2D<i64>>,
-    mutex_mesh_large: ThreadsafeValue<Mesh>,
+    mutex_mesh_large: ThreadsafeValue<Vec<Mesh>>,
     asset_to_load_plain: String,
     game_width: u32,
     game_height: u32,
@@ -114,7 +114,6 @@ fn create_mesh_on_thread(
     // let max_x_render_mesh = 100 as u32; //(game_width as f32 * 0.8) as u32;
     // let max_y_render_mesh = 100 as u32; //(game_height as f32 * 0.8) as u32;
     for x in 0..game_width {
-        
         for y in 0..game_height {
             let c = hex2d::Coordinate::new(x as i32, y as i32);
             let (x_pixel, y_pixel) = c.to_pixel(game_hex_spacing);
@@ -177,14 +176,43 @@ fn create_mesh_on_thread(
 
     height_field.finalize_mip_map();
     let texturing = Hexagon3DTexturing::new_height_based_texturing();
-    
+
     info!("start creating hexes including mip_maps LODS");
 
-    
-    let hexes_lod_0 =  create_hexes_lod_x(0,20, 0, game_hex_spacing, height_field.field());
-    // let lod_1_spacing = flip_spacing(game_hex_spacing);
-    let hexes_lod_1 = create_hexes_lod_x(20, 300, 1, game_hex_spacing, height_field.get_mip_map());
+    //let distance_incr = 81;
+    //let distance_incr = 234;
+    // let distance_incr = 729;
+    let pow_3 = usize::pow(3,3);
+    let pow_4 = usize::pow(3,4); // 81
+    let pow_5 = usize::pow(3,5); // 243
+    let pow_6 = usize::pow(3,6); // 729
+    let pow_7 = usize::pow(3,7); // 2187
+    let pow_8 = usize::pow(3,8); // 6561
+    let pow_9 = usize::pow(3,9);
+
+    //let lod_steps = [1, pow_5, pow_6, pow_7, pow_8, pow_9];
+
+    // let lod_steps = [0, 3, 9, 27, pow_4, pow_5];
+
+    // let lod_steps = [0, 9, 18, 27, 36, 45];
+    let mut current_distance = 0;
+
+    let mut increment = 243;
+
+    let lod_steps = [0, increment, increment * 2,increment * 3,increment * 4, increment * 5, increment * 6, increment * 7 ];
+
+
+    let hexes_lod_0 = create_hexes_lod_x(
+        lod_steps[0],
+        lod_steps[1],
+        0,
+        game_hex_spacing,
+        height_field.field(),
+    );
+
+   // let lod_1_spacing = flip_spacing(game_hex_spacing);
     // let hexes_lod_1 = create_hexes_lod_1(
+
     //     33,
     //     33,
     //     game_hex_spacing,
@@ -192,25 +220,48 @@ fn create_mesh_on_thread(
     // );
 
     info!("hexes lod 0: {}", hexes_lod_0.indeces().len());
-    info!("hexes lod 1: {}", hexes_lod_1.indeces().len());
+
+    let mut meshes = Vec::<Mesh>::new();
+
+    for i in 0..height_field.get_mip_maps().len() {
+
         
+        let lod = i + 1;
+
+        let lod_step_min = lod_steps[lod];
+        let lod_step_max = lod_steps[lod + 1];
+        
+        let field = height_field.get_mip_maps().get(i).unwrap();
+        let hexes = create_hexes_lod_x(
+            lod_step_min,
+            lod_step_max,
+            lod,
+            game_hex_spacing,
+            field,
+        );
+
+        info!("hexes lod {}: {}", lod, hexes.indeces().len());
+        let mesh = Hexagon3D::create_mesh_for_hexes(hexes.as_ref(), &texturing);
+        let vertices = mesh.count_vertices();
+        info!("vertices lod {}: {}", lod, vertices);
+
+        meshes.push(mesh);
+    }
+
     let mesh_lod_0 = Hexagon3D::create_mesh_for_hexes(hexes_lod_0.as_ref(), &texturing);
-    let mesh_lod_1 = Hexagon3D::create_mesh_for_hexes(hexes_lod_1.as_ref(), &texturing);
-
     let lod_0_vertices = mesh_lod_0.count_vertices();
-    let lod_1_vertices = mesh_lod_1.count_vertices();
+    info!(
+        "lod 0 vertices: {} - hexes: {}",
+        lod_0_vertices,
+        hexes_lod_0.indeces().len()
+    );
 
-    info!("lod 0 vertices: {} - hexes: {}", lod_0_vertices, hexes_lod_0.indeces().len());
-    info!("lod 1 vertices: {} - hexes: {}", lod_1_vertices, hexes_lod_1.indeces().len());
-    
     mutex.lock().unwrap().replace(mesh_lod_0);
     mutex_heights.lock().unwrap().replace(height_field);
-    mutex_mesh_large.lock().unwrap().replace(mesh_lod_1);
-
+    mutex_mesh_large.lock().unwrap().replace(meshes);
 }
 
 fn flip_spacing(game_hex_spacing: Spacing) -> Spacing {
-    
     match game_hex_spacing {
         Spacing::FlatTop(f) => Spacing::PointyTop(f),
         Spacing::PointyTop(f) => Spacing::FlatTop(f),
@@ -224,24 +275,49 @@ fn create_hexes_lod_x(
     spacing: Spacing<f32>,
     mip_map: &Field2D<i64>,
 ) -> Box<IndexedField2D<Hexagon3D>> {
+    let pos_x = 0;
+    let pos_y = 0;
 
-    let pos_x = 30;
-    let pos_y = 30;
+    // let current_pos = if lod_level == 0 {
+    //     hex2d::Coordinate::new(pos_x as i32, pos_y as i32)
+    // } else {
+    //     hex2d::Coordinate::new(
+    //         (pos_x / 3 * lod_level) as i32,
+    //         (pos_y / 3 * lod_level) as i32,
+    //     )
+    // };
 
-    let current_pos = if lod_level == 0 { hex2d::Coordinate::new(pos_x as i32, pos_y as i32 ) } else { hex2d::Coordinate::new((pos_x / 3 * lod_level) as i32, (pos_y / 3 * lod_level) as i32) };
+    let current_pos = hex2d::Coordinate::new(pos_x as i32, pos_y as i32);
 
-    let mut result = Box::new(IndexedField2D::<Hexagon3D>::new(mip_map.width().clone(), mip_map.height().clone()));
+    let mut result = Box::new(IndexedField2D::<Hexagon3D>::new(
+        mip_map.width().clone(),
+        mip_map.height().clone(),
+    ));
 
-    let min_distance_lod_correction = if lod_level == 0 {min_distance} else {min_distance / 3 * lod_level};
-    let max_distance_lod_correction = if lod_level == 0 {max_distance} else {max_distance / 3 * lod_level};
+    let lod_correction_value = 3 * lod_level; //usize::pow(3, lod_level as u32);
+
+    let min_distance_lod_correction = if lod_level == 0 {
+        min_distance
+    } else {
+        min_distance / lod_correction_value
+    };
+    let max_distance_lod_correction = if lod_level == 0 {
+        max_distance
+    } else {
+        max_distance / lod_correction_value
+    };
 
     for ring_distance in min_distance_lod_correction..=max_distance_lod_correction {
-        // info!("ring_distance: {}", ring_distance);
-        let ring = current_pos.ring_iter(ring_distance as i32, hex2d::Spin::CW(hex2d::Direction::XZ));
+        info!("ring_distance: {}", ring_distance);
+        let ring =
+            current_pos.ring_iter(ring_distance as i32, hex2d::Spin::CW(hex2d::Direction::XZ));
 
         for c in ring {
-            
-            if c.x < 0 || c.y < 0 || c.x >= (mip_map.width().clone() as i32) || c.y >= (mip_map.height().clone() as i32) {
+            if c.x < 0
+                || c.y < 0
+                || c.x >= (mip_map.width().clone() as i32)
+                || c.y >= (mip_map.height().clone() as i32)
+            {
                 // info!("c: {:?} not on playground - skipping", c);
                 continue;
             }
@@ -261,10 +337,9 @@ fn create_hexes_lod_x(
                 z: y_pixel,
             };
 
-            
             result.set(c.x as u32, c.y as u32, Some(hex));
         }
-    } 
+    }
 
     return result;
 }
@@ -275,8 +350,8 @@ fn create_hexes_lod_x(
 //     spacing: Spacing<f32>,
 //     mip_map: &Field2D<i64>,
 // ) -> IndexedField2D<Hexagon3D> {
-    
-//     //let mut hexes_2d: IndexedField2D::<Hexagon3D>::new(mip_ 
+
+//     //let mut hexes_2d: IndexedField2D::<Hexagon3D>::new(mip_
 //     let mut total_hexes = 0;
 
 //     let lod_1_width = mip_map.width().clone();
@@ -406,21 +481,21 @@ fn start_loading(
     let game_hex_spacing = game.hex_spacing;
 
     let mutex: ThreadsafeValue<Mesh> = Arc::new(Mutex::new(None));
-    let mutex_mesh_large: ThreadsafeValue<Mesh> = Arc::new(Mutex::new(None));
+    let mutex_lod_meshes: ThreadsafeValue<Vec<Mesh>> = Arc::new(Mutex::new(None));
     let mutex2 = mutex.clone();
     let map_to_load = map_registry.registered_heighmaps[map_registry.current_loaded_index].clone();
 
     let mutex_height: ThreadsafeValue<MipMapField2D<i64>> = Arc::new(Mutex::new(None));
     let mutex_height_clone = mutex_height.clone();
 
-    let mutex_mesh_large_clone = mutex_mesh_large.clone();
+    let mutex_lod_meshes_clone = mutex_lod_meshes.clone();
     info!("start mesh generation in own thread");
     map_registry.is_loading = true;
     std::thread::spawn(move || {
         create_mesh_on_thread(
             mutex,
             mutex_height_clone,
-            mutex_mesh_large_clone,
+            mutex_lod_meshes_clone,
             map_to_load,
             game_width,
             game_height,
@@ -431,7 +506,7 @@ fn start_loading(
     let gen_task = MeshGenTask {
         mesh: mutex2,
         mutex_height: mutex_height,
-        mesh_large: mutex_mesh_large,
+        mutex_lod_meshes: mutex_lod_meshes,
     };
     commands.spawn(gen_task);
 }
@@ -512,32 +587,41 @@ fn integrate_loaded_maps(
                 let height = heights.get_u32(pos.x, pos.y).clone();
                 transform.translation.y = (height / 1000) as f32 + 0.4;
             }
-            
+
             game.set_height_field(heights);
         } else {
             error!("Unexpected behavior: heights are not loaded");
         }
 
-        if let mut lock_guard_heights = mesh_gen_task.mesh_large.lock().unwrap() {
+        if let mut lock_guard_heights = mesh_gen_task.mutex_lod_meshes.lock().unwrap() {
             if lock_guard_heights.is_some() {
-                let mesh_large = lock_guard_heights.take().unwrap();
+                let mut meshes_lod = lock_guard_heights.take().unwrap();
+
+                meshes_lod.reverse();
+                
                 // game.set_mesh_large(mesh_large);
 
-                let mesh_handle_large = meshes.add(mesh_large);
+                let mut lod_level = 1;
+                while let Some(mesh) = meshes_lod.pop() {
+                    let mesh_handle_large = meshes.add(mesh);
 
-                commands
-                    .spawn(PbrBundle {
-                        mesh: mesh_handle_large,
-                        material: mat2.clone(),
-                        transform: Transform {
-                            translation: Vec3::new(0., -0.1, 0.),
-                            scale: Vec3::new(3., 1., 3.),
-                            // rotation: quat.clone(),
+                    let scaling = 3.0 * lod_level as f32; //f32::powi(3.0, lod_level);
+                    commands
+                        .spawn(PbrBundle {
+                            mesh: mesh_handle_large,
+                            material: mat2.clone(),
+                            transform: Transform {
+                                translation: Vec3::new(0., -0.001 * (lod_level as f32), 0.),
+                                scale: Vec3::new(scaling, 1., scaling),
+                                // rotation: quat.clone(),
+                                ..Default::default()
+                            },
                             ..Default::default()
-                        },
-                        ..Default::default()
-                    })
-                    .insert(PlaygroundMarker {});
+                        })
+                        .insert(PlaygroundMarker {});
+
+                    lod_level += 1;
+                }
             } else {
                 error!("Unexpected behavior: mesh large is not loaded");
             }

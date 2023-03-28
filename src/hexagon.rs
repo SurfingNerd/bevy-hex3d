@@ -316,7 +316,7 @@ impl Hexagon3D {
         let n_hex = match n_hex_o {
             Some(hex) => hex,
             None => {
-                info!("No neighbour found on {} {}", neighbour.x,neighbour.y);
+                // info!("No neighbour found on {} {}", neighbour.x,neighbour.y);
                 return;
             } ,
         };
