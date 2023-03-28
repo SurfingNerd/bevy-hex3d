@@ -205,12 +205,12 @@ fn create_mesh_on_thread(
 
     //let lod_steps = [0, increment, increment * 2 ,increment * 3,increment * 4, increment * 5, increment * 6, increment * 7 ];
 
-    let lod_steps = [ 0, 9, 11 ];
+    let lod_steps = [ 0, 9, 12, 300 ];
 
 
     let hexes_lod_0 = create_hexes_lod_x(
         lod_steps[0],
-         200, //lod_steps[1] + double_draw_distance,
+         300, //lod_steps[1] + double_draw_distance,
         0,
         game_hex_spacing,
         height_field.field(),
@@ -282,9 +282,24 @@ fn create_hexes_lod_x(
     min_distance: usize,
     max_distance: usize,
     lod_level: usize,
-    spacing: Spacing<f32>,
+    spacing_orig: Spacing<f32>,
     mip_map: &Field2D<i64>,
 ) -> Box<IndexedField2D<Hexagon3D>> {
+
+    //let spacing = spacing_orig * lod_level * 3;
+
+    let mut spacing = match spacing_orig {
+        Spacing::FlatTop(f) => {
+            Spacing::FlatTop(f * lod_level as f32 * 3.0)
+        }
+        Spacing::PointyTop(f) => {
+            Spacing::PointyTop(f * lod_level as f32 * 3.0)
+        }
+    };
+
+    if lod_level == 0 {
+        spacing = spacing_orig;
+    }
 
     info!("lod {} min_distance {} max_distance {} ", lod_level, min_distance, max_distance);
     let pos_x = 0;
@@ -617,14 +632,14 @@ fn integrate_loaded_maps(
                 while let Some(mesh) = meshes_lod.pop() {
                     let mesh_handle_large = meshes.add(mesh);
 
-                    let scaling = 3.0 * lod_level as f32; //f32::powi(3.0, lod_level);
+                    // let scaling = 3.0 * lod_level as f32; //f32::powi(3.0, lod_level);
                     commands
                         .spawn(PbrBundle {
                             mesh: mesh_handle_large,
                             material: mat2.clone(),
                             transform: Transform {
-                                translation: Vec3::new(0., -0.001 * (lod_level as f32), 0.),
-                                scale: Vec3::new(scaling, 1., scaling),
+                                translation: Vec3::new(0., -0.00001 * (lod_level as f32), 0.),
+                                // scale: Vec3::new(scaling, 1., scaling),
                                 // rotation: quat.clone(),
                                 ..Default::default()
                             },
