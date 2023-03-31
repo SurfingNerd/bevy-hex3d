@@ -311,7 +311,7 @@ pub fn run_hex2d_demo() {
     //let game = Game::new(700, 700);
 
     // because of mip maps, sizes should be powers of 3.
-    let game_side = u32::pow(3, 8); // = 729.
+    let game_side = u32::pow(3, 6); // = 729.
     let game = Game::new(game_side, game_side);
 
 

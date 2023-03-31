@@ -184,6 +184,8 @@ fn create_mesh_on_thread(
     //let distance_incr = 81;
     //let distance_incr = 234;
     // let distance_incr = 729;
+    let pow_1 = 3;
+    let pow_2 = usize::pow(3,2); // 9
     let pow_3 = usize::pow(3,3); // 27
     let pow_4 = usize::pow(3,4); // 81
     let pow_5 = usize::pow(3,5); // 243
@@ -200,19 +202,23 @@ fn create_mesh_on_thread(
     // let mut current_distance = 0;
 
     //let mut increment = 243;
-    let increment = pow_5;
+    let increment = pow_4;
     
     //let double_draw_distance = 27;
-    let double_draw_distance = 27;
+    let double_draw_distance = 9;
 
     //let lod_steps = [0, increment, increment * 2 ,increment * 3,increment * 4, increment * 5, increment * 6, increment * 7 ];
 
-    let lod_steps = [ 0, pow_3, pow_5, 3 * pow_5, 4 * pow_5, 5 * pow_5 ];
+    let lod_steps = [ 0, pow_3, pow_4, pow_5, pow_6, pow_7, pow_8, pow_9 ];
 
+    let lod_ranges_from = [0, pow_4 - pow_1, pow_5 - pow_4, pow_6 - pow_3, pow_7,pow_8];
+    let lod_ranges_to   = [pow_4, pow_5, pow_6, pow_7,pow_8, pow_9];
 
     let hexes_lod_0 = create_hexes_lod_x(
-        lod_steps[0],
-        lod_steps[1] + double_draw_distance,
+        lod_ranges_from[0],
+        lod_ranges_to[0],
+        height_field.width(),
+        height_field.height(), 
         0,
         game_hex_spacing,
         height_field.field(),
@@ -236,17 +242,25 @@ fn create_mesh_on_thread(
         
         let lod = i + 1;
 
-        if lod > lod_steps.len() - 2 {
+        // if lod > lod_steps.len() - 2 {
+        //     break;
+        // }
+
+        let lod_step_min = lod_ranges_from[lod];
+        let lod_step_max = lod_ranges_to[lod];
+        let max_distance = (height_field.width() + height_field.height()) as usize;
+        if lod_step_min > max_distance {
+            error!("rings are getting to big.");
             break;
         }
-
-        let lod_step_min = lod_steps[lod];
-        let lod_step_max = lod_steps[lod + 1] + double_draw_distance;
         
         let field = height_field.get_mip_maps().get(i).unwrap();
+        info!("lod {} - min {} - max {} max distance: {}", lod, lod_step_min, lod_step_max, max_distance);
         let hexes = create_hexes_lod_x(
-            0, // lod_step_min,
-            1200, // lod_step_max + double_draw_distance,
+            lod_step_min,
+            lod_step_max, //+ usize::pow( double_draw_distance, (lod + 1) as u32),
+             height_field.width(),
+             height_field.height(),
             lod,
             game_hex_spacing,
             field,
@@ -283,6 +297,8 @@ fn flip_spacing(game_hex_spacing: Spacing) -> Spacing {
 fn create_hexes_lod_x(
     min_distance: usize,
     max_distance: usize,
+    max_coord_x: usize,
+    max_coord_y: usize,
     lod_level: usize,
     spacing_orig: Spacing<f32>,
     mip_map: &Field2D<i64>,
@@ -290,13 +306,15 @@ fn create_hexes_lod_x(
 
     //let spacing = spacing_orig * lod_level * 3;
 
-
+    let maximum_view_distance = max_coord_x + max_coord_y;
     // Lod 0: 1
     // lod 1: 3
     // lod 2: 4.5
 
     let spacing_multiplier_options = [1.0, 3.0, 9.0, 27.0, 81.0, 243.0 ];
-    //let spacing_multi = spacing_multiplier_options[lod_level];
+    //let spacing_multi = spacing_multiplier_options[lod_level];#
+
+    // we need spacin_multi if we use the spacing method instead of the size method to achieve overlay
     let spacing_multi = 1.0;
     let mut spacing = match spacing_orig {
         Spacing::FlatTop(f) => {
@@ -335,16 +353,27 @@ fn create_hexes_lod_x(
     } else {
         min_distance / lod_correction_value
     };
-    let max_distance_lod_correction = if lod_level == 0 {
+    let mut max_distance_lod_correction = if lod_level == 0 {
         max_distance
     } else {
         max_distance / lod_correction_value
     };
 
+    // let additional_max_distance = (max_distance_lod_correction - min_distance_lod_correction) as f32 * f32::powf(1.3, lod_level as f32);
+
+    // max_distance_lod_correction += additional_max_distance as usize;
+
+
     for ring_distance in min_distance_lod_correction..=max_distance_lod_correction {
-        info!("ring_distance: {}", ring_distance);
+  
+        if ring_distance >= maximum_view_distance {
+            break;
+        }
+        // info!("ring_distance: {}", ring_distance);
         let ring =
             current_pos.ring_iter(ring_distance as i32, hex2d::Spin::CW(hex2d::Direction::XZ));
+
+  
 
         for c in ring {
             if c.x < 0
@@ -352,6 +381,11 @@ fn create_hexes_lod_x(
                 || c.x >= (mip_map.width().clone() as i32)
                 || c.y >= (mip_map.height().clone() as i32)
             {
+                //if c.x >= max_coord_x as i32 && c.y >= max_coord_y as i32 {
+                    // info!("c: {:?} out of bounds - skipping", c);
+                //    break;
+                //}
+
                 // info!("c: {:?} not on playground - skipping", c);
                 continue;
             }
@@ -602,7 +636,7 @@ fn integrate_loaded_maps(
                             mesh: mesh_handle_large,
                             material: mat2.clone(),
                             transform: Transform {
-                                translation: Vec3::new(0., -1.0000 * (lod_level as f32), 0.),
+                                translation: Vec3::new(0., -0.0001 * (lod_level as f32), 0.),
                                 scale: Vec3::new(scaling, 1., scaling),
                                 // rotation: quat.clone(),
                                 ..Default::default()
