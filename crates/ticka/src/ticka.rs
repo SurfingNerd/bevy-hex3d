@@ -1,6 +1,7 @@
 use std::sync::mpsc::Sender;
 use std::sync::Mutex;
 
+use hex2d::Spacing;
 use sn_rust::field_2_d::Field2D;
 use sn_rust::indexed_field_2_d::IndexedField2D;
 use sn_rust::mobile_entity_field_2_d::MobileEntityField2D;
@@ -39,6 +40,8 @@ pub struct Ticka {
     unit_plan_function: fn(&Unit, &TickaContext) -> UnitPlan,
 
     unit_move_sender: Option<Mutex<Sender<UnitMoveInstance>>>,
+
+    spacing: Spacing<f32>
 }
 
 // Threading concept:
@@ -51,6 +54,7 @@ impl Ticka {
         num_of_fields: usize,
         unit_plan_function: fn(&Unit, &TickaContext) -> UnitPlan,
         unit_move_sender_o: Option<Sender<UnitMoveInstance>>,
+        spacing: Spacing<f32>
     ) -> Self {
         let mut fields: Vec<Field2D<f32>> = Vec::new();
 
@@ -74,6 +78,7 @@ impl Ticka {
             unit_move_sender: mutex_option,
             unit_type: Vec::new(),
             unit_planners: Vec::new(),
+            spacing
         }
     }
 
@@ -127,7 +132,7 @@ impl Ticka {
 
         //println!("expecting {} plans", self.units_field.field().indeces().len());
 
-        let context = TickaContext::new(&mut self.units_field, None, None, &mut self.fields);
+        let context = TickaContext::new(&mut self.units_field, None, None, &mut self.fields, self.spacing);
 
         let field = context.unit_locations().field();
 
@@ -166,7 +171,7 @@ impl Ticka {
         // excutes the plans,
         // and resolves the conflicts the hard way.
 
-        let context = TickaContext::new(&mut self.units_field, None, None, &mut self.fields);
+        let context = TickaContext::new(&mut self.units_field, None, None, &mut self.fields, self.spacing);
 
         let mut conflicts = UnitPlanMoveConflicts::from_plans(plans, &context);
 
@@ -206,7 +211,7 @@ impl Ticka {
             MobileEntityField2D::<Unit>::new(width as usize, height as usize, Unit::new(0));
 
         let mut context =
-            TickaContext::new(&mut self.units_field, Some(new_field), unit_move_sender, &mut self.fields);
+            TickaContext::new(&mut self.units_field, Some(new_field), unit_move_sender, &mut self.fields, self.spacing);
 
         for unit_plan in conflicts.non_conflicting_plans_mut().iter_mut() {
             println!(
@@ -307,7 +312,7 @@ impl Ticka {
     }
 
     fn create_ticka_context(&mut self) -> TickaContext {
-        return TickaContext::new(&mut self.units_field, None, None, &mut self.fields);
+        return TickaContext::new(&mut self.units_field, None, None, &mut self.fields, self.spacing);
     }
 
     // fn create_unit_plan(&self, unit: &Unit, context: &TickaContext) -> UnitPlan {
@@ -324,5 +329,9 @@ impl Ticka {
         // todo: handle other unit properties here as well.
 
         return result;
+    }
+
+    pub fn spacing(&self) -> Spacing {
+        self.spacing
     }
 }

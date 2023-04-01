@@ -10,7 +10,7 @@ pub struct TileableField2D {
 }
 
 impl TileableField2D {
-    pub fn new() -> Self {
+    pub fn new(tile: Field2D) -> Self {
         Self {}
     }
 }

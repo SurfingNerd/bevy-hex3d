@@ -93,10 +93,15 @@ impl Plugin for TickaPlugin {
 
     fn build(&self, app: &mut bevy::prelude::App) {
         
+        
         info!("building Ticka base plugin");
         //let movement_reader = MovementReader::new();
         //let sender = movement_reader.create_sender();
-        let ticka = Ticka::new(100, 100, 1,  unit_plan, None);
+        
+        // todo: afture further refacturing there should be only one source of truth wich spacing is used.
+        let spacing =  hex2d::Spacing::FlatTop(0.50);
+
+        let ticka = Ticka::new(100, 100, 1,  unit_plan, None, spacing);
         let real_time_ticka = RealTimeTickaFascade::from_ticka(ticka, 0.05);
         let res = TickaRes{ real_time_ticka }; 
             

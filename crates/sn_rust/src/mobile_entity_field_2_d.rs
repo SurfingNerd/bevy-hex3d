@@ -56,6 +56,8 @@ impl<T: Clone + StorageLocationProvider + Debug> MobileEntityField2D<T> {
 
 
 
+
+
     pub fn new(x: usize, y: usize, entity_prototype: T) -> Self {
 
         MobileEntityField2D {
@@ -167,3 +169,5 @@ impl<T: Clone + StorageLocationProvider + Debug> MobileEntityField2D<T> {
     }
   
 }
+
+

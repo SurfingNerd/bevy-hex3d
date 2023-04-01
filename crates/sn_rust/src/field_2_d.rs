@@ -28,13 +28,8 @@ impl<T: Default + Clone> Field2D<T> {
 
 impl<T: Default + Clone> IField2D<T> for Field2D<T> {
 
-
   fn set(&mut self, x: usize, y: usize, value: T) {
       self.data[x * self.height + y] = value;
-  }
-
-  fn get_u32(&self, x: u32, y: u32) -> &T {
-      &self.data[x as usize * self.height + y as usize]
   }
 
   fn get(&self, x: usize, y: usize) -> &T {
