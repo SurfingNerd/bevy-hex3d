@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use bevy::prelude::{Entity, Resource};
-use sn_rust::{field_2_d::Field2D, mip_map_field_2_d::MipMapField2D};
-
+use sn_rust::{field_2_d::Field2D, mip_map_field_2_d::MipMapField2D,traits::IField2D};
 use crate::interpolation::interpolation_hex2d;
 
 // use crate::interpolation::create_hex2d_interpolation;

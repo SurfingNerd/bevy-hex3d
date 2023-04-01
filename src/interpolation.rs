@@ -1,6 +1,6 @@
 use hex2d::Spacing;
 use sn_rust::field_2_d::Field2D;
-
+use sn_rust::traits::IField2D;
 
 
 

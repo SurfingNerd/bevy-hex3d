@@ -1,6 +1,6 @@
 use std::{collections::BTreeSet, fmt::Debug};
 
-use crate::{field_2_d::Field2D, indexed_field2d_location::IndexedField2DLocation};
+use crate::{field_2_d::Field2D, indexed_field2d_location::IndexedField2DLocation, traits::IField2D};
 
 // type Indeces = BTreeSet<IndexedField2DLocation>;
 
@@ -86,7 +86,7 @@ impl<T: Clone + Debug> IndexedField2D<T> {
         if self.indeces.contains(&to_search_location) {
             panic!("trying to move entity to x: {to_x} y: {to_y}, but there is already an entity at this location");
         }
-
+        
         let value = self.field.get_mut(x as usize, y as usize).take();
         self.field.get_mut(to_x as usize, to_y as usize).replace(value.unwrap());
 

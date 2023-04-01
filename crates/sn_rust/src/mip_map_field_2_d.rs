@@ -1,5 +1,5 @@
 use crate::field_2_d::Field2D;
-
+use crate::traits::IField2D;
 //type MipMapRequirements<T> = T: Default + Clone + std::ops::Add<Output = T> + std::ops::Div<i32, Output = T>>
 
 pub struct MipMapField2D<T: Default + Clone + std::ops::Add<Output = T>> {

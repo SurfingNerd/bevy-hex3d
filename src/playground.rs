@@ -5,6 +5,7 @@ use bevy::render::texture::ImageType;
 use bevy::{prelude::*, render::texture::CompressedImageFormats};
 use hex2d::Spacing;
 use sn_rust::field_2_d::Field2D;
+use sn_rust::traits::IField2D;
 use sn_rust::indexed_field_2_d::IndexedField2D;
 use sn_rust::mip_map_field_2_d::MipMapField2D;
 

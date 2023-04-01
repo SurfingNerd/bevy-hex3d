@@ -1,5 +1,7 @@
 use derive_getters::Getters;
 
+use crate::traits::IField2D;
+
 
 
 
@@ -7,7 +9,7 @@ use derive_getters::Getters;
 /  More convinient that a Vec<Vec<T>>
 */
 #[derive(Getters, Debug)]
-pub struct Field2D<T: Default + Clone>{
+pub struct Field2D<T: Default + Clone>  {
     data: Vec<T>,
     width: usize,
     height: usize,
@@ -22,22 +24,26 @@ impl<T: Default + Clone> Field2D<T> {
       height,
     }
   }
+}
 
-  pub fn set(&mut self, x: usize, y: usize, value: T) {
+impl<T: Default + Clone> IField2D<T> for Field2D<T> {
+
+
+  fn set(&mut self, x: usize, y: usize, value: T) {
       self.data[x * self.height + y] = value;
   }
 
-  pub fn get_u32(&self, x: u32, y: u32) -> &T {
+  fn get_u32(&self, x: u32, y: u32) -> &T {
       &self.data[x as usize * self.height + y as usize]
   }
 
-  pub fn get(&self, x: usize, y: usize) -> &T {
+  fn get(&self, x: usize, y: usize) -> &T {
       &self.data[x * self.height + y]
   }
 
-  pub fn get_mut(&mut self, x: usize, y: usize) -> &mut T {
+  fn get_mut(&mut self, x: usize, y: usize) -> &mut T {
     let res = self.data.get_mut(x * self.height + y);
     return res.expect("Index Out of Boounds");
   }
-
 }
+
