@@ -15,7 +15,7 @@ use crate::unit_move_action::UnitMoveInstance;
 // since each thread get's it's own UnitPlanner
 //
 pub trait UnitPlanner : Sync + Send {
-    fn make_plan(&self, unit: &Unit) -> UnitPlan;
+    fn create_unit_plan(&self, unit: &Unit, context: &TickaContext) -> Option<UnitPlan>; 
 }
 
 pub struct Ticka {
@@ -87,18 +87,49 @@ impl Ticka {
         return self.unit_planners.len() - 1;
     }
 
-    async fn get_units_plans(units: &Vec<Option<Unit>>) -> Vec<Option<UnitPlan>> {
+    fn get_unit_plan(&self, unit: &Unit) -> Option<UnitPlan> {
+        for planers_d_1 in self. unit_planners.iter() {
+            for planer in planers_d_1.iter() {
+                let plan = planer.create_unit_plan(unit, context) .make_plan(unit);
+                if let Some(plan) = plan {
+                    //result.push(Some(plan));
+                    //break;
+                    Some(plan)
+                }
+            }
+        };
+
+        None
+    }
+    
+
+    async fn get_units_plans(&self, units: &Vec<Option<Unit>>, ) -> Vec<Option<UnitPlan>> {
         let mut result: Vec<Option<UnitPlan>> = Vec::with_capacity(units.len());
 
+        // todo:
+        // here we got a lot of paralellisation opportunitie.
+        // we can just throw all the units into a job pool,
+        // and let them calculate their plans.
+        // and return sync once they are finished.
+        
         for unit_option in units {
             if let Some(unit) = unit_option {
-            } else {
-                result.push(None);
+                // figure out the unit type here,
+                // or especialy, what planner group we should use.
+
+                // for now, we ask all planer groups.
+                let current_result: Option<UnitPlan> = None;
+
+                let plan = self.get_unit_plan(unit);
+                
+                    
+                
             }
         }
 
         return result;
     }
+
 
     pub fn register_field_f32(&mut self) -> usize {
         let new_field = Field2D::<f32>::new(
