@@ -201,7 +201,7 @@ fn ticka_system(mut commands: Commands, mut ticka: ResMut<TickaRes>, mut game: R
 
     let units = ticka.units_mut();
 
-    for (mut ticka_entity_component,mut transform) in query.iter_mut() {
+    for (ticka_entity_component,mut transform) in query.iter_mut() {
 
         let data = units.unit_locations();
         // info!("data: {}", data.len());

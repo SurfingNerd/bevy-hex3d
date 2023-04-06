@@ -7,7 +7,8 @@ use sn_rust::indexed_field_2_d::IndexedField2D;
 use sn_rust::mobile_entity_field_2_d::MobileEntityField2D;
 
 use crate::conflict::{UnitPlanMoveConflict, UnitPlanMoveConflicts};
-use crate::ticka_context::TickaContext;
+use crate::ticka_context::{TickaContext, TickaReadContext};
+use crate::ticka_systems::pheromone_system::PheromoneSystem;
 use crate::unit::*;
 use crate::unit_move_action::UnitMoveInstance;
 
@@ -15,7 +16,7 @@ use crate::unit_move_action::UnitMoveInstance;
 // since each thread get's it's own UnitPlanner
 //
 pub trait UnitPlanner : Sync + Send {
-    fn create_unit_plan(&self, unit: &Unit, context: &TickaContext) -> Option<UnitPlan>; 
+    fn create_unit_plan(&self, unit: &Unit, context: &TickaReadContext) -> Option<UnitPlan>; 
 }
 
 pub struct Ticka {
@@ -68,9 +69,9 @@ impl Ticka {
         } else {
             None
         };
-
+        
         // let vec = vec!(Field2D::new(width, height));
-        Ticka {
+        let mut result = Ticka {
             tick_counter: 0,
             units_field: MobileEntityField2D::new(width, height, Unit::new(0)),
             unit_plan_function,
@@ -79,7 +80,13 @@ impl Ticka {
             unit_type: Vec::new(),
             unit_planners: Vec::new(),
             spacing
-        }
+        };
+
+        result.add_example_planners();
+
+
+
+        return result;
     }
 
     pub fn register_unit_type(&mut self, unit_planners: Vec<Box<dyn UnitPlanner>>) -> usize {
@@ -87,7 +94,27 @@ impl Ticka {
         return self.unit_planners.len() - 1;
     }
 
-    fn get_unit_plan(&self, unit: &Unit, context: &TickaContext) -> Option<UnitPlan> {
+    fn add_example_planners(&mut self) {
+
+        
+        // let mut unit_planners: Vec<Vec<Box<dyn UnitPlanner>>> = Vec::new();
+        // let mut unit_planer: Vec<Box<dyn UnitPlanner>> = Vec::new();
+
+        let system = PheromoneSystem::new(self, 3, 4);
+        let planer = system.unit_planer();
+       
+        self.unit_planners.push(Vec::new());
+
+        //let pheromone_planer_box = 
+
+        let pheromone_planer_box: Box<dyn UnitPlanner> = Box::new(planer.clone());
+        
+        //let  = Box::new();
+        //let pheromone_system : dyn UnitPlanner = planer.clone();
+        self.unit_planners[0].push(pheromone_planer_box);
+    }
+
+    fn get_unit_plan(&self, unit: &Unit, context: &TickaReadContext) -> Option<UnitPlan> {
         for planers_d_1 in self. unit_planners.iter() {
             for planer in planers_d_1.iter() {
                 if let Some(plan) = planer.create_unit_plan(unit, context) {
@@ -100,6 +127,7 @@ impl Ticka {
 
         None
     }
+    
     
 
     // fn get_units_plans(&self, units: &Vec<Option<Unit>>, context: &TickaContext) -> Vec<Option<UnitPlan>> {
@@ -162,14 +190,24 @@ impl Ticka {
 
         //println!("expecting {} plans", self.units_field.field().indeces().len());
 
-        let context = TickaContext::new(&mut self.units_field, None, None, &mut self.fields, self.spacing);
+        // spacing: Spacing<f32>,
+        // unit_move_sender: Option<Sender<UnitMoveInstance>>,
+        // unit_locations: &'a MobileEntityField2D<Unit>,
+        // fields: &'a Vec<Field2D<f32>>,
+        // unit_locations_new: Option<MobileEntityField2D<Unit>>
+
+        let mut context = TickaReadContext::new(
+            &self.units_field,
+            &self.fields,
+            self.spacing,
+        );
 
         let field = context.unit_locations().field();
 
         for index in field.indeces().iter() {
             if let Some(unit) = field.get_u32(index.x(), index.y()) {
 
-                let Some(plan) = self.get_unit_plan(unit, &context) {
+                if let Some(plan) = self.get_unit_plan(unit, &context) {
                     plans.push(plan);
                 }
 

@@ -1,19 +1,22 @@
+use derive_getters::Getters;
 use hex2d::{Coordinate, Direction, Spacing};
 use sn_rust::field_2_d::Field2D;
 use sn_rust::traits::IField2D;
 
-use crate::{unit::{Unit, UnitPlan, UnitPlanEnum}, ticka_context::TickaContext, unit_idle_plan_action::IdlePlanAction, conflict::UnitPlanMoveConflict, ticka::Ticka};
+use crate::{unit::{Unit, UnitPlan, UnitPlanEnum}, ticka_context::{TickaContext, TickaReadContext}, unit_idle_plan_action::IdlePlanAction, conflict::UnitPlanMoveConflict, ticka::{Ticka, UnitPlanner}};
 
 
 /// units leave behind phermones on move.
 /// Units searches near fields for pheromones,
 /// and if they detect some, that did not originate by themself,
 /// then they follow this tracks. 
-pub struct PheromoneSystem {
+#[derive(Getters)]
+pub struct PheromoneSystem  {
     unit_planer: PheromoneSystemUnitPlaner,
 
 }
 
+#[derive(Getters, Clone, Debug)]
 pub struct PheromoneSystemUnitPlaner{
 
     /// storage location of pheromone field. 
@@ -29,39 +32,11 @@ pub struct PheromoneSystemUnitPlaner{
     spacing: Spacing<f32>
 }
 
+impl UnitPlanner for PheromoneSystemUnitPlaner {
 
-
-impl PheromoneSystemUnitPlaner {
-
-        /// @param unit_split_up_target: unity try to follow pheromones, but try to avoid units of the same type.
-        pub fn new(unit_split_up_target: u64, unit_pheromone_sense_range: u64, field_index: usize, spacing: Spacing<f32>) -> Self {
-
-            let mut direction_angles: [f32; 6] = [0.0 ;6];
-            match spacing {
-                hex2d::Spacing::FlatTop(_) => {
-                    for d in 0..6 {
-                        direction_angles[d] = Direction::all()[d].to_radians_flat();
-                    }
-                },
-                hex2d::Spacing::PointyTop(_) => {
-                    for d in 0..6 {
-                        direction_angles[d] = Direction::all()[d].to_radians_pointy();
-                    }
-                    
-                }
-            }
-
-            PheromoneSystemUnitPlaner {
-                field_index,
-                unit_split_up_target,
-                unit_pheromone_sense_range,
-                direction_angles,
-                spacing
-            }
-        }
-
-    pub fn get_unit_plan(&self, unit: &Unit, context: &TickaContext) -> Option<UnitPlan> {
-
+    fn create_unit_plan(&self, unit: &Unit, context: &TickaReadContext) -> Option<UnitPlan> {
+        
+        // just for test world
         if *unit.id() < 100 {
             return None;
         }
@@ -97,8 +72,8 @@ impl PheromoneSystemUnitPlaner {
                     if is_repelling {
 
                         // we need to figure out the 
-                        let source_pixel = unit_coordinate.to_pixel(context.spacing());
-                        let target_pixel = other_unit_location.to_pixel(context.spacing());
+                        let source_pixel = unit_coordinate.to_pixel(context.spacing().clone());
+                        let target_pixel = other_unit_location.to_pixel(context.spacing().clone());
 
                         let angle = self.get_direction_angle(unit_coordinate, other_unit_location);
 
@@ -114,11 +89,6 @@ impl PheromoneSystemUnitPlaner {
                         // let angle = vector.1.atan2(vector.0);
 
                     }
-                    // get attraction / repelling force for this unit type.
-
-                    // figure out direction.
-
-                    
                 }
             }
 
@@ -126,7 +96,36 @@ impl PheromoneSystemUnitPlaner {
         
         return Some(UnitPlan::new(unit.clone(), UnitPlanEnum::Idle(IdlePlanAction::new())));
     }
+}
 
+impl PheromoneSystemUnitPlaner {
+
+        /// @param unit_split_up_target: unity try to follow pheromones, but try to avoid units of the same type.
+        pub fn new(unit_split_up_target: u64, unit_pheromone_sense_range: u64, field_index: usize, spacing: Spacing<f32>) -> Self {
+
+            let mut direction_angles: [f32; 6] = [0.0 ;6];
+            match spacing {
+                hex2d::Spacing::FlatTop(_) => {
+                    for d in 0..6 {
+                        direction_angles[d] = Direction::all()[d].to_radians_flat();
+                    }
+                },
+                hex2d::Spacing::PointyTop(_) => {
+                    for d in 0..6 {
+                        direction_angles[d] = Direction::all()[d].to_radians_pointy();
+                    }
+                    
+                }
+            }
+
+            PheromoneSystemUnitPlaner {
+                field_index,
+                unit_split_up_target,
+                unit_pheromone_sense_range,
+                direction_angles,
+                spacing
+            }
+        }
 
     pub fn get_field<'a>(&self, context: &'a TickaContext) -> &'a Field2D<f32> {
         &context.fields()[self.field_index]

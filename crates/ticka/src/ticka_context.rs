@@ -5,7 +5,9 @@ use sn_rust::{mobile_entity_field_2_d::MobileEntityField2D, indexed_field2d_loca
 
 use crate::{unit_move_action::UnitMoveInstance, unit::Unit};
 
+pub trait ITickaContext {
 
+}
 // #[derive(Getters)]
 pub struct TickaContext<'a> {
 
@@ -14,6 +16,30 @@ pub struct TickaContext<'a> {
     unit_locations: &'a mut MobileEntityField2D<Unit>,
     fields: &'a mut Vec<Field2D<f32>>,
     unit_locations_new: Option<MobileEntityField2D<Unit>>
+}
+
+#[derive(Getters)]
+pub struct TickaReadContext<'a> {
+    spacing: Spacing<f32>,
+    unit_locations: &'a MobileEntityField2D<Unit>,
+    fields: &'a Vec<Field2D<f32>>,
+}
+
+impl<'a> TickaReadContext<'a> {
+
+    pub fn new(unit_locations: &'a MobileEntityField2D<Unit>, fields: &'a Vec<Field2D<f32>>, spacing: Spacing<f32>) -> Self {
+        TickaReadContext { unit_locations, fields, spacing }
+    }
+    
+    pub fn get_entity_location(&self, unit: &Unit) -> &IndexedField2DLocation {
+        self.unit_locations.get_entity_location(unit)
+    }
+
+    pub(crate) fn unit_ring_iter(&self, x: i32, y: i32, r: i32) -> Ring<i32> {
+        let coord = Coordinate::new(x, y); // .ring_iter()
+        coord.ring_iter(r, hex2d::Spin::CCW(hex2d::Direction::XY))
+        //self.unit_locations.
+    }
 }
 
 
