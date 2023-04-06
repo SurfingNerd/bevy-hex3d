@@ -87,14 +87,13 @@ impl Ticka {
         return self.unit_planners.len() - 1;
     }
 
-    fn get_unit_plan(&self, unit: &Unit) -> Option<UnitPlan> {
+    fn get_unit_plan(&self, unit: &Unit, context: &TickaContext) -> Option<UnitPlan> {
         for planers_d_1 in self. unit_planners.iter() {
             for planer in planers_d_1.iter() {
-                let plan = planer.create_unit_plan(unit, context) .make_plan(unit);
-                if let Some(plan) = plan {
+                if let Some(plan) = planer.create_unit_plan(unit, context) {
                     //result.push(Some(plan));
                     //break;
-                    Some(plan)
+                    return Some(plan);
                 }
             }
         };
@@ -103,32 +102,32 @@ impl Ticka {
     }
     
 
-    async fn get_units_plans(&self, units: &Vec<Option<Unit>>, ) -> Vec<Option<UnitPlan>> {
-        let mut result: Vec<Option<UnitPlan>> = Vec::with_capacity(units.len());
+    // fn get_units_plans(&self, units: &Vec<Option<Unit>>, context: &TickaContext) -> Vec<Option<UnitPlan>> {
+    //     let mut result: Vec<Option<UnitPlan>> = Vec::with_capacity(units.len());
 
-        // todo:
-        // here we got a lot of paralellisation opportunitie.
-        // we can just throw all the units into a job pool,
-        // and let them calculate their plans.
-        // and return sync once they are finished.
+    //     // todo:
+    //     // here we got a lot of paralellisation opportunitie.
+    //     // we can just throw all the units into a job pool,
+    //     // and let them calculate their plans.
+    //     // and return sync once they are finished.
         
-        for unit_option in units {
-            if let Some(unit) = unit_option {
-                // figure out the unit type here,
-                // or especialy, what planner group we should use.
+    //     for unit_option in units {
+    //         if let Some(unit) = unit_option {
+    //             // figure out the unit type here,
+    //             // or especialy, what planner group we should use.
 
-                // for now, we ask all planer groups.
-                let current_result: Option<UnitPlan> = None;
+    //             // for now, we ask all planer groups.
+    //             let current_result: Option<UnitPlan> = None;
 
-                let plan = self.get_unit_plan(unit);
+    //             let plan = self.get_unit_plan(unit);
                 
                     
                 
-            }
-        }
+    //         }
+    //     }
 
-        return result;
-    }
+    //     return result;
+    // }
 
 
     pub fn register_field_f32(&mut self) -> usize {
@@ -170,11 +169,14 @@ impl Ticka {
         for index in field.indeces().iter() {
             if let Some(unit) = field.get_u32(index.x(), index.y()) {
 
-                let plan = (self.unit_plan_function)(unit, &context);
+                let Some(plan) = self.get_unit_plan(unit, &context) {
+                    plans.push(plan);
+                }
+
+                //let plan = (self.unit_plan_function)(unit, &context);
                 // let plan = self.create_unit_plan(unit, &context);
-                
                 // println!("creating plan for x {} y {}: {:?}", index.x(), index.y(), plan);
-                plans.push(plan);
+                
             } else {
                 panic!("Unexpected: every coordinate should match a unit!");
             }
