@@ -38,11 +38,6 @@ impl StorageLocationProvider for Unit {
     }
 }
 
-pub struct UnitPlanner {
-
-
-}
-
 
 
 #[derive(Debug, Clone)]

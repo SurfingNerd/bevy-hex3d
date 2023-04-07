@@ -3,7 +3,7 @@ use hex2d::{Coordinate, Direction, Spacing};
 use sn_rust::field_2_d::Field2D;
 use sn_rust::traits::IField2D;
 
-use crate::{unit::{Unit, UnitPlan, UnitPlanEnum}, ticka_context::{TickaContext, TickaReadContext}, unit_idle_plan_action::IdlePlanAction, conflict::UnitPlanMoveConflict, ticka::{Ticka, UnitPlanner}};
+use crate::{unit::{Unit, UnitPlan, UnitPlanEnum}, ticka_context::{TickaContext, TickaReadContext}, unit_idle_plan_action::IdlePlanAction, conflict::UnitPlanMoveConflict, ticka::{Ticka, UnitPlanner}, unit_move_action::MovePlanAction};
 
 
 /// units leave behind phermones on move.
@@ -37,7 +37,7 @@ impl UnitPlanner for PheromoneSystemUnitPlaner {
     fn create_unit_plan(&self, unit: &Unit, context: &TickaReadContext) -> Option<UnitPlan> {
         
         // just for test world
-        if *unit.id() < 100 {
+        if *unit.id() > 100 {
             return None;
         }
 
@@ -68,14 +68,14 @@ impl UnitPlanner for PheromoneSystemUnitPlaner {
                 }
 
                 if let Some(other_unit) = context.unit_locations().get(other_unit_location.x as u32, other_unit_location.y as u32) {
-                    let is_repelling = *other_unit.id() > 100; 
-                    if is_repelling {
+                    let is_repelling = *other_unit.id() < 100; 
+                    if is_repelling { 
 
                         // we need to figure out the 
-                        let source_pixel = unit_coordinate.to_pixel(context.spacing().clone());
-                        let target_pixel = other_unit_location.to_pixel(context.spacing().clone());
+                        // let source_pixel = unit_coordinate.to_pixel(context.spacing().clone());
+                        // let target_pixel = other_unit_location.to_pixel(context.spacing().clone());
 
-                        let angle = self.get_direction_angle(unit_coordinate, other_unit_location);
+                        // let angle = self.get_direction_angle(unit_coordinate, other_unit_location);
 
                         let direction_index = self.get_direction_index_from_source_to_target(unit_coordinate, other_unit_location);
 
@@ -91,10 +91,44 @@ impl UnitPlanner for PheromoneSystemUnitPlaner {
                     }
                 }
             }
-
         }
+
+        let mut forces_sorted = forces.clone();
+        // let mut forces_sorted: [f32; 6] = forces.iter().filter(|x| **x > 0.0).collect();
+        //forces_sorted.sort_by(|a, b|  *a < *b);
+        // forces_sorted.so
         
-        return Some(UnitPlan::new(unit.clone(), UnitPlanEnum::Idle(IdlePlanAction::new())));
+        forces_sorted.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
+
+        println!("forces sorted: {:?}", forces_sorted);
+        for i_checked_max in 0..6 {
+            let checked_max = forces_sorted[i_checked_max];
+            println!("unit: {} i_checked_max: {}: checked_max {}", unit.id(),  i_checked_max, checked_max);
+
+            for i_force in 0..6 {
+                let force = forces_sorted[i_force];
+                if force < 1.0 {
+                    return None;
+                }
+                if forces_sorted[i_force] == checked_max {
+                    // if we are on the max value, check if the field of this direction is available.
+                    
+                    let direction = hex2d::Direction::from_int(i_force as i64);
+                    let target_coordinate = unit_coordinate + direction;
+
+                    if context.unit_locations().get(target_coordinate.x as u32, target_coordinate.y as u32).is_none() {
+
+                        println!("found a direction for unit: {} i_checked_max: {}: checked_max {}: target Location: {:?}", unit.id(),  i_checked_max, checked_max, target_coordinate);
+
+                        // if the field is available, then we can move there.
+                        //let target_pixel = target_coordinate.to_pixel(context.spacing().clone());
+                        return Some(UnitPlan::new(unit.clone(), UnitPlanEnum::Move(MovePlanAction::from_single_step(direction))));
+                    }
+                }
+            }
+        }
+            
+        return None; // Some(UnitPlan::new(unit.clone(), UnitPlanEnum::Idle(IdlePlanAction::new())));
     }
 }
 
@@ -139,13 +173,13 @@ impl PheromoneSystemUnitPlaner {
         &mut context.fields_mut()[self.field_index]
     }
 
-    fn get_direction_vector(&self, a: Coordinate, b: Coordinate) -> (f32, f32) {
-        let a_pixel = a.to_pixel(self.spacing);
-        let b_pixel = b.to_pixel(self.spacing);
+    // fn get_direction_vector(&self, a: Coordinate, b: Coordinate) -> (f32, f32) {
+    //     let a_pixel = a.to_pixel(self.spacing);
+    //     let b_pixel = b.to_pixel(self.spacing);
 
-        return (b_pixel.0 - a_pixel.0, a_pixel.1 - b_pixel.1);
-        //return 
-    }
+    //     return (b_pixel.0 - a_pixel.0, a_pixel.1 - b_pixel.1);
+    //     //return 
+    // }
 
     fn get_direction_angle(&self, a: Coordinate, b: Coordinate) -> f32 {
         let a_pixel = a.to_pixel(self.spacing);

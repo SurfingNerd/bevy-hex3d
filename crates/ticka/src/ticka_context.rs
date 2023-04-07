@@ -8,7 +8,7 @@ use crate::{unit_move_action::UnitMoveInstance, unit::Unit};
 pub trait ITickaContext {
 
 }
-// #[derive(Getters)]
+//#[derive(Getters)]
 pub struct TickaContext<'a> {
 
     spacing: Spacing<f32>,

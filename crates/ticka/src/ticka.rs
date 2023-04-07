@@ -8,6 +8,8 @@ use sn_rust::mobile_entity_field_2_d::MobileEntityField2D;
 
 use crate::conflict::{UnitPlanMoveConflict, UnitPlanMoveConflicts};
 use crate::ticka_context::{TickaContext, TickaReadContext};
+use crate::ticka_systems::directional_move::DirectionalMovePlanner;
+use crate::ticka_systems::idle::IdleUnitPlanner;
 use crate::ticka_systems::pheromone_system::PheromoneSystem;
 use crate::unit::*;
 use crate::unit_move_action::UnitMoveInstance;
@@ -82,6 +84,10 @@ impl Ticka {
             spacing
         };
 
+        // unit type 0 means a dead unit, 
+        // we do not need planers for the dead.
+        result.unit_planners.push(Vec::new());
+
         result.add_example_planners();
 
 
@@ -91,7 +97,9 @@ impl Ticka {
 
     pub fn register_unit_type(&mut self, unit_planners: Vec<Box<dyn UnitPlanner>>) -> usize {
         self.unit_planners.push(unit_planners);
-        return self.unit_planners.len() - 1;
+        let result = self.unit_planners.len() - 1;
+        println!("unit type {result} registered.");
+        return result;
     }
 
     fn add_example_planners(&mut self) {
@@ -102,28 +110,60 @@ impl Ticka {
 
         let system = PheromoneSystem::new(self, 3, 4);
         let planer = system.unit_planer();
+
+
+        
        
-        self.unit_planners.push(Vec::new());
+        // self.unit_planners.push(Vec::new());
+        // self.unit_planners.push(Vec::new());
 
         //let pheromone_planer_box = 
 
-        let pheromone_planer_box: Box<dyn UnitPlanner> = Box::new(planer.clone());
-        
-        //let  = Box::new();
+        let mut unit_pheromone_planners : Vec<Box<dyn UnitPlanner>> = Vec::new();
+        let mut unit_idle_planners : Vec<Box<dyn UnitPlanner>> = Vec::new();
+
+
         //let pheromone_system : dyn UnitPlanner = planer.clone();
-        self.unit_planners[0].push(pheromone_planer_box);
+        unit_pheromone_planners.push( Box::new(planer.clone()));
+
+        let directional_move = DirectionalMovePlanner::new(hex2d::Direction::XY);
+        unit_pheromone_planners.push(Box::new(directional_move));
+
+        let idle_planer = IdleUnitPlanner {};
+        unit_pheromone_planners.push(Box::new(idle_planer));
+        
+
+        unit_idle_planners.push(Box::new(IdleUnitPlanner {}));
+
+
+
+        self.register_unit_type(unit_pheromone_planners);
+        self.register_unit_type(unit_idle_planners);
+
+
     }
 
     fn get_unit_plan(&self, unit: &Unit, context: &TickaReadContext) -> Option<UnitPlan> {
-        for planers_d_1 in self. unit_planners.iter() {
-            for planer in planers_d_1.iter() {
-                if let Some(plan) = planer.create_unit_plan(unit, context) {
-                    //result.push(Some(plan));
-                    //break;
-                    return Some(plan);
-                }
+
+        let planer_index = self.unit_type[*unit.id() as usize];
+
+        //for planers_d_1 in self.unit_planners.iter() {
+            // for planer in planers_d_1.iter() {
+            //     if let Some(plan) = planer.create_unit_plan(unit, context) {
+            //         //result.push(Some(plan));
+            //         //break;
+            //         return Some(plan);
+            //     }
+            // }
+        //};
+
+        for planer in self.unit_planners[planer_index].iter() {
+            if let Some(plan) = planer.create_unit_plan(unit, context) {
+                //result.push(Some(plan));
+                //break;
+                return Some(plan);
             }
-        };
+        }
 
         None
     }
@@ -393,7 +433,8 @@ impl Ticka {
     pub fn spawn_unit(&mut self, x: u32, y: u32, unit_type: usize) -> Unit {
         let result = self.units_mut().spawn_entity(x, y);
 
-        debug_assert!(unit_type >= self.unit_planners.len(), "unit_type {unit_type} not registered yet. make sure to register it first.");
+        let len_of_planers = self.unit_planners.len();
+        debug_assert!(unit_type < len_of_planers, "unit_type {unit_type} not registered yet. make sure to register it first. registed: {len_of_planers}");
         
         self.unit_type.push(unit_type);
 

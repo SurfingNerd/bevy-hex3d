@@ -135,7 +135,11 @@ fn startup_ticka(mut commands: Commands, mut game: ResMut<Game>,mut  meshes: Res
 
     let mut ticka = ticka_res.as_mut().real_time_ticka_mut().ticka_mut(); 
     
-    let pheromones_field_index = ticka.register_field_f32();
+    // let pheromones_field_index = ticka.register_field_f32();
+
+    //ticka.register_unit_type(unit_planners)
+
+    
     
 
     //let mut ticka2 = ticka_res.as_mut();
