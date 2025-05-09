@@ -7,11 +7,11 @@ pub fn camera_movement_speed(
     keyboard_input: Res<Input<KeyCode>>,
     mut movement_settings: ResMut<MovementSettings>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::NumpadAdd) {
+    if keyboard_input.just_pressed(KeyCode::NumpadAdd) ||  keyboard_input.just_pressed(KeyCode::Plus) {
         movement_settings.speed *= 1.5;
         info!("camera speed: {}", movement_settings.speed);
     }
-    if keyboard_input.just_pressed(KeyCode::NumpadSubtract) {
+    if keyboard_input.just_pressed(KeyCode::NumpadSubtract) || keyboard_input.just_pressed(KeyCode::Minus) {
         movement_settings.speed /= 1.5;
         info!("camera speed: {}", movement_settings.speed);
     }
